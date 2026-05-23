@@ -27,9 +27,17 @@ This skill does not install the real Claude-Mem plugin. If the project needs the
 2. Search memory before writing new memory.
 3. Use the 3-Layer Workflow for past-session lookup.
 4. Keep entries short and factual.
-5. Store project-specific facts in project memory when available.
+5. Use `.claude/STATE.md` for current project working state.
 6. Store general user preferences in user memory when available.
 7. Update or remove memory when it becomes wrong.
+
+## Relationship With STATE.md
+
+Use `.claude/STATE.md` for current project working state.
+
+Use memory for durable facts that should outlive a single project state file: recurring user preferences, stable project rules, decisions, and lessons from bugs or reviews.
+
+Do not duplicate long entries between both places. If a durable memory affects current work, add a short reference or summary in `.claude/STATE.md`.
 
 ## 3-Layer Workflow
 

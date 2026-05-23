@@ -42,7 +42,6 @@ This repo keeps the source of the pack:
 - `setupskill.sh`: the installer.
 - `tests/run-tests.sh`: smoke tests for install behavior and hooks.
 - `docs/`: usage docs and examples.
-- `tasks/todo.md`: local build and verification trail.
 
 ## Installed Commands
 
@@ -72,6 +71,8 @@ Hooks are optional. They run only if installed with `--with-hooks`.
 ## Git Workflow Rule
 
 Do not push directly to the default branch. Push a branch and open a pull request.
+
+Internal planning files stay local. This repo ignores `tasks/` and `docs/superpowers/` so private plans, specs, and working notes are not shipped with the public pack.
 
 ```text
 git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit

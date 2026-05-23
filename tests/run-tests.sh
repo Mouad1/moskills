@@ -55,6 +55,12 @@ assert_contains() {
   grep -F "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' in $file"
 }
 
+assert_not_contains() {
+  file=$1
+  text=$2
+  ! grep -F "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' to be absent from $file"
+}
+
 make_project() {
   name=$1
   mkdir -p "$TMP_ROOT/$name"
@@ -294,6 +300,7 @@ test_hook_install_supports_gitdir_file() {
 
 test_documentation_exists() {
   assert_file "$ROOT_DIR/README.md"
+  assert_file "$ROOT_DIR/.gitignore"
   assert_file "$ROOT_DIR/CHANGELOG.md"
   assert_file "$ROOT_DIR/LICENSE"
   assert_file "$ROOT_DIR/docs/lifecycle.md"
@@ -305,6 +312,9 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/README.md" './setupskill.sh --target /path/to/project'
   assert_contains "$ROOT_DIR/README.md" 'fruit of learning from engineers, experts, and successful GitHub repos'
   assert_contains "$ROOT_DIR/README.md" 'What users get'
+  assert_not_contains "$ROOT_DIR/README.md" 'tasks/todo.md'
+  assert_contains "$ROOT_DIR/.gitignore" 'tasks/'
+  assert_contains "$ROOT_DIR/.gitignore" 'docs/superpowers/'
   assert_contains "$ROOT_DIR/CHANGELOG.md" '/shared-language'
   assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/shared-language'
@@ -312,7 +322,10 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'search -> timeline -> get_observations'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/compress-input'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/memorize'
-  assert_contains "$ROOT_DIR/docs/pain-points.md" 'Project jargon is unclear between devs and domain experts.'
+  assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
+  assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |'
+  assert_contains "$ROOT_DIR/templates/claude/STATE.md" 'Local working state for the current project.'
+  assert_contains "$ROOT_DIR/templates/claude/skills/memorize/SKILL.md" 'Use `.claude/STATE.md` for current project working state.'
   assert_contains "$ROOT_DIR/templates/claude/CLAUDE.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   assert_contains "$ROOT_DIR/README.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   pass 'documentation exists'
