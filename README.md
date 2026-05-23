@@ -6,6 +6,19 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 The goal is simple: install one folder into any project, then use clear slash commands when the agent needs structure.
 
+## Installed Commands
+
+- `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
+- `/shared-language`: turn project jargon into a glossary agents and humans can share.
+- `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
+- `/tdd`: run the red, green, refactor loop for behavior changes.
+- `/diagnose`: debug by reproducing the issue and finding root cause before fixing.
+- `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
+- `/gatekeeper`: validate completed work against the active intent model before reporting completion.
+- `/compress-input`: switch to short, direct technical communication.
+- `/memorize`: use durable memory for lessons, rules, and past-session context.
+- `/handoff`: compact current work so another agent can continue.
+
 ## Install
 
 Run from this repository after cloning or downloading it:
@@ -42,19 +55,6 @@ This repo keeps the source of the pack:
 - `setupskill.sh`: the installer.
 - `tests/run-tests.sh`: smoke tests for install behavior and hooks.
 - `docs/`: usage docs and examples.
-
-## Installed Commands
-
-- `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
-- `/shared-language`: turn project jargon into a glossary agents and humans can share.
-- `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
-- `/tdd`: run the red, green, refactor loop for behavior changes.
-- `/diagnose`: debug by reproducing the issue and finding root cause before fixing.
-- `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
-- `/gatekeeper`: validate completed work against the active intent model before reporting completion.
-- `/compress-input`: switch to short, direct technical communication.
-- `/memorize`: use durable memory for lessons, rules, and past-session context.
-- `/handoff`: compact current work so another agent can continue.
 
 ## Lifecycle
 
