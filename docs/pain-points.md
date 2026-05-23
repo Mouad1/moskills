@@ -1,25 +1,20 @@
 # Pain Points
 
-moskills maps common agent failures to small commands with one job each.
+moskills maps specific agent failures to small commands with one job each.
 
-| Pain point | Command | Result |
+| Command | Real pain point | What it gives |
 | --- | --- | --- |
-| Agent starts coding before requirements are clear. | `/align-intent` | Shared intent model before edits. |
-| User intent is assumed from partial chat context. | `/align-intent` | Inputs, action, output, success, non-goals, and risks are explicit. |
-| Project jargon is unclear between devs and domain experts. | `/shared-language` | Terms, meanings, code names, and examples are written once. |
-| Code names drift away from business language. | `/shared-language` | Variables, functions, tests, and docs can reuse project terms. |
-| Agent changes the wrong layer or too many files. | `/system-map` | Change boundary is visible before implementation. |
-| Hidden dependencies are missed. | `/system-map` | Modules, data flow, and external dependencies are named. |
-| Agent produces code without runtime feedback. | `/tdd` | A red, green, refactor loop gives fast evidence. |
-| Bugs are patched before root cause is known. | `/diagnose` | Reproduction, evidence, cause, fix, and verification are separated. |
-| Long sessions lose track of why files changed. | `/checkpoint` | Factual progress and Git deltas are recorded. |
-| Context handoff loses current blockers or next steps. | `/checkpoint` | Blockers and next action are written into `.claude/STATE.md`. |
-| Agent says tests passed without proof. | `/gatekeeper` | Completion requires observed command output. |
-| Success criteria are not checked against original intent. | `/gatekeeper` | Passing, failing, and unknown checks are separated. |
-| Agent updates are too noisy. | `/compress-input` | Communication becomes short, direct, and action-focused. |
-| Lessons get lost between sessions. | `/memorize` | Durable memory stores short project rules and lessons. |
-| Another agent needs to continue the work. | `/handoff` | Goal, decisions, changed files, blockers, and next steps are compacted. |
-| Risky placeholder text reaches commits. | Optional Git hook | `agent-guard.sh` blocks conflict markers and selected placeholder phrases in staged files. |
+| `/shared-language` | People use different words for the same domain idea, so agent output drifts away from how the team thinks and names things. | A shared glossary of terms, meanings, code names, examples, and naming guidance. |
+| `/align-intent` | Requirements live in scattered chat messages, so agent starts coding from an incomplete brief. | A clear intent model: goal, constraints, inputs, outputs, success criteria, non-goals, and risks. |
+| `/system-map` | Agent edits the wrong layer because it has not seen module boundaries, data flow, owners, or hidden dependencies. | A compact map of files, responsibilities, dependencies, risk areas, and safest change boundary. |
+| `/tdd` | Agent writes code that looks plausible but has no fast proof that behavior changed correctly. | A red, green, refactor loop with a focused test before implementation. |
+| `/diagnose` | Bugs get patched by guesswork, so symptoms disappear briefly while root cause stays unknown. | Reproduction, evidence, suspected cause, fix plan, and verification kept separate. |
+| `/checkpoint` | Long sessions lose the thread: changed files, decisions, commands, blockers, and next steps are scattered across chat. | A factual progress record in `.claude/STATE.md` for the current project session. |
+| `/gatekeeper` | Agent says work is done without checking the original intent or showing observed verification output. | A completion gate that separates passing checks, failing checks, unknowns, and remaining risk. |
+| `/compress-input` | Agent replies are too verbose, burying the next action and wasting attention during focused work. | Short, direct communication modes while preserving exact technical terms, commands, paths, and errors. |
+| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |
+| `/handoff` | Another agent or future session needs to continue, but the useful context is mixed into a long transcript. | A compact handoff with goal, decisions, changed files, blockers, verification, and next actions. |
+| Optional Git hook | Conflict markers or risky placeholder text reach staged files because final checks were skipped. | `agent-guard.sh` blocks selected staged-file hazards before commit. |
 
 Use the commands together for full lifecycle coverage:
 
