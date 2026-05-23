@@ -61,6 +61,17 @@ assert_not_contains() {
   ! grep -F "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' to be absent from $file"
 }
 
+assert_heading_before() {
+  file=$1
+  first_heading=$2
+  second_heading=$3
+  awk -v first="$first_heading" -v second="$second_heading" '
+    $0 == first { first_line = NR }
+    $0 == second { second_line = NR }
+    END { exit !(first_line > 0 && second_line > 0 && first_line < second_line) }
+  ' "$file" || fail "expected '$first_heading' before '$second_heading' in $file"
+}
+
 make_project() {
   name=$1
   mkdir -p "$TMP_ROOT/$name"
@@ -312,6 +323,7 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/README.md" './setupskill.sh --target /path/to/project'
   assert_contains "$ROOT_DIR/README.md" 'fruit of learning from engineers, experts, and successful GitHub repos'
   assert_contains "$ROOT_DIR/README.md" 'What users get'
+  assert_heading_before "$ROOT_DIR/README.md" '## Installed Commands' '## Install'
   assert_not_contains "$ROOT_DIR/README.md" 'tasks/todo.md'
   assert_contains "$ROOT_DIR/.gitignore" 'tasks/'
   assert_contains "$ROOT_DIR/.gitignore" 'docs/superpowers/'
