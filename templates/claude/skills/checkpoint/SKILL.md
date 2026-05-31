@@ -1,6 +1,6 @@
 ---
 name: checkpoint
-description: Record Git deltas, current state, blockers, commands run, and next steps.
+description: "Use when: recording progress, Git deltas, current state, blockers, commands run, or next steps after a work increment, or before a context switch."
 ---
 
 # Checkpoint

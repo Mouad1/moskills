@@ -126,16 +126,16 @@ test_commands_point_to_matching_skills() {
   output_file="$TMP_ROOT/command-links-output.txt"
   run_installer --target "$project" >"$output_file"
 
-  assert_contains "$project/.claude/commands/align-intent.md" 'Use skill: align-intent'
-  assert_contains "$project/.claude/commands/shared-language.md" 'Use skill: shared-language'
-  assert_contains "$project/.claude/commands/system-map.md" 'Use skill: system-map'
-  assert_contains "$project/.claude/commands/tdd.md" 'Use skill: tdd'
-  assert_contains "$project/.claude/commands/diagnose.md" 'Use skill: diagnose'
-  assert_contains "$project/.claude/commands/checkpoint.md" 'Use skill: checkpoint'
-  assert_contains "$project/.claude/commands/gatekeeper.md" 'Use skill: gatekeeper'
-  assert_contains "$project/.claude/commands/compress-input.md" 'Use skill: compress-input'
-  assert_contains "$project/.claude/commands/memorize.md" 'Use skill: memorize'
-  assert_contains "$project/.claude/commands/handoff.md" 'Use skill: handoff'
+  assert_contains "$project/.claude/commands/align-intent.md" '`align-intent` skill'
+  assert_contains "$project/.claude/commands/shared-language.md" '`shared-language` skill'
+  assert_contains "$project/.claude/commands/system-map.md" '`system-map` skill'
+  assert_contains "$project/.claude/commands/tdd.md" '`tdd` skill'
+  assert_contains "$project/.claude/commands/diagnose.md" '`diagnose` skill'
+  assert_contains "$project/.claude/commands/checkpoint.md" '`checkpoint` skill'
+  assert_contains "$project/.claude/commands/gatekeeper.md" '`gatekeeper` skill'
+  assert_contains "$project/.claude/commands/compress-input.md" '`compress-input` skill'
+  assert_contains "$project/.claude/commands/memorize.md" '`memorize` skill'
+  assert_contains "$project/.claude/commands/handoff.md" '`handoff` skill'
   pass 'commands point to matching skills'
 }
 
@@ -185,7 +185,7 @@ test_force_overwrites_existing_files() {
 
   run_installer --target "$project" --force >"$output_file"
 
-  assert_contains "$project/.claude/commands/align-intent.md" 'Use skill: align-intent'
+  assert_contains "$project/.claude/commands/align-intent.md" '`align-intent` skill'
   pass 'force overwrites existing managed files'
 }
 

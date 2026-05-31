@@ -1,13 +1,7 @@
 # /tdd
 
-Use skill: tdd
+Manual trigger for the `tdd` skill.
 
-Use this command when building or changing behavior that can be protected by tests.
-
-Flow:
-
-```text
-Red -> Green -> Refactor
-```
-
-The agent must write the failing test first, watch it fail for the right reason, implement the smallest fix, then run the test again.
+Run it to drive a red, green, refactor loop for a behavior change. The full
+procedure and rules live in the skill, which also runs automatically when its
+`Use when:` triggers match.

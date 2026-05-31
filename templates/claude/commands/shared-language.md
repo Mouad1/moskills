@@ -1,16 +1,7 @@
 # /shared-language
 
-Use skill: shared-language
+Manual trigger for the `shared-language` skill.
 
-Use this command when devs, agents, and domain experts are using different words for the same thing.
-
-Output:
-
-```text
-Term:
-Meaning:
-Use When:
-Avoid Saying:
-Code Names:
-Example:
-```
+Run it to build or update the shared glossary between devs, agents, and domain
+experts. The full procedure and output template live in the skill, which also
+runs automatically when its `Use when:` triggers match.

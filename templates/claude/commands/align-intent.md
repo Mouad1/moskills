@@ -1,16 +1,7 @@
 # /align-intent
 
-Use skill: align-intent
+Manual trigger for the `align-intent` skill.
 
-Use this command before coding when the goal, constraints, inputs, outputs, or success criteria are not fully agreed.
-
-Output:
-
-```text
-Input:
-Action:
-Output:
-Success:
-Non-goals:
-Risks:
-```
+Run it to force intent alignment before coding. The full procedure, output
+template, and rules live in the skill, which also runs automatically when its
+`Use when:` triggers match.

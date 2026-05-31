@@ -1,6 +1,6 @@
 ---
 name: system-map
-description: Map module relationships and change boundaries before editing code.
+description: "Use when: editing unfamiliar code, mapping module relationships, dependency direction, or change boundaries before making a change."
 ---
 
 # System Map

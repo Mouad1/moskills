@@ -1,6 +1,6 @@
 ---
 name: align-intent
-description: Confirm implementation intent before coding. Use when requirements, scope, inputs, outputs, or success criteria are unclear.
+description: "Use when: requirements, scope, inputs, outputs, success criteria, or non-goals are unclear before coding or starting a new feature."
 ---
 
 # Align Intent

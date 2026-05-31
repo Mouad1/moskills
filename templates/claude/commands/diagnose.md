@@ -1,7 +1,7 @@
 # /diagnose
 
-Use skill: diagnose
+Manual trigger for the `diagnose` skill.
 
-Use this command for bugs, failing tests, broken builds, or unexpected behavior.
-
-The agent must reproduce the issue, find the root cause, test one hypothesis at a time, then fix the cause.
+Run it to reproduce an issue and find root cause before fixing. The full
+procedure and rules live in the skill, which also runs automatically when its
+`Use when:` triggers match.

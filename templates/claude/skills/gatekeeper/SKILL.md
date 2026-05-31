@@ -1,6 +1,6 @@
 ---
 name: gatekeeper
-description: Validate implementation against intent before reporting completion.
+description: "Use when: about to report work complete, verifying implementation against intent, or separating passing, failing, and unknown checks before claiming done."
 ---
 
 # Gatekeeper
