@@ -1,10 +1,7 @@
 # /system-map
 
-Use skill: system-map
+Manual trigger for the `system-map` skill.
 
-Use this command when architecture, module relationships, dependency direction, or change boundaries matter.
-
-Modes:
-
-- Zoom-Out: system-level relationships.
-- Zoom-In: one module and its inputs, outputs, dependencies, and risks.
+Run it to map modules, data flow, dependencies, and the safest change boundary
+before editing. The full procedure and modes live in the skill, which also runs
+automatically when its `Use when:` triggers match.

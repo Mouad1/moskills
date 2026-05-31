@@ -1,0 +1,33 @@
+{
+  "name": "moskills",
+  "id": "moskills",
+  "owner": {
+    "name": "Mouad Belghiti",
+    "url": "https://belghitis.com"
+  },
+  "metadata": {
+    "description": "A small, composable skill pack that keeps AI agent work structured instead of random.",
+    "version": "0.2.0"
+  },
+  "plugins": [
+    {
+      "name": "moskills",
+      "source": "./",
+      "description": "Align intent, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, and hand off cleanly.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Mouad Belghiti",
+        "url": "https://belghitis.com"
+      },
+      "homepage": "https://github.com/Mouad1/moskills",
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "skills",
+        "agent",
+        "best-practices"
+      ],
+      "category": "workflow"
+    }
+  ]
+}

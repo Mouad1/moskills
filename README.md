@@ -1,5 +1,7 @@
 # moskills
 
+By [Mouad Belghiti](https://belghitis.com).
+
 moskills is my small skill pack for working with AI agents without letting the work become random.
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, and leave clean handoffs.
@@ -19,9 +21,57 @@ The goal is simple: install one folder into any project, then use clear slash co
 - `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
 
+## How the Agent Knows When to Use Skills
+
+### 1. Automatic (the default)
+
+Each skill is a folder with a `SKILL.md` file. The top of that file holds a
+short description with a `Use when:` trigger line. For example:
+
+```yaml
+---
+name: diagnose
+description: "Use when: debugging bugs, failing tests, broken builds, regressions, performance issues, or unexpected behavior."
+---
+```
+
+The agent reads these descriptions and matches them against what you are asking
+for.
+
+This is why the descriptions matter more than the command names. A precise
+`Use when:` line is what makes the skill discoverable and self-triggering.
+
+### 2. Manual (the slash command)
+
+Typing the slash command, like `/diagnose`, forces that skill to run even if the agent did not trigger it on its own.
+
 ## Install
 
-Run from this repository after cloning or downloading it:
+### Option A: Plugin (recommended, one line, updates centrally)
+
+Install moskills as a Claude Code plugin. The skills become available in every
+project, and you update them in one place instead of per project.
+
+From inside Claude Code, add the marketplace once, then install:
+
+```text
+/plugin marketplace add Mouad1/moskills
+/plugin install moskills@moskills
+```
+
+To update later, pull the latest version centrally:
+
+```text
+/plugin update moskills@moskills
+```
+
+This installs all skills and their slash commands globally. No files are
+copied into your project.
+
+### Option B: Copy script (per project, no plugin system)
+
+Run from this repository after cloning or downloading it, to copy the `.claude/`
+folder into one project:
 
 ```sh
 ./setupskill.sh --target /path/to/project
@@ -136,3 +186,13 @@ Remove the installed `.claude` directory from the target project. If `--with-hoo
 - [docs/pain-points.md](docs/pain-points.md)
 - [docs/examples/node-project.md](docs/examples/node-project.md)
 - [docs/examples/python-project.md](docs/examples/python-project.md)
+
+## Who Made This
+
+moskills is built and maintained by Mouad Belghiti.
+
+- Website: [belghitis.com](https://belghitis.com)
+- Write-up on the thinking behind it: [How I keep AI coding agents structured](https://belghitis.com)
+
+If moskills helps you, a star on the repo and a link back to
+[belghitis.com](https://belghitis.com) are appreciated.

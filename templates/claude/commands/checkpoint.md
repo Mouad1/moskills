@@ -1,7 +1,7 @@
 # /checkpoint
 
-Use skill: checkpoint
+Manual trigger for the `checkpoint` skill.
 
-Use this command to record factual progress, Git deltas, blockers, and next steps in `.claude/STATE.md`.
-
-Never claim tests passed unless command output was observed.
+Run it to record factual progress, Git deltas, blockers, and next steps in
+`.claude/STATE.md`. The full procedure and rules live in the skill, which also
+runs automatically when its `Use when:` triggers match.

@@ -1,7 +1,7 @@
 # /gatekeeper
 
-Use skill: gatekeeper
+Manual trigger for the `gatekeeper` skill.
 
-Use this command before saying work is done.
-
-It must compare observed verification results against the active `/align-intent` logic model, check feedback loops, and separate passing, failing, and unknown checks.
+Run it before saying work is done to validate observed results against the
+active intent model. The full procedure and rules live in the skill, which also
+runs automatically when its `Use when:` triggers match.

@@ -1,7 +1,7 @@
 # /handoff
 
-Use skill: handoff
+Manual trigger for the `handoff` skill.
 
-Use this command when another agent may need to continue the work.
-
-The output should compact current context, decisions, changed files, verification, blockers, and next steps into a handoff document.
+Run it to compact current work so another agent can continue. The output format
+and rules live in the skill, which also runs automatically when its `Use when:`
+triggers match.
