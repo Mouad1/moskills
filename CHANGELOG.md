@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Added `project-dna` skill and `/project-dna` slash command.
+  Tracks every significant implementation decision, configuration, and action
+  taken during a co-development session so the exact same work can be
+  reproduced in one shot by a fresh agent.
+  Each entry follows a structured format: context → decisions → validations →
+  steps → configs → outputs → Replay Prompt.
+  Triggers manually (`track this`, `DNA this`) and automatically before
+  `git commit` or `git push`.
+
 ## 0.2.0
 
 - Added Claude Code plugin support via `.claude-plugin/plugin.json` and
