@@ -2,7 +2,7 @@
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
+New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
 
 moskills is built around a small workflow loop. Each step gives the agent one clear job and leaves durable context in the project when needed.
 
@@ -59,9 +59,17 @@ Use `/gatekeeper` before reporting completion.
 
 The command compares observed checks against the active intent model and separates passing, failing, and unknown results.
 
-## 6. Done
+## 6. /project-dna
 
-Call the work done only after validation output has been observed and any remaining unknowns or risks are reported.
+Use `/project-dna` after validation passes — before or at the time of committing.
+
+The command writes a structured entry to `PROJECT-DNA.md` capturing context, decisions, steps, config, and outputs, and always ends with a Replay Prompt: a self-contained Claude prompt that reproduces the same work from scratch.
+
+Run it manually with `track this` or `DNA this`, or let it trigger automatically before `git commit` or `git push`.
+
+## 7. Done
+
+Call the work done only after validation output has been observed, any remaining unknowns or risks are reported, and a DNA entry has been written.
 
 ## Optional Hooks
 
