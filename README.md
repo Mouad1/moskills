@@ -4,7 +4,7 @@ By [Mouad Belghiti](https://belghitis.com).
 
 moskills is my small skill pack for working with AI agents without letting the work become random.
 
-It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, and leave clean handoffs.
+It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
 
 The goal is simple: install one folder into any project, then use clear slash commands when the agent needs structure.
 
@@ -20,6 +20,7 @@ The goal is simple: install one folder into any project, then use clear slash co
 - `/compress-input`: switch to short, direct technical communication.
 - `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
+- `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
 
 ## How the Agent Knows When to Use Skills
 
@@ -110,7 +111,7 @@ This repo keeps the source of the pack:
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
+New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
 
 If work must pause, use `/handoff`.
 
@@ -147,6 +148,7 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
     compress-input.md
     memorize.md
     handoff.md
+    project-dna.md
   skills/
     align-intent/
       SKILL.md
@@ -168,6 +170,10 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
       SKILL.md
     handoff/
       SKILL.md
+    project-dna/
+      SKILL.md
+      references/
+        templates.md
   hooks/
     agent-guard.sh
 .git/

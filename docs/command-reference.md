@@ -237,3 +237,33 @@ Commands Run:
 Blockers:
 Next Steps:
 ```
+
+## /project-dna
+
+Purpose: track implementation decisions and produce reproducible recipes.
+
+Use after building a feature, completing a configuration, or making a significant architectural decision — so the exact same work can be reproduced in one shot by a fresh agent.
+
+Triggers:
+
+- Manual: `track this`, `DNA this`, `log this`, `wrap up this feature`
+- Automatic: before `git commit` or `git push`
+
+Expected output per entry:
+
+```text
+Context:
+Decisions:
+Validations / ACs:
+Steps:
+Config:
+Outputs:
+Replay Prompt:
+```
+
+Rules:
+
+- Every entry ends with a self-contained Replay Prompt.
+- Never write actual secret values — use `[SECRET: VAR_NAME]` placeholders.
+- Steps must be precise enough for a fresh agent with zero context to follow.
+- One entry per feature or decision boundary.
