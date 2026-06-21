@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0
+## 0.4.0
 
 - Added `preview` skill and `/preview` slash command.
   Turns a vague idea into a written spec before any code is written.
@@ -12,6 +12,17 @@
   committed. After user approval the skill hands off to `/align-intent`.
   Lifecycle updated: New Feature → /preview → /align-intent → /system-map →
   Coding Phase → /gatekeeper → Done.
+
+## 0.3.0
+
+- Added `project-dna` skill and `/project-dna` slash command.
+  Tracks every significant implementation decision, configuration, and action
+  taken during a co-development session so the exact same work can be
+  reproduced in one shot by a fresh agent.
+  Each entry follows a structured format: context → decisions → validations →
+  steps → configs → outputs → Replay Prompt.
+  Triggers manually (`track this`, `DNA this`) and automatically before
+  `git commit` or `git push`.
 
 ## 0.2.0
 
