@@ -2,14 +2,14 @@
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
 
 moskills is built around a small workflow loop. Each step gives the agent one clear job and leaves durable context in the project when needed.
 
 For compatibility with the first release flow, this lifecycle is still valid:
 
 ```text
-New Feature -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done
 ```
 
 ## 0. /shared-language
@@ -21,6 +21,12 @@ It turns project jargon into a glossary the user, domain expert, and agent can s
 ## 1. New Feature
 
 Start with the user request, issue, bug report, or change idea. Keep the initial scope visible. Do not treat unclear requirements as permission to guess.
+
+## 1.5 /preview
+
+Use `/preview` when the idea is still vague. It explores scope, proposes approaches, and produces a written spec before any intent is locked or code is written.
+
+The spec is saved to `docs/specs/YYYY-MM-DD-<topic>.md` and committed. After user approval the skill hands off to `/align-intent`.
 
 ## 2. /align-intent
 
@@ -59,17 +65,9 @@ Use `/gatekeeper` before reporting completion.
 
 The command compares observed checks against the active intent model and separates passing, failing, and unknown results.
 
-## 6. /project-dna
+## 6. Done
 
-Use `/project-dna` after validation passes — before or at the time of committing.
-
-The command writes a structured entry to `PROJECT-DNA.md` capturing context, decisions, steps, config, and outputs, and always ends with a Replay Prompt: a self-contained Claude prompt that reproduces the same work from scratch.
-
-Run it manually with `track this` or `DNA this`, or let it trigger automatically before `git commit` or `git push`.
-
-## 7. Done
-
-Call the work done only after validation output has been observed, any remaining unknowns or risks are reported, and a DNA entry has been written.
+Call the work done only after validation output has been observed and any remaining unknowns or risks are reported.
 
 ## Optional Hooks
 
