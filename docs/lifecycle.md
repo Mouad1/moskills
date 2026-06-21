@@ -26,7 +26,7 @@ Start with the user request, issue, bug report, or change idea. Keep the initial
 
 Use `/preview` when the idea is still vague. It explores scope, proposes approaches, and produces a written spec before any intent is locked or code is written.
 
-The spec is saved to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and committed. After user approval the skill hands off to `/align-intent`.
+The spec is saved to `docs/specs/YYYY-MM-DD-<topic>.md` and committed. After user approval the skill hands off to `/align-intent`.
 
 ## 2. /align-intent
 
