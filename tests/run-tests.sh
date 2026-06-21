@@ -89,7 +89,6 @@ test_generic_install_creates_claude_files() {
 
   assert_file "$project/.claude/CLAUDE.md"
   assert_file "$project/.claude/STATE.md"
-  assert_file "$project/.claude/commands/preview.md"
   assert_file "$project/.claude/commands/align-intent.md"
   assert_file "$project/.claude/commands/shared-language.md"
   assert_file "$project/.claude/commands/system-map.md"
@@ -104,7 +103,6 @@ test_generic_install_creates_claude_files() {
   assert_not_exists "$project/.claude/commands/claude-mem.md"
   assert_not_exists "$project/.claude/skills/caveman"
   assert_not_exists "$project/.claude/skills/claude-mem"
-  assert_file "$project/.claude/skills/preview/SKILL.md"
   assert_file "$project/.claude/skills/align-intent/SKILL.md"
   assert_file "$project/.claude/skills/shared-language/SKILL.md"
   assert_contains "$output_file" 'Installed commands:'
@@ -128,7 +126,6 @@ test_commands_point_to_matching_skills() {
   output_file="$TMP_ROOT/command-links-output.txt"
   run_installer --target "$project" >"$output_file"
 
-  assert_contains "$project/.claude/commands/preview.md" '`preview` skill'
   assert_contains "$project/.claude/commands/align-intent.md" '`align-intent` skill'
   assert_contains "$project/.claude/commands/shared-language.md" '`shared-language` skill'
   assert_contains "$project/.claude/commands/system-map.md" '`system-map` skill'
@@ -147,7 +144,6 @@ test_skills_have_single_primary_goal() {
   output_file="$TMP_ROOT/skill-goals-output.txt"
   run_installer --target "$project" >"$output_file"
 
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'Primary goal: Crystallise an idea into an approved spec before any code is written.'
   assert_contains "$project/.claude/skills/align-intent/SKILL.md" 'Primary goal: Ensure agreement before coding.'
   assert_contains "$project/.claude/skills/shared-language/SKILL.md" 'Primary goal: Build shared language for the project.'
   assert_contains "$project/.claude/skills/system-map/SKILL.md" 'Primary goal: Show module relationships before changes.'
@@ -330,11 +326,9 @@ test_documentation_exists() {
   assert_heading_before "$ROOT_DIR/README.md" '## Installed Commands' '## Install'
   assert_not_contains "$ROOT_DIR/README.md" 'tasks/todo.md'
   assert_contains "$ROOT_DIR/.gitignore" 'tasks/'
-  assert_contains "$ROOT_DIR/.gitignore" '.preview/'
+  assert_contains "$ROOT_DIR/.gitignore" 'docs/superpowers/'
   assert_contains "$ROOT_DIR/CHANGELOG.md" '/shared-language'
-  assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
-  assert_contains "$ROOT_DIR/docs/lifecycle.md" '/preview'
-  assert_contains "$ROOT_DIR/docs/command-reference.md" '/preview'
+  assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/shared-language'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'lite, full, ultra, wenyan'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'search -> timeline -> get_observations'
@@ -347,98 +341,6 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/templates/claude/CLAUDE.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   assert_contains "$ROOT_DIR/README.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   pass 'documentation exists'
-}
-
-test_preview_skill_structure() {
-  project=$(make_project preview-skill)
-  run_installer --target "$project" >"$TMP_ROOT/preview-skill-output.txt"
-
-  assert_file "$project/.claude/skills/preview/SKILL.md"
-  assert_file "$project/.claude/commands/preview.md"
-
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'Primary goal: Crystallise an idea into an approved spec before any code is written.'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'HARD-GATE'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" '/align-intent'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'docs/specs/'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" '.preview/'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" '.claude/skills/preview/scripts/start-server.sh'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" '.claude/skills/preview/scripts/stop-server.sh'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'screen_dir'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'STATE_DIR/events'
-  assert_not_contains "$project/.claude/skills/preview/SKILL.md" 'superpowers'
-  assert_file "$project/.claude/skills/preview/scripts/server.cjs"
-  assert_file "$project/.claude/skills/preview/scripts/start-server.sh"
-  assert_file "$project/.claude/skills/preview/scripts/stop-server.sh"
-  assert_file "$project/.claude/skills/preview/scripts/helper.js"
-  assert_file "$project/.claude/skills/preview/scripts/frame-template.html"
-  assert_not_contains "$project/.claude/skills/preview/scripts/frame-template.html" 'superpowers'
-  assert_not_contains "$project/.claude/skills/preview/scripts/server.cjs" 'BRAINSTORM'
-  assert_contains "$project/.claude/skills/preview/scripts/server.cjs" '/health'
-  assert_contains "$project/.claude/skills/preview/scripts/server.cjs" 'PREVIEW_DIR'
-  assert_contains "$project/.claude/skills/preview/scripts/start-server.sh" '.preview/'
-  assert_contains "$project/.claude/skills/preview/scripts/helper.js" 'window.preview'
-  assert_contains "$project/.claude/commands/preview.md" '`preview` skill'
-
-  pass 'preview skill structure is complete'
-}
-
-test_preview_frontend_detection_rules_present() {
-  project=$(make_project preview-frontend)
-  run_installer --target "$project" >"$TMP_ROOT/preview-frontend-output.txt"
-
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'angular.json'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'tailwind.config'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'src/app/'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'src/pages/'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'src/components/'
-
-  pass 'preview skill contains frontend detection rules'
-}
-
-test_preview_session_resume_rules_present() {
-  project=$(make_project preview-resume)
-  run_installer --target "$project" >"$TMP_ROOT/preview-resume-output.txt"
-
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'server-info'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'curl'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'Alive'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'Dead but file exists'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" '.preview/'
-
-  pass 'preview skill contains session resume logic'
-}
-
-test_preview_hard_gate_no_code_before_approval() {
-  project=$(make_project preview-gate)
-  run_installer --target "$project" >"$TMP_ROOT/preview-gate-output.txt"
-
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'Do NOT write code'
-  assert_contains "$project/.claude/skills/preview/SKILL.md" 'No exceptions'
-
-  pass 'preview skill enforces hard gate before approval'
-}
-
-test_preview_installer_banner() {
-  project=$(make_project preview-banner)
-  output_file="$TMP_ROOT/preview-banner-output.txt"
-  run_installer --target "$project" >"$output_file"
-
-  assert_contains "$output_file" '/preview'
-
-  pass 'installer banner lists /preview'
-}
-
-test_preview_lifecycle_position() {
-  project=$(make_project preview-lifecycle)
-  run_installer --target "$project" >"$TMP_ROOT/preview-lifecycle-output.txt"
-
-  assert_contains "$project/.claude/CLAUDE.md" '/preview'
-
-  preview_line=$(grep -n '`/preview`' "$project/.claude/CLAUDE.md" | head -1 | cut -d: -f1)
-  intent_line=$(grep -n '`/align-intent`' "$project/.claude/CLAUDE.md" | head -1 | cut -d: -f1)
-  [ "$preview_line" -lt "$intent_line" ] || fail "/preview command entry must appear before /align-intent in CLAUDE.md"
-
-  pass 'preview appears before align-intent in lifecycle'
 }
 
 mkdir -p "$TMP_ROOT"
@@ -457,11 +359,5 @@ test_agent_guard_checks_staged_content_not_worktree
 test_agent_guard_allows_markdown_setext_heading
 test_hook_install_supports_gitdir_file
 test_documentation_exists
-test_preview_skill_structure
-test_preview_frontend_detection_rules_present
-test_preview_session_resume_rules_present
-test_preview_hard_gate_no_code_before_approval
-test_preview_installer_banner
-test_preview_lifecycle_position
 
 printf 'All tests passed: %s\n' "$pass_count"
