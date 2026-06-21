@@ -1,6 +1,6 @@
 ---
 name: preview
-description: "Use when: turning a vague idea into a concrete design before coding. Runs before /align-intent. Explores scope, approaches, and tradeoffs through dialogue, then produces a written spec."
+description: "Use when: turning a vague idea into a concrete design before coding. Runs before /align-intent. Explores scope, approaches, and tradeoffs through dialogue, then produces a written spec. Do not trigger when intent is already clear or /align-intent is already active."
 ---
 
 # Preview
@@ -75,7 +75,7 @@ Save `screen_dir` and `state_dir`. Tell user to open the URL.
 
 ### Write a mockup
 
-Write an HTML fragment (not a full document) to `$SCREEN_DIR/<name>.html`. The server wraps it with chrome and reloads the browser automatically.
+Write an HTML fragment (not a full document) to `$SCREEN_DIR/<n>.html`. The server wraps it with chrome and reloads the browser automatically.
 
 ```html
 <!-- example fragment -->
