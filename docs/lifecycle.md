@@ -2,14 +2,14 @@
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
 
 moskills is built around a small workflow loop. Each step gives the agent one clear job and leaves durable context in the project when needed.
 
 For compatibility with the first release flow, this lifecycle is still valid:
 
 ```text
-New Feature -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done
 ```
 
 ## 0. /shared-language
@@ -21,6 +21,12 @@ It turns project jargon into a glossary the user, domain expert, and agent can s
 ## 1. New Feature
 
 Start with the user request, issue, bug report, or change idea. Keep the initial scope visible. Do not treat unclear requirements as permission to guess.
+
+## 1.5 /preview
+
+Use `/preview` when the idea is still vague. It explores scope, proposes approaches, and produces a written spec before any intent is locked or code is written.
+
+The spec is saved to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md` and committed. After user approval the skill hands off to `/align-intent`.
 
 ## 2. /align-intent
 

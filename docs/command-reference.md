@@ -2,6 +2,44 @@
 
 moskills installs slash commands into `.claude/commands/`. Each command points to a matching skill in `.claude/skills/`.
 
+## /preview
+
+Purpose: turn a vague idea into a concrete written spec before any code is written.
+
+Use when a feature request, spike, or product idea needs to be explored before locking intent or starting implementation.
+
+Flow:
+
+```text
+Explore context -> Detect frontend -> Clarify -> Propose approaches -> Present design -> Write spec -> Hand off to /align-intent
+```
+
+Visual Companion: when the project is frontend (Angular, React, Vue, HTML/CSS), a browser-based mockup server starts automatically using the bundled scripts in `.claude/skills/preview/scripts/`. No external plugins required. For backend projects it is offered with consent.
+
+Session resume: if a previous session is alive (`.preview/*/state/server-info`), it is resumed instead of starting fresh.
+
+Expected output:
+
+```text
+Date:
+Topic:
+Chosen Approach:
+Architecture:
+Components:
+Data Flow:
+Error Handling:
+Testing:
+Non-goals:
+Open Questions:
+```
+
+Rules:
+
+- One question per message.
+- No code until spec is approved.
+- Decompose multi-subsystem scope before speccing.
+- Next step after approval is always `/align-intent`.
+
 ## /align-intent
 
 Purpose: prevent coding before agreement.

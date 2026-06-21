@@ -6,14 +6,15 @@ Use this router to keep agent work deliberate, modular, easy to audit, and easy 
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
 
 If the session must stop before done, use `/handoff`.
 
 ## Commands
 
+- Use `/preview` when an idea is still vague — explores scope, approaches, and tradeoffs, then produces a written spec before any coding.
 - Use `/shared-language` when project terms, domain words, acronyms, or repeated explanations are unclear.
-- Use `/align-intent` before coding when intent, scope, inputs, outputs, or success criteria are not fully agreed.
+- Use `/align-intent` after `/preview` to lock intent, inputs, outputs, and success criteria before coding.
 - Use `/system-map` when a task touches multiple files, modules, data flows, or boundaries.
 - Use `/tdd` when building or changing behavior that can be protected by tests.
 - Use `/diagnose` when a bug, failing test, or unexpected behavior appears.
