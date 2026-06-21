@@ -156,11 +156,6 @@ if [ "$DRY_RUN" -ne 1 ] && [ -f "$agent_guard" ]; then
   chmod +x "$agent_guard"
 fi
 
-preview_scripts="$TARGET_DIR/.claude/skills/preview/scripts"
-if [ "$DRY_RUN" -ne 1 ] && [ -d "$preview_scripts" ]; then
-  chmod +x "$preview_scripts/start-server.sh" "$preview_scripts/stop-server.sh"
-fi
-
 install_git_hook
 
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -171,7 +166,6 @@ fi
 
 cat <<DONE
 $command_banner
-  /preview
   /align-intent
   /shared-language
   /system-map
