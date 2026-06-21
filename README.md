@@ -4,12 +4,13 @@ By [Mouad Belghiti](https://belghitis.com).
 
 moskills is my small skill pack for working with AI agents without letting the work become random.
 
-It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, and leave clean handoffs.
+It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, and leave clean handoffs.
 
 The goal is simple: install one folder into any project, then use clear slash commands when the agent needs structure.
 
 ## Installed Commands
 
+- `/preview`: turn a vague idea into a written spec before any code is written. Auto-starts a Visual Companion browser server for frontend projects.
 - `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
 - `/shared-language`: turn project jargon into a glossary agents and humans can share.
 - `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
@@ -110,7 +111,7 @@ This repo keeps the source of the pack:
 
 Project Start -> /shared-language
 
-New Feature -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
+New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> Done
 
 If work must pause, use `/handoff`.
 
@@ -137,6 +138,7 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
   CLAUDE.md
   STATE.md
   commands/
+    preview.md
     align-intent.md
     shared-language.md
     system-map.md
@@ -148,6 +150,14 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
     memorize.md
     handoff.md
   skills/
+    preview/
+      SKILL.md
+      scripts/
+        start-server.sh
+        stop-server.sh
+        server.cjs
+        helper.js
+        frame-template.html
     align-intent/
       SKILL.md
     shared-language/
