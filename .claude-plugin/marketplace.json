@@ -7,14 +7,14 @@
   },
   "metadata": {
     "description": "A small, composable skill pack that keeps AI agent work structured instead of random.",
-    "version": "0.3.0"
+    "version": "0.4.0"
   },
   "plugins": [
     {
       "name": "moskills",
       "source": "./",
-      "description": "Explore and spec ideas first, align intent, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, and hand off cleanly.",
-      "version": "0.3.0",
+      "description": "Explore and spec ideas first, align intent, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, hand off cleanly, and track every implementation decision as a reproducible recipe.",
+      "version": "0.4.0",
       "author": {
         "name": "Mouad Belghiti",
         "url": "https://belghitis.com"
@@ -26,6 +26,7 @@
         "skills",
         "agent",
         "best-practices",
+        "reproducibility",
         "spec",
         "preview"
       ],
