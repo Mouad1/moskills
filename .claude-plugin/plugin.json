@@ -1,7 +1,7 @@
 {
   "name": "moskills",
-  "description": "A small, composable skill pack that keeps AI agent work structured: align intent first, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, and hand off cleanly.",
-  "version": "0.2.0",
+  "description": "A small, composable skill pack that keeps AI agent work structured: explore and spec ideas first, align intent, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, and hand off cleanly.",
+  "version": "0.3.0",
   "author": {
     "name": "Mouad Belghiti",
     "url": "https://belghitis.com"
@@ -14,7 +14,9 @@
     "agent",
     "best-practices",
     "tdd",
-    "alignment"
+    "alignment",
+    "spec",
+    "preview"
   ],
   "commands": "./templates/claude/commands",
   "skills": [
