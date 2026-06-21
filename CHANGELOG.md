@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.0
+
+- Added `preview` skill and `/preview` slash command.
+  Turns a vague idea into a written spec before any code is written.
+  Includes a Visual Companion local server (bundled scripts, no external plugin)
+  that auto-starts for frontend projects (Angular, React, Vue) and renders
+  browser-based mockups during the design dialogue.
+  Session resume: if a previous server is alive, it is resumed instead of
+  starting fresh. Spec is saved to `docs/specs/YYYY-MM-DD-<topic>.md` and
+  committed. After user approval the skill hands off to `/align-intent`.
+  Lifecycle updated: New Feature → /preview → /align-intent → /system-map →
+  Coding Phase → /gatekeeper → Done.
+
 ## 0.3.0
 
 - Added `project-dna` skill and `/project-dna` slash command.
