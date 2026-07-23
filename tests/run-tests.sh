@@ -328,7 +328,7 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/.gitignore" 'tasks/'
   assert_contains "$ROOT_DIR/.gitignore" 'docs/superpowers/'
   assert_contains "$ROOT_DIR/CHANGELOG.md" '/shared-language'
-  assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
+  assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/shared-language'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'lite, full, ultra, wenyan'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'search -> timeline -> get_observations'

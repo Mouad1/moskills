@@ -1,0 +1,280 @@
+#!/usr/bin/env sh
+# moskills — portfolio standard manager (init | sync | doctor)
+# Managed files live under .claude/standard, .claude/commands, .claude/skills,
+# .claude/hooks/agent-guard.sh and are OWNED by this tool (never hand-edit).
+# Project-owned files (CLAUDE.md, STATE.md, tasks/) are seeded once, never overwritten.
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+STANDARD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
+MANAGED_DIR="$SCRIPT_DIR/templates/managed"
+LEGACY_DIR="$SCRIPT_DIR/templates/claude"
+PROJECT_TPL="$SCRIPT_DIR/templates/project"
+
+MARKER_BEGIN='<!-- moskills:begin (managed imports - do not edit inside markers) -->'
+MARKER_END='<!-- moskills:end -->'
+
+log()  { printf '%s\n' "$1"; }
+warn() { printf 'WARN: %s\n' "$1"; }
+die()  { printf 'Error: %s\n' "$1" >&2; exit 1; }
+
+usage() {
+  cat <<'USAGE'
+Usage: moskills <command> [options]
+
+Commands:
+  init    [--target <path>]            Install the standard into a project.
+  sync    [--target <path>] [--force]  Upgrade managed files to the latest version.
+  doctor  [--target <path>]            Report drift (read-only, exit 1 on drift).
+  version                              Print the standard version.
+
+Multi-repo:
+  init|sync|doctor --all <root>        Run against every subdirectory of <root>
+                                       that contains .moskills.json (init: skipped).
+
+Options:
+  --force   sync only: overwrite managed files even if hand-edited.
+USAGE
+}
+
+sha() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+  else shasum -a 256 "$1" | awk '{print $1}'; fi
+}
+
+# ---------- managed file inventory (source|dest pairs) ----------
+managed_pairs() {
+  for f in "$MANAGED_DIR"/*.md; do
+    [ -e "$f" ] || continue
+    printf '%s|%s\n' "$f" ".claude/standard/$(basename "$f")"
+  done
+  find "$LEGACY_DIR/commands" -type f | while IFS= read -r f; do
+    printf '%s|%s\n' "$f" ".claude/commands/${f#"$LEGACY_DIR/commands/"}"
+  done
+  find "$LEGACY_DIR/skills" -type f | while IFS= read -r f; do
+    printf '%s|%s\n' "$f" ".claude/skills/${f#"$LEGACY_DIR/skills/"}"
+  done
+  printf '%s|%s\n' "$LEGACY_DIR/hooks/agent-guard.sh" ".claude/hooks/agent-guard.sh"
+}
+
+SUM_FILE='.claude/standard/.manifest.sum'
+
+write_sums() { # $1 = target
+  t=$1
+  : > "$t/$SUM_FILE.tmp"
+  managed_pairs | while IFS='|' read -r src dest; do
+    [ -f "$t/$dest" ] || continue
+    printf '%s  %s\n' "$(sha "$t/$dest")" "$dest" >> "$t/$SUM_FILE.tmp"
+  done
+  mv "$t/$SUM_FILE.tmp" "$t/$SUM_FILE"
+}
+
+write_manifest() { # $1 = target
+  cat > "$1/.moskills.json" <<EOF
+{
+  "standard": "moskills",
+  "version": "$STANDARD_VERSION",
+  "layout": "1",
+  "updated": "$(date +%Y-%m-%d)"
+}
+EOF
+}
+
+manifest_version() { # $1 = target
+  sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$1/.moskills.json" 2>/dev/null | head -1
+}
+
+# ---------- CLAUDE.md marker block ----------
+marker_block() {
+  cat <<EOF
+$MARKER_BEGIN
+@.claude/standard/base.md
+@.claude/standard/session-protocol.md
+$MARKER_END
+EOF
+}
+
+ensure_marker() { # $1 = target
+  cm="$1/CLAUDE.md"
+  [ -f "$cm" ] || return 0
+  if grep -q 'moskills:begin' "$cm"; then
+    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" '
+      index($0,"moskills:begin") { print begin; print "@.claude/standard/base.md"; print "@.claude/standard/session-protocol.md"; inblk=1; next }
+      index($0,"moskills:end")   { print end; inblk=0; next }
+      !inblk { print }
+    ' "$cm" > "$cm.tmp" && mv "$cm.tmp" "$cm"
+  else
+    { printf '\n'; marker_block; } >> "$cm"
+    log "Added managed import block to CLAUDE.md"
+  fi
+}
+
+# ---------- install / seed ----------
+install_managed() { # $1 = target
+  t=$1
+  managed_pairs | while IFS='|' read -r src dest; do
+    mkdir -p "$t/$(dirname "$dest")"
+    cp "$src" "$t/$dest"
+  done
+  chmod +x "$t/.claude/hooks/agent-guard.sh" 2>/dev/null || true
+  write_sums "$t"
+}
+
+seed_one() { # $1 src, $2 dest — copy only if missing
+  if [ -e "$2" ]; then log "Keep existing: ${2#"$TARGET/"}"; else
+    mkdir -p "$(dirname "$2")"; cp "$1" "$2"; log "Seeded: ${2#"$TARGET/"}"
+  fi
+}
+
+seed_project() { # $1 = target
+  t=$1
+  seed_one "$PROJECT_TPL/CLAUDE.md"            "$t/CLAUDE.md"
+  seed_one "$PROJECT_TPL/STATE.md"             "$t/.claude/STATE.md"
+  seed_one "$PROJECT_TPL/settings.local.json"  "$t/.claude/settings.local.json"
+  seed_one "$PROJECT_TPL/tasks/todo.md"        "$t/tasks/todo.md"
+  seed_one "$PROJECT_TPL/tasks/lessons.md"     "$t/tasks/lessons.md"
+}
+
+# ---------- drift check ----------
+# prints: "edited <dest>" / "missing <dest>" lines; returns 0 always
+drift_lines() { # $1 = target
+  t=$1
+  [ -f "$t/$SUM_FILE" ] || return 0
+  while IFS= read -r line; do
+    expected=${line%%  *}
+    dest=${line#*  }
+    if [ ! -f "$t/$dest" ]; then printf 'missing %s\n' "$dest"
+    elif [ "$(sha "$t/$dest")" != "$expected" ]; then printf 'edited %s\n' "$dest"
+    fi
+  done < "$t/$SUM_FILE"
+}
+
+# ---------- commands ----------
+cmd_init() {
+  t=$TARGET
+  [ -d "$t" ] || die "target does not exist: $t"
+  log "Installing moskills standard v$STANDARD_VERSION into $t"
+  install_managed "$t"
+  seed_project "$t"
+  ensure_marker "$t"
+  write_manifest "$t"
+  log "Done. Next: edit CLAUDE.md 'Project constraints' section, then run: moskills doctor --target $t"
+}
+
+cmd_sync() {
+  t=$TARGET
+  [ -f "$t/.moskills.json" ] || die "no .moskills.json in $t — run 'moskills init' first"
+  from=$(manifest_version "$t")
+  log "Sync $t: v$from -> v$STANDARD_VERSION"
+
+  skipped=0
+  drift=$(drift_lines "$t")
+  if [ -n "$drift" ] && [ "$FORCE" -ne 1 ]; then
+    printf '%s\n' "$drift" | while IFS=' ' read -r kind dest; do
+      [ "$kind" = "edited" ] && warn "hand-edited managed file kept (use --force to overwrite): $dest"
+    done
+    skipped=1
+  fi
+
+  # run migrations between majors, if any
+  from_major=${from%%.*}; to_major=${STANDARD_VERSION%%.*}
+  if [ "$from_major" != "$to_major" ] && [ -f "$SCRIPT_DIR/migrations/v$from_major-to-v$to_major.sh" ]; then
+    log "Running migration v$from_major -> v$to_major"
+    sh "$SCRIPT_DIR/migrations/v$from_major-to-v$to_major.sh" "$t"
+  fi
+
+  if [ "$FORCE" -eq 1 ] || [ "$skipped" -eq 0 ]; then
+    install_managed "$t"
+  else
+    # update only non-edited files
+    edited_list=$(printf '%s\n' "$drift" | awk '$1=="edited"{print $2}')
+    managed_pairs | while IFS='|' read -r src dest; do
+      case "$edited_list" in *"$dest"*) continue ;; esac
+      mkdir -p "$t/$(dirname "$dest")"; cp "$src" "$t/$dest"
+    done
+    chmod +x "$t/.claude/hooks/agent-guard.sh" 2>/dev/null || true
+    # keep old sums for edited files so doctor keeps flagging them
+    tmp="$t/$SUM_FILE.new"; : > "$tmp"
+    managed_pairs | while IFS='|' read -r src dest; do
+      [ -f "$t/$dest" ] || continue
+      case "$edited_list" in
+        *"$dest"*) grep "  $dest\$" "$t/$SUM_FILE" >> "$tmp" || true ;;
+        *) printf '%s  %s\n' "$(sha "$t/$dest")" "$dest" >> "$tmp" ;;
+      esac
+    done
+    mv "$tmp" "$t/$SUM_FILE"
+  fi
+
+  ensure_marker "$t"
+  write_manifest "$t"
+  log "Sync complete."
+}
+
+cmd_doctor() {
+  t=$TARGET
+  issues=0
+  name=$(basename "$t")
+  if [ ! -f "$t/.moskills.json" ]; then
+    printf '%-20s NOT INSTALLED (run: moskills init --target %s)\n' "$name" "$t"
+    return 1
+  fi
+  v=$(manifest_version "$t")
+  if [ "$v" != "$STANDARD_VERSION" ]; then
+    printf '%-20s OUTDATED  v%s (latest v%s) -> run moskills sync\n' "$name" "$v" "$STANDARD_VERSION"
+    issues=1
+  fi
+  drift=$(drift_lines "$t")
+  if [ -n "$drift" ]; then
+    printf '%s\n' "$drift" | while IFS=' ' read -r kind dest; do
+      printf '%-20s %s managed file: %s\n' "$name" "$kind" "$dest"
+    done
+    issues=1
+  fi
+  for req in CLAUDE.md .claude/STATE.md tasks/todo.md tasks/lessons.md; do
+    if [ ! -f "$t/$req" ]; then
+      printf '%-20s missing project file: %s\n' "$name" "$req"
+      issues=1
+    fi
+  done
+  if [ -f "$t/CLAUDE.md" ] && ! grep -q 'moskills:begin' "$t/CLAUDE.md"; then
+    printf '%-20s CLAUDE.md missing managed import block\n' "$name"
+    issues=1
+  fi
+  [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
+  return "$issues"
+}
+
+# ---------- arg parsing ----------
+[ "$#" -ge 1 ] || { usage; exit 1; }
+CMD=$1; shift
+TARGET=$(pwd)
+FORCE=0
+ALL_ROOT=''
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --target) [ "$#" -ge 2 ] || die '--target requires a path'; TARGET=$2; shift 2 ;;
+    --all)    [ "$#" -ge 2 ] || die '--all requires a root path'; ALL_ROOT=$2; shift 2 ;;
+    --force)  FORCE=1; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) die "unknown option: $1" ;;
+  esac
+done
+
+run_all() { # $1 = command function
+  rc=0
+  for d in "$ALL_ROOT"/*/; do
+    [ -f "$d/.moskills.json" ] || continue
+    TARGET=${d%/}
+    "$1" || rc=1
+  done
+  return "$rc"
+}
+
+case "$CMD" in
+  version) log "$STANDARD_VERSION" ;;
+  init)    [ -n "$ALL_ROOT" ] && die 'init does not support --all (install per repo deliberately)'; cmd_init ;;
+  sync)    if [ -n "$ALL_ROOT" ]; then run_all cmd_sync; else cmd_sync; fi ;;
+  doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
+  *) usage; exit 1 ;;
+esac
