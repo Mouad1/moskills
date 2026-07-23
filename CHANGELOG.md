@@ -21,6 +21,10 @@
   parking protocol). Compact `STATE.md`/`tasks` seeds.
 - `VERSION` file introduced; semver policy documented in `migrations/README.md`.
 - `setupskill.sh` remains for legacy installs; `moskills init` is now canonical.
+- **Plugin meta-commands** (`commands/`, plugin-only, never copied into repos):
+  `/moskills-init`, `/moskills-sync`, `/moskills-doctor` run the bundled CLI via
+  `${CLAUDE_PLUGIN_ROOT}` — so a plain `/plugin install` delivers the full
+  standard with no cloning: install plugin, then `/moskills-init` in any project.
 
 ## 0.4.0
 

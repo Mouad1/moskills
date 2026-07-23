@@ -19,7 +19,10 @@
     "spec",
     "preview"
   ],
-  "commands": "./templates/claude/commands",
+  "commands": [
+    "./templates/claude/commands",
+    "./commands"
+  ],
   "skills": [
     "./templates/claude/skills/align-intent",
     "./templates/claude/skills/shared-language",
