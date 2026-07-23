@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.0
+
+- **New `moskills` CLI** (`init` / `sync` / `doctor` / `version`) replacing raw
+  template copying with a versioned, upgradeable standard:
+  - Managed layer (`.claude/standard/`, `.claude/commands/`, `.claude/skills/`,
+    `agent-guard.sh`) owned by moskills, tracked via sha256 checksums in
+    `.claude/standard/.manifest.sum`, overwritten on `sync`.
+  - Project layer (root `CLAUDE.md`, `.claude/STATE.md`, `tasks/todo.md`,
+    `tasks/lessons.md`, `settings.local.json`) seeded once, never overwritten.
+  - `.moskills.json` manifest per repo records installed standard version.
+  - Root `CLAUDE.md` links the standard via an `@`-import marker block;
+    existing CLAUDE.md files get the block appended, content untouched.
+  - `doctor` reports drift (outdated version, hand-edited managed files,
+    missing project files); exit 1 on drift. `--all <root>` runs across repos.
+  - `sync` keeps hand-edited managed files (warn) unless `--force`;
+    `migrations/` scripts run automatically across major versions.
+- New managed templates: `base.md` (router + delegation tiers + universal rules
+  promoted from portfolio lessons) and `session-protocol.md` (start/end rituals,
+  parking protocol). Compact `STATE.md`/`tasks` seeds.
+- `VERSION` file introduced; semver policy documented in `migrations/README.md`.
+- `setupskill.sh` remains for legacy installs; `moskills init` is now canonical.
+
 ## 0.4.0
 
 - Added `preview` skill and `/preview` slash command.
