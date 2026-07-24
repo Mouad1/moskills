@@ -6,7 +6,7 @@ moskills is my small skill pack for working with AI agents without letting the w
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
 
-The goal is simple: install one folder into any project, then use clear slash commands when the agent needs structure.
+The goal is simple: install the plugin once, run `/moskills-init` in any project, then use clear slash commands when the agent needs structure.
 
 ## Installed Commands
 
@@ -49,10 +49,13 @@ Typing the slash command, like `/diagnose`, forces that skill to run even if the
 
 ## Install
 
-### Option A: Plugin (recommended, one line, updates centrally)
+moskills installs a versioned **standard** into each project: managed files
+owned by the tool (`.claude/standard/`, commands, skills, guard hook) that
+upgrades rewrite, plus project seeds you own (`CLAUDE.md`, `.claude/STATE.md`,
+`tasks/`) that are created once and never touched again.
 
-Install moskills as a Claude Code plugin. The skills become available in every
-project, and you update them in one place instead of per project.
+The plugin is the only supported distribution channel. The `moskills` CLI ships
+inside the plugin and is driven by its meta-commands — no cloning required.
 
 From inside Claude Code, add the marketplace once, then install:
 
@@ -61,19 +64,46 @@ From inside Claude Code, add the marketplace once, then install:
 /plugin install moskills@moskills
 ```
 
-To update later, pull the latest version centrally:
+This makes all skills and slash commands available globally. Then, inside each
+project that should carry the standard:
 
 ```text
+/moskills-init
+```
+
+This installs the managed layer (`.claude/standard/`, commands, skills, guard
+hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`),
+adds `.claude/settings.local.json` to `.gitignore`, and records the installed
+version in `.moskills.json`.
+
+To also install the Git pre-commit guard (blocks conflict markers and risky
+placeholder phrases in staged files), pass `--with-hooks` to init — the
+`/moskills-init` command offers it, or run the CLI directly:
+
+```text
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
+```
+
+### Updating
+
+```text
+/plugin marketplace update moskills
 /plugin update moskills@moskills
 ```
 
-This installs all skills and their slash commands globally. No files are
-copied into your project.
+Then, inside each project:
 
-### Option B: Copy script (per project, no plugin system)
+```text
+/moskills-sync
+```
 
-Run from this repository after cloning or downloading it, to copy the `.claude/`
-folder into one project:
+`/moskills-doctor` reports drift: outdated version, hand-edited managed files,
+missing project files.
+
+### Legacy: copy script (deprecated)
+
+Deprecated — kept for existing installs only; use the plugin above. Run from a
+clone of this repository to copy the `.claude/` folder into one project:
 
 ```sh
 ./setupskill.sh --target /path/to/project
@@ -91,21 +121,31 @@ Flags:
 
 ## What users get
 
-Users get files inside their own project:
+Files inside their own project after `/moskills-init`:
 
+- `CLAUDE.md` (root): seeded once, yours to edit — imports the standard through a managed marker block.
+- `.claude/standard/`: the managed rules — base router, three-tier delegation model, session protocol. Owned by moskills, rewritten on sync.
 - `.claude/commands/`: slash commands they can call directly.
 - `.claude/skills/`: deeper workflows the agent can load when needed.
 - `.claude/STATE.md`: durable context outside the chat window.
-- `.claude/hooks/agent-guard.sh`: optional staged-file guard.
+- `tasks/`: seeded todo and lessons files, yours to edit.
+- `.moskills.json`: records the installed standard version for `doctor`/`sync`.
+- `.claude/hooks/agent-guard.sh`: staged-file guard script.
 - `.git/hooks/pre-commit`: installed only with `--with-hooks`.
+- `.gitignore` entry keeping `.claude/settings.local.json` out of version control.
 
 ## What I use in this repo
 
 This repo keeps the source of the pack:
 
-- `templates/claude/`: what gets copied into user projects.
-- `setupskill.sh`: the installer.
-- `tests/run-tests.sh`: smoke tests for install behavior and hooks.
+- `moskills`: the CLI (`init` / `sync` / `doctor` / `version`) bundled into the plugin.
+- `templates/managed/`: the managed standard files copied to `.claude/standard/`.
+- `templates/claude/`: commands, skills, hooks, and legacy project template.
+- `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
+- `.claude-plugin/`: plugin and marketplace manifests.
+- `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
+- `tests/run-tests.sh`: smoke tests for install, sync, hooks, and version consistency.
+- `setupskill.sh`: legacy installer, deprecated.
 - `docs/`: usage docs and examples.
 
 ## Lifecycle
@@ -118,7 +158,8 @@ If work must pause, use `/handoff`.
 
 ## Hook Flow
 
-Hooks are optional. They run only if installed with `--with-hooks`.
+Hooks are optional. They run only if init was given `--with-hooks` (works in
+both the plugin CLI and the legacy script).
 
 ## Git Workflow Rule
 
@@ -135,9 +176,17 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
 ## Installed Files
 
 ```text
+CLAUDE.md               # seeded once, imports the standard via marker block
+.moskills.json          # installed standard version
+tasks/                  # seeded todo + lessons files, project-owned
 .claude/
-  CLAUDE.md
   STATE.md
+  settings.local.json   # local settings, git-ignored
+  standard/
+    base.md
+    delegation.md
+    session-protocol.md
+    .manifest.sum       # checksums of managed files, used by doctor
   commands/
     preview.md
     align-intent.md
@@ -193,7 +242,12 @@ The guard checks staged files. It blocks conflict markers and selected risky pla
 
 ## Uninstall
 
-Remove the installed `.claude` directory from the target project. If `--with-hooks` was used, remove `.git/hooks/pre-commit` only if it is the moskills wrapper and not a custom project hook.
+Remove `.claude/` and `.moskills.json` from the target project, and delete the
+moskills marker block (between `<!-- moskills:begin -->` and
+`<!-- moskills:end -->`) from the root `CLAUDE.md` — the rest of that file and
+`tasks/` are yours to keep. If `--with-hooks` was used, remove
+`.git/hooks/pre-commit` only if it is the moskills wrapper and not a custom
+project hook.
 
 ## More Docs
 

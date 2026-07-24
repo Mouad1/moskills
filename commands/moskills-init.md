@@ -9,6 +9,12 @@ Install the moskills standard into the current project by running the CLI bundle
 sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target .
 ```
 
+If the user wants the Git pre-commit guard (blocks conflict markers and risky placeholder phrases in staged files), add `--with-hooks`:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
+```
+
 Then:
 
 1. Show the user the command output (what was installed, what was kept).
