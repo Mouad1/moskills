@@ -23,17 +23,18 @@ usage() {
 Usage: moskills <command> [options]
 
 Commands:
-  init    [--target <path>]            Install the standard into a project.
-  sync    [--target <path>] [--force]  Upgrade managed files to the latest version.
-  doctor  [--target <path>]            Report drift (read-only, exit 1 on drift).
-  version                              Print the standard version.
+  init    [--target <path>] [--with-hooks]  Install the standard into a project.
+  sync    [--target <path>] [--force]       Upgrade managed files to the latest version.
+  doctor  [--target <path>]                 Report drift (read-only, exit 1 on drift).
+  version                                   Print the standard version.
 
 Multi-repo:
   init|sync|doctor --all <root>        Run against every subdirectory of <root>
                                        that contains .moskills.json (init: skipped).
 
 Options:
-  --force   sync only: overwrite managed files even if hand-edited.
+  --force       sync only: overwrite managed files even if hand-edited.
+  --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
 USAGE
 }
 
@@ -85,24 +86,26 @@ manifest_version() { # $1 = target
 }
 
 # ---------- CLAUDE.md marker block ----------
-marker_block() {
-  cat <<EOF
-$MARKER_BEGIN
-@.claude/standard/base.md
-@.claude/standard/session-protocol.md
-$MARKER_END
-EOF
+marker_block() { # imports every managed standard file, so new files need no CLI change
+  printf '%s\n' "$MARKER_BEGIN"
+  for f in "$MANAGED_DIR"/*.md; do
+    [ -e "$f" ] || continue
+    printf '@.claude/standard/%s\n' "$(basename "$f")"
+  done
+  printf '%s\n' "$MARKER_END"
 }
 
 ensure_marker() { # $1 = target
   cm="$1/CLAUDE.md"
   [ -f "$cm" ] || return 0
   if grep -q 'moskills:begin' "$cm"; then
-    awk -v begin="$MARKER_BEGIN" -v end="$MARKER_END" '
-      index($0,"moskills:begin") { print begin; print "@.claude/standard/base.md"; print "@.claude/standard/session-protocol.md"; inblk=1; next }
-      index($0,"moskills:end")   { print end; inblk=0; next }
+    marker_block > "$cm.blk"
+    awk -v blkfile="$cm.blk" '
+      index($0,"moskills:begin") { while ((getline line < blkfile) > 0) print line; inblk=1; next }
+      index($0,"moskills:end")   { inblk=0; next }
       !inblk { print }
     ' "$cm" > "$cm.tmp" && mv "$cm.tmp" "$cm"
+    rm -f "$cm.blk"
   else
     { printf '\n'; marker_block; } >> "$cm"
     log "Added managed import block to CLAUDE.md"
@@ -135,6 +138,43 @@ seed_project() { # $1 = target
   seed_one "$PROJECT_TPL/tasks/lessons.md"     "$t/tasks/lessons.md"
 }
 
+install_git_hook() { # $1 = target — pre-commit wrapper running agent-guard.sh
+  t=$1
+  [ "$WITH_HOOKS" -eq 1 ] || return 0
+  if ! git -C "$t" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    log 'Skip Git hook install: target is not a Git repository'
+    return 0
+  fi
+  hook_path=$(git -C "$t" rev-parse --git-path hooks/pre-commit)
+  case "$hook_path" in
+    /*) hook_dest=$hook_path ;;
+    *)  hook_dest=$t/$hook_path ;;
+  esac
+  if [ -e "$hook_dest" ]; then
+    log "Skip existing Git hook: $hook_dest"
+    return 0
+  fi
+  mkdir -p "$(dirname "$hook_dest")"
+  cp "$LEGACY_DIR/hooks/pre-commit" "$hook_dest"
+  chmod +x "$hook_dest"
+  log "Installed Git pre-commit hook: $hook_dest"
+}
+
+ensure_gitignore() { # $1 = target — keep seeded local settings out of git
+  t=$1
+  entry='.claude/settings.local.json'
+  [ -e "$t/.git" ] || return 0
+  gi="$t/.gitignore"
+  if [ -f "$gi" ]; then
+    grep -qxF "$entry" "$gi" && return 0
+    [ -n "$(tail -c 1 "$gi")" ] && printf '\n' >> "$gi"
+    printf '%s\n' "$entry" >> "$gi"
+  else
+    printf '%s\n' "$entry" > "$gi"
+  fi
+  log "Added $entry to .gitignore"
+}
+
 # ---------- drift check ----------
 # prints: "edited <dest>" / "missing <dest>" lines; returns 0 always
 drift_lines() { # $1 = target
@@ -156,6 +196,8 @@ cmd_init() {
   log "Installing moskills standard v$STANDARD_VERSION into $t"
   install_managed "$t"
   seed_project "$t"
+  ensure_gitignore "$t"
+  install_git_hook "$t"
   ensure_marker "$t"
   write_manifest "$t"
   log "Done. Next: edit CLAUDE.md 'Project constraints' section, then run: moskills doctor --target $t"
@@ -249,6 +291,7 @@ cmd_doctor() {
 CMD=$1; shift
 TARGET=$(pwd)
 FORCE=0
+WITH_HOOKS=0
 ALL_ROOT=''
 
 while [ "$#" -gt 0 ]; do
@@ -256,6 +299,7 @@ while [ "$#" -gt 0 ]; do
     --target) [ "$#" -ge 2 ] || die '--target requires a path'; TARGET=$2; shift 2 ;;
     --all)    [ "$#" -ge 2 ] || die '--all requires a root path'; ALL_ROOT=$2; shift 2 ;;
     --force)  FORCE=1; shift ;;
+    --with-hooks) WITH_HOOKS=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac

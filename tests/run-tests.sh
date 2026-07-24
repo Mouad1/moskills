@@ -82,6 +82,10 @@ run_installer() {
   sh "$ROOT_DIR/setupskill.sh" "$@"
 }
 
+run_moskills() {
+  sh "$ROOT_DIR/moskills" "$@"
+}
+
 test_generic_install_creates_claude_files() {
   project=$(make_project generic-install)
   output_file="$TMP_ROOT/generic-install-output.txt"
@@ -309,6 +313,115 @@ test_hook_install_supports_gitdir_file() {
   pass 'gitdir file hook install is supported'
 }
 
+test_init_installs_delegation_standard() {
+  project=$(make_project delegation-init)
+
+  run_moskills init --target "$project" >/dev/null
+
+  assert_file "$project/.claude/standard/delegation.md"
+  assert_contains "$project/.claude/standard/delegation.md" 'Tier 1 — Fable 5: The Orchestrator'
+  assert_contains "$project/.claude/standard/delegation.md" 'The Findings & Decision Rule (Mandatory)'
+  assert_contains "$project/CLAUDE.md" '@.claude/standard/base.md'
+  assert_contains "$project/CLAUDE.md" '@.claude/standard/delegation.md'
+  assert_contains "$project/CLAUDE.md" '@.claude/standard/session-protocol.md'
+  pass 'init installs delegation standard and imports it'
+}
+
+test_sync_rewrites_marker_block_with_new_imports() {
+  project=$(make_project delegation-sync)
+  run_moskills init --target "$project" >/dev/null
+
+  # simulate a project installed before delegation.md existed
+  awk '!/delegation.md/' "$project/CLAUDE.md" >"$project/CLAUDE.md.tmp"
+  mv "$project/CLAUDE.md.tmp" "$project/CLAUDE.md"
+  assert_not_contains "$project/CLAUDE.md" '@.claude/standard/delegation.md'
+
+  run_moskills sync --target "$project" >/dev/null
+
+  assert_contains "$project/CLAUDE.md" '@.claude/standard/delegation.md'
+  pass 'sync rewrites marker block with new imports'
+}
+
+test_init_adds_settings_local_to_gitignore() {
+  project=$(make_project gitignore-init)
+  git -C "$project" init >/dev/null 2>&1
+
+  run_moskills init --target "$project" >"$TMP_ROOT/gitignore-init-output.txt"
+
+  assert_file "$project/.gitignore"
+  assert_contains "$project/.gitignore" '.claude/settings.local.json'
+
+  run_moskills init --target "$project" >/dev/null
+  count=$(grep -cxF '.claude/settings.local.json' "$project/.gitignore")
+  [ "$count" = "1" ] || fail 'expected single .gitignore entry after re-init'
+  pass 'init adds settings.local.json to .gitignore once'
+}
+
+test_init_preserves_existing_gitignore_content() {
+  project=$(make_project gitignore-existing)
+  git -C "$project" init >/dev/null 2>&1
+  printf '%s' 'node_modules' >"$project/.gitignore"
+
+  run_moskills init --target "$project" >/dev/null
+
+  assert_contains "$project/.gitignore" 'node_modules'
+  grep -qxF '.claude/settings.local.json' "$project/.gitignore" || fail 'expected settings.local.json on its own line'
+  pass 'init preserves existing .gitignore content'
+}
+
+test_init_without_git_repo_skips_gitignore() {
+  project=$(make_project gitignore-nogit)
+
+  run_moskills init --target "$project" >/dev/null
+
+  assert_not_exists "$project/.gitignore"
+  pass 'init without git repo does not create .gitignore'
+}
+
+test_moskills_init_with_hooks_installs_git_hook() {
+  project=$(make_project cli-hooks-flag)
+  git -C "$project" init >/dev/null 2>&1
+
+  run_moskills init --target "$project" --with-hooks >/dev/null
+
+  assert_file "$project/.git/hooks/pre-commit"
+  assert_contains "$project/.git/hooks/pre-commit" 'agent-guard.sh'
+  pass 'moskills init --with-hooks installs git pre-commit hook'
+}
+
+test_moskills_init_without_hooks_flag_skips_git_hook() {
+  project=$(make_project cli-hooks-default)
+  git -C "$project" init >/dev/null 2>&1
+
+  run_moskills init --target "$project" >/dev/null
+
+  assert_not_exists "$project/.git/hooks/pre-commit"
+  pass 'moskills init without --with-hooks leaves git hooks alone'
+}
+
+test_moskills_init_with_hooks_preserves_existing_hook() {
+  project=$(make_project cli-hooks-preserve)
+  output_file="$TMP_ROOT/cli-hooks-preserve-output.txt"
+  git -C "$project" init >/dev/null 2>&1
+  printf '%s\n' '# custom hook' >"$project/.git/hooks/pre-commit"
+
+  run_moskills init --target "$project" --with-hooks >"$output_file"
+
+  assert_contains "$project/.git/hooks/pre-commit" '# custom hook'
+  assert_contains "$output_file" 'Skip existing Git hook:'
+  pass 'moskills init --with-hooks preserves existing hook'
+}
+
+test_version_files_are_consistent() {
+  v=$(cat "$ROOT_DIR/VERSION")
+  plugin_v=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ROOT_DIR/.claude-plugin/plugin.json" | head -1)
+  [ "$plugin_v" = "$v" ] || fail "plugin.json version $plugin_v != VERSION $v"
+  mk_count=$(grep -c "\"version\": \"$v\"" "$ROOT_DIR/.claude-plugin/marketplace.json")
+  [ "$mk_count" = "2" ] || fail "marketplace.json must pin version $v twice (metadata + plugin entry), found $mk_count"
+  assert_contains "$ROOT_DIR/CHANGELOG.md" "## $v"
+  pass 'VERSION, plugin.json, marketplace.json, CHANGELOG are consistent'
+}
+
 test_documentation_exists() {
   assert_file "$ROOT_DIR/README.md"
   assert_file "$ROOT_DIR/.gitignore"
@@ -358,6 +471,15 @@ test_existing_git_hook_is_preserved_without_force
 test_agent_guard_checks_staged_content_not_worktree
 test_agent_guard_allows_markdown_setext_heading
 test_hook_install_supports_gitdir_file
+test_init_installs_delegation_standard
+test_sync_rewrites_marker_block_with_new_imports
+test_init_adds_settings_local_to_gitignore
+test_init_preserves_existing_gitignore_content
+test_init_without_git_repo_skips_gitignore
+test_moskills_init_with_hooks_installs_git_hook
+test_moskills_init_without_hooks_flag_skips_git_hook
+test_moskills_init_with_hooks_preserves_existing_hook
+test_version_files_are_consistent
 test_documentation_exists
 
 printf 'All tests passed: %s\n' "$pass_count"
