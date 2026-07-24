@@ -30,10 +30,7 @@ If the session must stop before done, use `/handoff`.
 
 ## Delegation Tiers
 
-- Orchestrator plans, dispatches, reviews. It does not do mechanical volume work.
-- Heavyweight model for design, architecture, and complex reasoning.
-- Cheaper model for mechanical volume work (renames, extractions, test scaffolds).
-- Findings & decision rule: a subagent that discovers something unexpected STOPS and reports. It never expands scope on its own.
+The full three-tier delegation model (Orchestrator / Reasoner / Executor) is defined in `.claude/standard/delegation.md`. It is mandatory for all non-trivial work.
 
 ## Rules
 
