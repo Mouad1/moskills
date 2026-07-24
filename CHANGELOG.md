@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.6.0
+
+- New managed template `delegation.md`: strict three-tier delegation model
+  (Fable 5 Orchestrator / Opus Reasoner / Sonnet Executor) with the mandatory
+  Findings & Decision rule — subagents stop and report, never improvise; every
+  dispatch prompt must carry the stop-and-report instruction. `base.md`'s
+  Delegation Tiers section now points to it.
+- `CLAUDE.md` marker block is generated dynamically from `templates/managed/*.md`
+  — adding a managed file no longer requires CLI changes; `sync` rewrites the
+  block so existing projects pick up new imports.
+- `moskills init` adds `.claude/settings.local.json` to the project `.gitignore`
+  (created if missing, appended idempotently, skipped outside git repos).
+- `moskills init --with-hooks` installs the Git pre-commit wrapper (previously
+  legacy-script-only); existing hooks are never overwritten.
+- Plugin is now the only supported distribution channel; `setupskill.sh` copy
+  script documented as deprecated/legacy. Version-consistency test guards
+  `VERSION` == `plugin.json` == `marketplace.json` == CHANGELOG entry.
+- README rewritten plugin-first: install/update flows, installed-files layout
+  (`.claude/standard/`, `.moskills.json`, root `CLAUDE.md` marker block),
+  repo map, and uninstall steps now match the v0.5+ managed-layer model.
+
 ## 0.5.0
 
 - **New `moskills` CLI** (`init` / `sync` / `doctor` / `version`) replacing raw
