@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.3
+
+- Multi-agent support: moskills now works in Antigravity, Codex, and other
+  agents that read `SKILL.md` folders and `AGENTS.md`, without Claude Code.
+  - `moskills link [--replace]` links the skills into every detected agent
+    (`~/.gemini/config/skills`, `~/.agents/skills`) and installs the
+    `~/.local/bin/moskills` launcher. Existing real folders are kept unless
+    `--replace`, which backs them up to `~/.moskills-backups/`.
+  - `moskills unlink` removes only the links it created.
+  - `init`/`sync --agents` adds `.agents/skills/` and a managed `AGENTS.md`
+    block to a project; remembered in `.moskills.json`, checked by `doctor`.
+  - `moskills self-update` pulls a standalone install (clean `main` only) and
+    re-links; `moskills schedule-update` runs it daily on macOS.
+- Fix: `sync` no longer aborts silently when a managed file was deleted.
+
 ## 0.6.2
 
 - New `moskills notice` command: prints one line when a project's

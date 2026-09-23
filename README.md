@@ -149,6 +149,45 @@ Flags:
 - `--dry-run`: print planned writes without changing files.
 - `--force`: overwrite existing managed files.
 
+## Other agents (Antigravity, Codex, …)
+
+moskills skills are plain `SKILL.md` folders, so any agent that reads that
+format can use them. No Claude Code needed.
+
+**1. Install once (standalone copy, always on `main`):**
+
+```sh
+git clone https://github.com/Mouad1/moskills ~/.moskills
+sh ~/.moskills/moskills link            # add --replace to swap old copies
+sh ~/.moskills/moskills schedule-update # macOS: pull updates daily
+```
+
+`link` detects each agent and links the skills into its global folder:
+
+| Agent | Global skills folder |
+|---|---|
+| Antigravity | `~/.gemini/config/skills/` |
+| Codex (and `.agents` readers) | `~/.agents/skills/` |
+
+It also adds the `moskills` command to `~/.local/bin`. Links point at
+`~/.moskills`, so every update reaches every agent at once. Folders that are
+not moskills links are never touched; `--replace` backs them up to
+`~/.moskills-backups/` first. `moskills unlink` removes only its own links.
+
+**2. Per project:**
+
+```sh
+moskills init --agents     # or: moskills sync --agents on an existing project
+```
+
+This also writes `.agents/skills/` and a managed block in `AGENTS.md`, which
+Antigravity and Codex read at the start of a session. The block tells the
+agent to run `moskills notice`, so version drift is reported there too.
+
+Keep `~/.moskills` for use and a separate clone for development:
+`self-update` refuses to run on a branch other than `main` or with local
+changes.
+
 ## What users get
 
 Files inside their own project after `/moskills-init`:
