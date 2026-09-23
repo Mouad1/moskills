@@ -1,6 +1,6 @@
 # Command Reference
 
-moskills installs slash commands into `.claude/commands/`. Each command points to a matching skill in `.claude/skills/`.
+moskills installs slash commands into `.claude/commands/`. Each command points to a matching skill in `.claude/skills/`. Agents without slash commands (Antigravity, Codex) pick the same skills from their descriptions; see [Terminal commands](#terminal-commands-moskills-cli) for the `moskills` command itself.
 
 ## /preview
 
@@ -305,3 +305,30 @@ Rules:
 - Never write actual secret values — use `[SECRET: VAR_NAME]` placeholders.
 - Steps must be precise enough for a fresh agent with zero context to follow.
 - One entry per feature or decision boundary.
+
+## Terminal commands (moskills CLI)
+
+Available as `moskills` after the one-line install
+(`curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh`), or inside Claude Code through
+`/moskills-init`, `/moskills-sync` and `/moskills-doctor`.
+
+Machine:
+
+| Command | Purpose |
+|---|---|
+| `moskills setup [--yes]` | Guided first run: link agents, replace old copies, daily updates. Safe to repeat |
+| `moskills status` | Version, install folder, linked agents, command on PATH, daily update |
+| `moskills link [--replace]` | Link the skills into every detected agent; `--replace` backs up old folders first |
+| `moskills unlink` | Remove only the links moskills created |
+| `moskills self-update` | Pull the latest `main` (clean git install only), then re-link |
+| `moskills schedule-update` | macOS: run `self-update` daily at 09:15 |
+| `moskills uninstall [--yes]` | Remove links, daily update and the standalone install |
+
+Project (add `--target <path>`, default is the current folder):
+
+| Command | Purpose |
+|---|---|
+| `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
+| `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
+| `moskills doctor` | Report drift: version, edited or missing managed files |
+| `moskills notice [--hook]` | One line when the project version differs from the installed one |
