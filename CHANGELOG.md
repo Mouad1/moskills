@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.6.4
+
+- One-line install for Antigravity, Codex and other agents, no clone to manage:
+  `curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh`.
+  Uses git when available (enables daily updates), otherwise a download.
+  Re-running it updates in place.
+- `moskills setup [--yes]`: guided first run with up to three yes/no questions
+  (link agents, back up and replace old copies, daily updates). Safe to repeat.
+- `moskills status`: version, install folder, linked agents, command on PATH,
+  daily update and last run.
+- `moskills uninstall [--yes]`: removes links, the daily update and the
+  standalone install; never deletes a development clone.
+- `moskills init` suggests `--agents` when the project has `AGENTS.md` or
+  another agent is installed; `/moskills-init` offers it too.
+- `self-update` ignores untracked files, so the install marker never blocks it.
+- Docs: README "Install" now starts with a route picker (Claude Code plugin vs
+  one-line install); command reference lists every terminal command.
+
 ## 0.6.3
 
 - Multi-agent support: moskills now works in Antigravity, Codex, and other
