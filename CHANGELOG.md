@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.1
+
+- `moskills sync` now also ensures the `.claude/settings.local.json`
+  `.gitignore` entry (previously init-only), so projects installed before
+  0.6.0 pick it up on upgrade. Idempotent; skipped outside git repos.
+
 ## 0.6.0
 
 - New managed template `delegation.md`: strict three-tier delegation model
