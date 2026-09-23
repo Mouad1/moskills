@@ -14,6 +14,18 @@ mark_failure() {
 
 staged_files=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
 
+# moskills-owned files are checked by `moskills doctor` (checksums), and this
+# script lists the blocked phrases itself, so skip them in the phrase check.
+managed_files=''
+if [ -f .claude/standard/.manifest.sum ]; then
+  managed_files=$(sed 's/^[^ ]*  //' .claude/standard/.manifest.sum)
+fi
+
+is_managed() {
+  [ "$1" = .claude/hooks/agent-guard.sh ] && return 0
+  printf '%s\n' "$managed_files" | grep -qxF -- "$1"
+}
+
 if [ -z "$staged_files" ]; then
   say 'agent-guard: no staged files to check'
   exit 0
@@ -24,6 +36,10 @@ while IFS= read -r staged_file; do
 
   if git show ":$staged_file" 2>/dev/null | grep -Eq '^(<<<<<<<|>>>>>>>)'; then
     mark_failure "conflict marker found in $staged_file"
+  fi
+
+  if is_managed "$staged_file"; then
+    continue
   fi
 
   if git show ":$staged_file" 2>/dev/null | grep -F \
