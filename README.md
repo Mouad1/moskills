@@ -86,19 +86,49 @@ sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
 
 ### Updating
 
+Updates are automatic once auto-update is on for the marketplace
+(`/plugin` → **Marketplaces** → moskills → enable auto-update; third-party
+marketplaces start with it off). Claude Code then pulls every new release from
+`main` at session start. A release is picked up only when `version` is bumped
+(the test suite keeps `VERSION`, `plugin.json`, `marketplace.json` and the
+CHANGELOG in step).
+
+To update by hand instead:
+
 ```text
 /plugin marketplace update moskills
 /plugin update moskills@moskills
 ```
 
-Then, inside each project:
+Each project keeps its own standard version in `.moskills.json`. At session
+start the plugin compares it with the installed plugin and, when they differ,
+shows one line:
+
+```text
+moskills standard v0.6.0 is older than the plugin v0.6.2: run /moskills-sync
+```
+
+Then, inside that project:
 
 ```text
 /moskills-sync
 ```
 
 `/moskills-doctor` reports drift: outdated version, hand-edited managed files,
-missing project files.
+missing project files. `moskills notice --target <path>` prints the same
+one-line check from a terminal.
+
+### Developing moskills locally
+
+Keep your normal install on the GitHub marketplace and load a working copy
+for one session only:
+
+```sh
+claude --plugin-dir ~/path/to/moskills
+```
+
+Do not register a working clone as a directory marketplace: Claude Code would
+install whatever branch happens to be checked out.
 
 ### Legacy: copy script (deprecated)
 
