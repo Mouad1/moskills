@@ -729,6 +729,29 @@ test_init_suggests_agents_when_agents_md_exists() {
   pass 'init suggests --agents when AGENTS.md exists'
 }
 
+test_first_commit_after_init_with_hooks_passes() {
+  project=$(make_project first-commit)
+  git -C "$project" init >/dev/null 2>&1
+  git -C "$project" config user.email tests@example.invalid
+  git -C "$project" config user.name Tests
+  run_moskills init --target "$project" --with-hooks --agents >/dev/null
+  git -C "$project" add -A
+  git -C "$project" commit -qm init >"$TMP_ROOT/first-commit.txt" 2>&1 || fail 'first commit after init must pass the guard'
+  pass 'first commit after init --with-hooks passes the guard'
+}
+
+test_guard_still_blocks_placeholders_in_project_files() {
+  project=$(make_project guard-still-blocks)
+  git -C "$project" init >/dev/null 2>&1
+  run_moskills init --target "$project" >/dev/null
+  printf '%s\n' 'TODO: implement later' > "$project/app.txt"
+  git -C "$project" add -A
+  (cd "$project" && sh .claude/hooks/agent-guard.sh) >"$TMP_ROOT/guard-blocks.txt" 2>&1 && fail 'placeholder in a project file must still be blocked'
+  assert_contains "$TMP_ROOT/guard-blocks.txt" 'app.txt'
+  assert_not_contains "$TMP_ROOT/guard-blocks.txt" 'agent-guard.sh'
+  pass 'guard still blocks placeholders in project files'
+}
+
 test_version_files_are_consistent() {
   v=$(cat "$ROOT_DIR/VERSION")
   plugin_v=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ROOT_DIR/.claude-plugin/plugin.json" | head -1)
@@ -828,6 +851,8 @@ test_status_reports_links_and_updates
 test_uninstall_removes_standalone_install
 test_uninstall_keeps_development_clone
 test_init_suggests_agents_when_agents_md_exists
+test_first_commit_after_init_with_hooks_passes
+test_guard_still_blocks_placeholders_in_project_files
 test_version_files_are_consistent
 test_documentation_exists
 

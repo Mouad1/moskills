@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.5
+
+- Fix: the pre-commit guard blocked the first commit after `init --with-hooks`
+  (or after a `sync` that rewrote the hook) because it matched its own list of
+  blocked phrases. The placeholder check now skips moskills-owned files (listed
+  in `.claude/standard/.manifest.sum`, already verified by `doctor`); the
+  conflict-marker check still covers every file.
+
 ## 0.6.4
 
 - One-line install for Antigravity, Codex and other agents, no clone to manage:
