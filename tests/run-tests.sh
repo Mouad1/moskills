@@ -432,6 +432,15 @@ set_project_version() { # $1 = project, $2 = version
   mv "$1/.moskills.json.tmp" "$1/.moskills.json"
 }
 
+test_sync_restores_deleted_managed_file() {
+  project=$(make_project sync-restore)
+  run_moskills init --target "$project" >/dev/null
+  rm "$project/.claude/skills/tdd/SKILL.md"
+  run_moskills sync --target "$project" >/dev/null || fail 'sync must not abort when a managed file is missing'
+  assert_file "$project/.claude/skills/tdd/SKILL.md"
+  pass 'sync restores a deleted managed file'
+}
+
 test_notice_reports_outdated_project() {
   project=$(make_project notice-outdated)
   run_moskills init --target "$project" >/dev/null
@@ -563,6 +572,7 @@ test_sync_adds_missing_gitignore_entry
 test_moskills_init_with_hooks_installs_git_hook
 test_moskills_init_without_hooks_flag_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
+test_sync_restores_deleted_managed_file
 test_notice_reports_outdated_project
 test_notice_reports_plugin_older_than_project
 test_notice_is_silent_when_current

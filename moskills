@@ -216,7 +216,7 @@ cmd_sync() {
   drift=$(drift_lines "$t")
   if [ -n "$drift" ] && [ "$FORCE" -ne 1 ]; then
     printf '%s\n' "$drift" | while IFS=' ' read -r kind dest; do
-      [ "$kind" = "edited" ] && warn "hand-edited managed file kept (use --force to overwrite): $dest"
+      if [ "$kind" = "edited" ]; then warn "hand-edited managed file kept (use --force to overwrite): $dest"; fi
     done
     skipped=1
   fi
