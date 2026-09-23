@@ -247,6 +247,7 @@ cmd_sync() {
     mv "$tmp" "$t/$SUM_FILE"
   fi
 
+  ensure_gitignore "$t"
   ensure_marker "$t"
   write_manifest "$t"
   log "Sync complete."

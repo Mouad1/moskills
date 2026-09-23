@@ -378,6 +378,21 @@ test_init_without_git_repo_skips_gitignore() {
   pass 'init without git repo does not create .gitignore'
 }
 
+test_sync_adds_missing_gitignore_entry() {
+  project=$(make_project gitignore-sync)
+  git -C "$project" init >/dev/null 2>&1
+  run_moskills init --target "$project" >/dev/null
+
+  # simulate a project installed before the entry existed
+  rm "$project/.gitignore"
+
+  run_moskills sync --target "$project" >/dev/null
+
+  assert_file "$project/.gitignore"
+  grep -qxF '.claude/settings.local.json' "$project/.gitignore" || fail 'expected sync to add gitignore entry'
+  pass 'sync adds missing gitignore entry'
+}
+
 test_moskills_init_with_hooks_installs_git_hook() {
   project=$(make_project cli-hooks-flag)
   git -C "$project" init >/dev/null 2>&1
@@ -476,6 +491,7 @@ test_sync_rewrites_marker_block_with_new_imports
 test_init_adds_settings_local_to_gitignore
 test_init_preserves_existing_gitignore_content
 test_init_without_git_repo_skips_gitignore
+test_sync_adds_missing_gitignore_entry
 test_moskills_init_with_hooks_installs_git_hook
 test_moskills_init_without_hooks_flag_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
