@@ -184,6 +184,10 @@ This also writes `.agents/skills/` and a managed block in `AGENTS.md`, which
 Antigravity and Codex read at the start of a session. The block tells the
 agent to run `moskills notice`, so version drift is reported there too.
 
+The project must be the agent's workspace. The Antigravity IDE does this when
+you open the folder; the `agy` CLI does not use the current directory by
+default, so start it with `agy --add-dir .`.
+
 Keep `~/.moskills` for use and a separate clone for development:
 `self-update` refuses to run on a branch other than `main` or with local
 changes.
