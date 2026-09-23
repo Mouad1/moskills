@@ -6,7 +6,7 @@ moskills is my small skill pack for working with AI agents without letting the w
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
 
-The goal is simple: install the plugin once, run `/moskills-init` in any project, then use clear slash commands when the agent needs structure.
+The goal is simple: install once (the Claude Code plugin, or one terminal line for Antigravity, Codex and other agents), set up each project once, then use clear commands when the agent needs structure.
 
 ## Installed Commands
 
@@ -54,9 +54,17 @@ owned by the tool (`.claude/standard/`, commands, skills, guard hook) that
 upgrades rewrite, plus project seeds you own (`CLAUDE.md`, `.claude/STATE.md`,
 `tasks/`) that are created once and never touched again.
 
-The plugin is the only supported distribution channel. The `moskills` CLI ships
-inside the plugin and is driven by its meta-commands — no cloning required.
+Pick your route. Neither needs a manual clone.
 
+| You use | Install |
+|---|---|
+| Claude Code | the plugin, below |
+| Antigravity, Codex, other agents | one terminal line, see [Other agents](#other-agents-antigravity-codex-) |
+| Both | both; they share nothing and do not conflict |
+
+### Claude Code
+
+The `moskills` CLI ships inside the plugin and is driven by its meta-commands.
 From inside Claude Code, add the marketplace once, then install:
 
 ```text
@@ -154,25 +162,41 @@ Flags:
 moskills skills are plain `SKILL.md` folders, so any agent that reads that
 format can use them. No Claude Code needed.
 
-**1. Install once (standalone copy, always on `main`):**
+**1. Install once: paste one line in a terminal.**
 
 ```sh
-git clone https://github.com/Mouad1/moskills ~/.moskills
-sh ~/.moskills/moskills link            # add --replace to swap old copies
-sh ~/.moskills/moskills schedule-update # macOS: pull updates daily
+curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh
 ```
 
-`link` detects each agent and links the skills into its global folder:
+It downloads moskills to `~/.moskills` (with git when available, otherwise a
+plain download), adds the `moskills` command to `~/.local/bin`, then asks up to
+three questions. Enter accepts the default (yes):
+
+1. Link moskills to the agents it found (Antigravity, Codex)?
+2. Back up and replace old copies of moskills skills? (only asked if some exist)
+3. Update moskills automatically every day? (macOS; on Linux it prints a cron line)
+
+Prefer to read the script first:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh -o install.sh
+less install.sh
+sh install.sh
+```
+
+Running the line again is safe: it updates the install and re-checks the links.
+`MOSKILLS_YES=1` accepts every default without asking.
+
+Where the skills go:
 
 | Agent | Global skills folder |
 |---|---|
 | Antigravity | `~/.gemini/config/skills/` |
 | Codex (and `.agents` readers) | `~/.agents/skills/` |
 
-It also adds the `moskills` command to `~/.local/bin`. Links point at
-`~/.moskills`, so every update reaches every agent at once. Folders that are
-not moskills links are never touched; `--replace` backs them up to
-`~/.moskills-backups/` first. `moskills unlink` removes only its own links.
+They are links to `~/.moskills`, so every update reaches every agent at once.
+Folders that are not moskills links are never touched without your yes; old
+copies are backed up to `~/.moskills-backups/` first.
 
 **2. Per project:**
 
@@ -183,14 +207,27 @@ moskills init --agents     # or: moskills sync --agents on an existing project
 This also writes `.agents/skills/` and a managed block in `AGENTS.md`, which
 Antigravity and Codex read at the start of a session. The block tells the
 agent to run `moskills notice`, so version drift is reported there too.
+`moskills init` suggests `--agents` when it sees an `AGENTS.md` or another agent.
 
 The project must be the agent's workspace. The Antigravity IDE does this when
 you open the folder; the `agy` CLI does not use the current directory by
 default, so start it with `agy --add-dir .`.
 
-Keep `~/.moskills` for use and a separate clone for development:
-`self-update` refuses to run on a branch other than `main` or with local
-changes.
+**3. Day to day:**
+
+| Command | Does |
+|---|---|
+| `moskills status` | Version, linked agents, command on PATH, daily update and last run |
+| `moskills setup` | Run the questions again (new agent installed, changed your mind) |
+| `moskills self-update` | Update now instead of waiting for the daily run |
+| `moskills uninstall` | Remove the links, the daily update and `~/.moskills` |
+
+Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
+Automatic updates need the git install.
+
+For development, keep a separate clone and do not point `MOSKILLS_HOME` at
+it: `self-update` refuses to run on a branch other than `main` or with local
+changes, and `uninstall` never deletes a folder it did not install.
 
 ## What users get
 
@@ -315,10 +352,15 @@ tasks/                  # seeded todo + lessons files, project-owned
 
 ## Uninstall
 
-Remove `.claude/` and `.moskills.json` from the target project, and delete the
+From your machine (Antigravity, Codex install): `moskills uninstall`. It
+removes the links, the daily update and `~/.moskills`. Claude Code plugin:
+`/plugin uninstall moskills@moskills`.
+
+From one project: remove `.claude/` and `.moskills.json` from the target project, and delete the
 moskills marker block (between `<!-- moskills:begin -->` and
 `<!-- moskills:end -->`) from the root `CLAUDE.md` — the rest of that file and
-`tasks/` are yours to keep. If `--with-hooks` was used, remove
+`tasks/` are yours to keep. With `--agents`, also remove `.agents/skills/` and
+the marker block in `AGENTS.md`. If `--with-hooks` was used, remove
 `.git/hooks/pre-commit` only if it is the moskills wrapper and not a custom
 project hook.
 

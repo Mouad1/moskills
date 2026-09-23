@@ -635,6 +635,100 @@ test_schedule_update_writes_launch_agent() {
   pass 'schedule-update writes a LaunchAgent'
 }
 
+run_install() { # $1 = fake HOME, $2 = install dir; installs from this working tree without network
+  HOME=$1 MOSKILLS_HOME=$2 MOSKILLS_REPO=$ROOT_DIR MOSKILLS_YES=1 MOSKILLS_NO_LAUNCHCTL=1 sh "$ROOT_DIR/install.sh"
+}
+
+test_install_script_installs_standalone_copy() {
+  h=$(make_home install)
+  dest="$h/.moskills"
+  out="$TMP_ROOT/install.txt"
+  run_install "$h" "$dest" >"$out" 2>&1 || fail 'install.sh must succeed'
+  assert_file "$dest/moskills"
+  assert_file "$dest/VERSION"
+  assert_file "$dest/.moskills-standalone"
+  assert_not_exists "$dest/.git"
+  [ -L "$h/.gemini/config/skills/tdd" ] || fail 'install must run setup and link agents'
+  [ "$(readlink "$h/.gemini/config/skills/tdd")" = "$(cd "$dest" && pwd)/templates/claude/skills/tdd" ] || fail 'links must point at the standalone copy'
+  assert_contains "$out" 'moskills init --agents'
+  pass 'install.sh installs a standalone copy and runs setup'
+}
+
+test_install_script_is_rerunnable() {
+  h=$(make_home reinstall)
+  dest="$h/.moskills"
+  run_install "$h" "$dest" >/dev/null 2>&1
+  run_install "$h" "$dest" >/dev/null 2>&1 || fail 'second install must succeed'
+  assert_file "$dest/moskills"
+  pass 'install.sh can be run again safely'
+}
+
+test_setup_yes_links_backs_up_and_schedules() {
+  h=$(make_home setup)
+  mkdir -p "$h/.gemini/config/skills/tdd"; printf 'old\n' > "$h/.gemini/config/skills/tdd/SKILL.md"
+  out="$TMP_ROOT/setup.txt"
+  HOME=$h MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$out"
+  [ -L "$h/.gemini/config/skills/tdd" ] || fail 'setup --yes must replace old copies'
+  ls "$h"/.moskills-backups/antigravity/tdd-*/SKILL.md >/dev/null 2>&1 || fail 'expected backup'
+  assert_file "$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  assert_contains "$out" 'moskills init --agents'
+  pass 'setup --yes links, backs up and schedules updates'
+}
+
+test_setup_answers_no_changes_nothing() {
+  h=$(make_home setup-no)
+  answers="$TMP_ROOT/answers-no.txt"; printf 'n\nn\nn\n' > "$answers"
+  HOME=$h MOSKILLS_TTY=$answers MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup >/dev/null
+  assert_not_exists "$h/.gemini/config/skills/tdd"
+  assert_not_exists "$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  pass 'setup respects no answers'
+}
+
+test_status_reports_links_and_updates() {
+  h=$(make_home status)
+  HOME=$h run_moskills link >/dev/null
+  out="$TMP_ROOT/status.txt"
+  HOME=$h run_moskills status >"$out" || fail 'status must exit 0'
+  count=$(ls "$ROOT_DIR/templates/claude/skills" | wc -l | tr -d ' ')
+  assert_contains "$out" "antigravity: $count skills linked"
+  assert_contains "$out" 'Daily update: off'
+  assert_contains "$out" "Version: $(cat "$ROOT_DIR/VERSION")"
+  pass 'status reports version, links and updates'
+}
+
+test_uninstall_removes_standalone_install() {
+  h=$(make_home uninstall)
+  dest="$h/.moskills"
+  run_install "$h" "$dest" >/dev/null 2>&1
+  HOME=$h MOSKILLS_NO_LAUNCHCTL=1 sh "$dest/moskills" uninstall --yes >/dev/null || fail 'uninstall must succeed'
+  assert_not_exists "$dest"
+  assert_not_exists "$h/.gemini/config/skills/tdd"
+  assert_not_exists "$h/.local/bin/moskills"
+  assert_not_exists "$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  pass 'uninstall removes a standalone install completely'
+}
+
+test_uninstall_keeps_development_clone() {
+  h=$(make_home uninstall-dev)
+  HOME=$h run_moskills link >/dev/null
+  out="$TMP_ROOT/uninstall-dev.txt"
+  HOME=$h MOSKILLS_NO_LAUNCHCTL=1 run_moskills uninstall --yes >"$out"
+  assert_file "$ROOT_DIR/moskills"
+  assert_not_exists "$h/.gemini/config/skills/tdd"
+  assert_contains "$out" 'kept'
+  pass 'uninstall never deletes a development clone'
+}
+
+test_init_suggests_agents_when_agents_md_exists() {
+  project=$(make_project init-tip)
+  printf '# rules\n' > "$project/AGENTS.md"
+  out="$TMP_ROOT/init-tip.txt"
+  run_moskills init --target "$project" >"$out"
+  assert_contains "$out" 'moskills sync --agents'
+  assert_not_exists "$project/.agents"
+  pass 'init suggests --agents when AGENTS.md exists'
+}
+
 test_version_files_are_consistent() {
   v=$(cat "$ROOT_DIR/VERSION")
   plugin_v=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ROOT_DIR/.claude-plugin/plugin.json" | head -1)
@@ -670,6 +764,9 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'search -> timeline -> get_observations'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/compress-input'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/memorize'
+  assert_contains "$ROOT_DIR/README.md" 'curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh'
+  assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills setup'
+  assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills uninstall'
   assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
   assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |'
   assert_contains "$ROOT_DIR/templates/claude/STATE.md" 'Local working state for the current project.'
@@ -723,6 +820,14 @@ test_sync_maintains_agent_files
 test_doctor_flags_missing_agents_block
 test_self_update_refuses_outside_git_checkout
 test_schedule_update_writes_launch_agent
+test_install_script_installs_standalone_copy
+test_install_script_is_rerunnable
+test_setup_yes_links_backs_up_and_schedules
+test_setup_answers_no_changes_nothing
+test_status_reports_links_and_updates
+test_uninstall_removes_standalone_install
+test_uninstall_keeps_development_clone
+test_init_suggests_agents_when_agents_md_exists
 test_version_files_are_consistent
 test_documentation_exists
 

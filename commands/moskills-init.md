@@ -15,6 +15,12 @@ If the user wants the Git pre-commit guard (blocks conflict markers and risky pl
 sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
 ```
 
+If the project is also used with Antigravity, Codex or another agent that reads `AGENTS.md` (or an `AGENTS.md` already exists), add `--agents` so those agents get `.agents/skills/` and a managed `AGENTS.md` block:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --agents
+```
+
 Then:
 
 1. Show the user the command output (what was installed, what was kept).
