@@ -427,6 +427,74 @@ test_moskills_init_with_hooks_preserves_existing_hook() {
   pass 'moskills init --with-hooks preserves existing hook'
 }
 
+set_project_version() { # $1 = project, $2 = version
+  sed 's/"version": *"[^"]*"/"version": "'"$2"'"/' "$1/.moskills.json" > "$1/.moskills.json.tmp"
+  mv "$1/.moskills.json.tmp" "$1/.moskills.json"
+}
+
+test_notice_reports_outdated_project() {
+  project=$(make_project notice-outdated)
+  run_moskills init --target "$project" >/dev/null
+  set_project_version "$project" 0.0.1
+  output_file="$TMP_ROOT/notice-outdated.txt"
+
+  run_moskills notice --target "$project" >"$output_file" || fail 'notice must exit 0'
+
+  assert_contains "$output_file" '0.0.1'
+  assert_contains "$output_file" 'run /moskills-sync'
+  pass 'notice reports outdated project'
+}
+
+test_notice_reports_plugin_older_than_project() {
+  project=$(make_project notice-newer)
+  run_moskills init --target "$project" >/dev/null
+  set_project_version "$project" 99.0.0
+  output_file="$TMP_ROOT/notice-newer.txt"
+
+  run_moskills notice --target "$project" >"$output_file" || fail 'notice must exit 0'
+
+  assert_contains "$output_file" 'update the moskills plugin'
+  pass 'notice reports plugin older than project'
+}
+
+test_notice_is_silent_when_current() {
+  project=$(make_project notice-current)
+  run_moskills init --target "$project" >/dev/null
+  output=$(run_moskills notice --target "$project") || fail 'notice must exit 0'
+
+  [ -z "$output" ] || fail "expected no output, got: $output"
+  pass 'notice is silent when project is current'
+}
+
+test_notice_is_silent_without_moskills() {
+  project=$(make_project notice-none)
+  output=$(run_moskills notice --target "$project") || fail 'notice must exit 0'
+
+  [ -z "$output" ] || fail "expected no output, got: $output"
+  pass 'notice is silent in projects without moskills'
+}
+
+test_notice_hook_format_is_json() {
+  project=$(make_project notice-hook)
+  run_moskills init --target "$project" >/dev/null
+  set_project_version "$project" 0.0.1
+  output_file="$TMP_ROOT/notice-hook.json"
+
+  run_moskills notice --target "$project" --hook >"$output_file" || fail 'notice must exit 0'
+
+  python3 -c "import json,sys; d=json.load(open(sys.argv[1])); assert 'moskills-sync' in d['systemMessage']; assert d['hookSpecificOutput']['hookEventName']=='SessionStart'" "$output_file" \
+    || fail 'expected SessionStart hook JSON with systemMessage'
+  pass 'notice --hook emits SessionStart JSON'
+}
+
+test_plugin_registers_session_start_notice() {
+  hooks_file="$ROOT_DIR/hooks/hooks.json"
+  assert_file "$hooks_file"
+  assert_contains "$hooks_file" 'SessionStart'
+  assert_contains "$hooks_file" 'notice'
+  pass 'plugin registers SessionStart version notice'
+}
+
 test_version_files_are_consistent() {
   v=$(cat "$ROOT_DIR/VERSION")
   plugin_v=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$ROOT_DIR/.claude-plugin/plugin.json" | head -1)
@@ -495,6 +563,12 @@ test_sync_adds_missing_gitignore_entry
 test_moskills_init_with_hooks_installs_git_hook
 test_moskills_init_without_hooks_flag_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
+test_notice_reports_outdated_project
+test_notice_reports_plugin_older_than_project
+test_notice_is_silent_when_current
+test_notice_is_silent_without_moskills
+test_notice_hook_format_is_json
+test_plugin_registers_session_start_notice
 test_version_files_are_consistent
 test_documentation_exists
 

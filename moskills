@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# moskills — portfolio standard manager (init | sync | doctor)
+# moskills — portfolio standard manager (init | sync | doctor | notice)
 # Managed files live under .claude/standard, .claude/commands, .claude/skills,
 # .claude/hooks/agent-guard.sh and are OWNED by this tool (never hand-edit).
 # Project-owned files (CLAUDE.md, STATE.md, tasks/) are seeded once, never overwritten.
@@ -26,6 +26,8 @@ Commands:
   init    [--target <path>] [--with-hooks]  Install the standard into a project.
   sync    [--target <path>] [--force]       Upgrade managed files to the latest version.
   doctor  [--target <path>]                 Report drift (read-only, exit 1 on drift).
+  notice  [--target <path>] [--hook]        One line if the project version differs
+                                            from the plugin; silent otherwise. Never fails.
   version                                   Print the standard version.
 
 Multi-repo:
@@ -35,6 +37,7 @@ Multi-repo:
 Options:
   --force       sync only: overwrite managed files even if hand-edited.
   --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
+  --hook        notice only: print Claude Code SessionStart hook JSON instead of text.
 USAGE
 }
 
@@ -287,12 +290,43 @@ cmd_doctor() {
   return "$issues"
 }
 
+# ---------- version notice (session start) ----------
+version_lt() { # $1 < $2 for dotted numeric versions
+  awk -v a="$1" -v b="$2" 'BEGIN {
+    na = split(a, x, "."); nb = split(b, y, "."); n = (na > nb) ? na : nb
+    for (i = 1; i <= n; i++) {
+      if ((x[i] + 0) < (y[i] + 0)) exit 0
+      if ((x[i] + 0) > (y[i] + 0)) exit 1
+    }
+    exit 1
+  }'
+}
+
+cmd_notice() {
+  t=$TARGET
+  [ -f "$t/.moskills.json" ] || return 0
+  v=$(manifest_version "$t")
+  [ -n "$v" ] && [ "$v" != "$STANDARD_VERSION" ] || return 0
+  if version_lt "$v" "$STANDARD_VERSION"; then
+    msg="moskills standard v$v is older than the plugin v$STANDARD_VERSION: run /moskills-sync"
+  else
+    msg="moskills standard v$v is newer than the plugin v$STANDARD_VERSION: update the moskills plugin"
+  fi
+  if [ "$HOOK" -eq 1 ]; then
+    printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s. Tell the user before starting work."}}\n' "$msg" "$msg"
+  else
+    log "$msg"
+  fi
+  return 0
+}
+
 # ---------- arg parsing ----------
 [ "$#" -ge 1 ] || { usage; exit 1; }
 CMD=$1; shift
 TARGET=$(pwd)
 FORCE=0
 WITH_HOOKS=0
+HOOK=0
 ALL_ROOT=''
 
 while [ "$#" -gt 0 ]; do
@@ -301,6 +335,7 @@ while [ "$#" -gt 0 ]; do
     --all)    [ "$#" -ge 2 ] || die '--all requires a root path'; ALL_ROOT=$2; shift 2 ;;
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
+    --hook)   HOOK=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
@@ -321,5 +356,6 @@ case "$CMD" in
   init)    [ -n "$ALL_ROOT" ] && die 'init does not support --all (install per repo deliberately)'; cmd_init ;;
   sync)    if [ -n "$ALL_ROOT" ]; then run_all cmd_sync; else cmd_sync; fi ;;
   doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
+  notice)  cmd_notice ;;
   *) usage; exit 1 ;;
 esac
