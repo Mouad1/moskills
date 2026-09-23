@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.6.2
+
+- New `moskills notice` command: prints one line when a project's
+  `.moskills.json` version differs from the plugin (older: run
+  `/moskills-sync`; newer: update the plugin). Silent otherwise, read-only,
+  always exits 0. `--hook` emits Claude Code SessionStart JSON.
+- Plugin now ships `hooks/hooks.json`: at session start, Claude Code shows the
+  notice automatically in any project that carries the standard.
+- README "Updating" documents the automatic flow (GitHub marketplace with
+  auto-update + session-start notice) and local development with
+  `claude --plugin-dir`.
+
 ## 0.6.1
 
 - `moskills sync` now also ensures the `.claude/settings.local.json`
