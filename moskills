@@ -42,6 +42,10 @@ Commands:
   version                                   Print the standard version.
 
 Other agents (Antigravity, Codex):
+  setup   [--yes]        Guided first run: link agents, replace old copies,
+                         turn on daily updates. Safe to run again.
+  status                 Version, linked agents, launcher, daily update.
+  uninstall [--yes]      Remove links, daily update and a standalone install.
   link    [--replace]    Link moskills skills into every detected agent
                          (~/.gemini/config/skills, ~/.agents/skills) and add
                          the launcher ~/.local/bin/moskills.
@@ -60,6 +64,7 @@ Options:
   --agents      init/sync: also install skills in .agents/skills and a managed
                 block in AGENTS.md (read by Antigravity, Codex, and others).
   --replace     link only: back up existing real skill folders, then link.
+  --yes         setup/uninstall: accept every default without asking.
 USAGE
 }
 
@@ -259,6 +264,9 @@ cmd_init() {
   install_git_hook "$t"
   ensure_marker "$t"
   write_manifest "$t"
+  if [ "$AGENTS_ON" -ne 1 ] && { [ -f "$t/AGENTS.md" ] || [ -n "$(agent_targets)" ]; }; then
+    log "Tip: Antigravity, Codex and other agents can use moskills too. Run: moskills sync --agents --target $t"
+  fi
   log "Done. Next: edit CLAUDE.md 'Project constraints' section, then run: moskills doctor --target $t"
 }
 
@@ -419,6 +427,10 @@ cmd_link() {
   else
     log 'No other agents found (looked for ~/.gemini, ~/.agents, ~/.codex).'
   fi
+  install_launcher
+}
+
+install_launcher() {
   launcher="$HOME/.local/bin/moskills"
   if [ -e "$launcher" ] && [ ! -L "$launcher" ]; then
     warn "kept existing file $launcher (not a moskills link)"
@@ -450,7 +462,7 @@ cmd_self_update() {
     || die "not a git checkout: $SCRIPT_DIR (install with: git clone https://github.com/Mouad1/moskills ~/.moskills)"
   branch=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD)
   [ "$branch" = main ] || die "self-update only runs on main (current branch: $branch)"
-  [ -z "$(git -C "$SCRIPT_DIR" status --porcelain)" ] || die "local changes in $SCRIPT_DIR, refusing to update"
+  [ -z "$(git -C "$SCRIPT_DIR" status --porcelain --untracked-files=no)" ] || die "local changes in $SCRIPT_DIR, refusing to update"
   git -C "$SCRIPT_DIR" pull --ff-only --quiet || die 'git pull failed'
   log "moskills v$STANDARD_VERSION -> v$(cat "$SCRIPT_DIR/VERSION")"
   sh "$SCRIPT_DIR/moskills" link
@@ -482,6 +494,122 @@ EOF
   log "Remove with: launchctl unload $plist && rm $plist"
 }
 
+# ---------- guided setup / status / uninstall ----------
+open_input() { # answers come from MOSKILLS_TTY (tests), the terminal, or nowhere
+  NO_TTY=0
+  if [ -n "${MOSKILLS_TTY:-}" ]; then exec 3<"$MOSKILLS_TTY"
+  elif (exec 3</dev/tty) 2>/dev/null; then exec 3</dev/tty
+  else NO_TTY=1
+  fi
+}
+
+ask() { # $1 = question; default yes; returns 0 for yes
+  if [ "$YES" -eq 1 ] || [ "$NO_TTY" -eq 1 ]; then
+    log "$1 [Y/n] yes"
+    return 0
+  fi
+  printf '%s [Y/n] ' "$1"
+  ans=''
+  read -r ans <&3 || ans=''
+  case "$ans" in n|N|no|No|NO) return 1 ;; *) return 0 ;; esac
+}
+
+is_git_install() { git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; }
+
+old_copies() { # counts real folders that block links
+  n=0
+  agents=$(agent_targets)
+  [ -n "$agents" ] || { echo 0; return 0; }
+  for dir in $(printf '%s\n' "$agents" | cut -d'|' -f2); do
+    for sk in "$LEGACY_DIR"/skills/*/; do
+      d="$dir/$(basename "$sk")"
+      if [ -e "$d" ] && [ ! -L "$d" ]; then n=$((n + 1)); fi
+    done
+  done
+  echo "$n"
+}
+
+cmd_setup() {
+  open_input
+  log "moskills v$STANDARD_VERSION setup ($SCRIPT_DIR)"
+  agents=$(agent_targets)
+  if [ -z "$agents" ]; then
+    log 'No other agents found (looked for ~/.gemini, ~/.agents, ~/.codex). Claude Code users: install the plugin, see the README.'
+  else
+    names=$(printf '%s\n' "$agents" | cut -d'|' -f1 | tr '\n' ' ' | sed 's/ $//; s/ /, /g')
+    if ask "Link moskills to: $names?"; then
+      old=$(old_copies)
+      if [ "$old" -gt 0 ] && ask "Found $old old copies of moskills skills. Back them up and replace them?"; then
+        REPLACE=1
+      fi
+      cmd_link
+      linked=1
+    fi
+  fi
+  [ "${linked:-0}" -eq 1 ] || install_launcher
+  if ! is_git_install; then
+    log 'Automatic updates need git. To update, run the install line again.'
+  elif [ "$(uname)" = Darwin ]; then
+    if ask 'Update moskills automatically every day?'; then cmd_schedule_update; fi
+  else
+    log "Automatic updates: add this line to crontab -e: 15 9 * * * sh $SCRIPT_DIR/moskills self-update"
+  fi
+  log ''
+  log 'Next: in a project, run: moskills init --agents'
+  log 'Check anytime: moskills status'
+}
+
+cmd_status() {
+  log "Version: $STANDARD_VERSION"
+  if is_git_install; then
+    log "Installed in: $SCRIPT_DIR (git, branch $(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD))"
+  else
+    log "Installed in: $SCRIPT_DIR"
+  fi
+  for pair in "antigravity|$HOME/.gemini/config/skills" "codex|$HOME/.agents/skills"; do
+    agent=${pair%%|*}; dir=${pair#*|}
+    if [ ! -d "$dir" ]; then log "$agent: not installed"; continue; fi
+    n=0
+    for entry in "$dir"/*; do
+      [ -L "$entry" ] || continue
+      case "$(readlink "$entry")" in "$SCRIPT_DIR"/*) n=$((n + 1)) ;; esac
+    done
+    log "$agent: $n skills linked ($dir)"
+  done
+  if command -v moskills >/dev/null 2>&1; then log "Command: $(command -v moskills)"
+  else log 'Command: moskills is not on PATH (add ~/.local/bin to PATH)'
+  fi
+  plist="$HOME/Library/LaunchAgents/com.moskills.self-update.plist"
+  if [ -f "$plist" ]; then
+    last='never'
+    [ -f /tmp/moskills-self-update.log ] && last=$(date -r /tmp/moskills-self-update.log '+%Y-%m-%d %H:%M')
+    log "Daily update: on (last run: $last)"
+  else
+    log 'Daily update: off'
+  fi
+}
+
+cmd_uninstall() {
+  open_input
+  ask "Remove moskills links, the daily update and $SCRIPT_DIR?" || { log 'Nothing removed.'; return 0; }
+  cmd_unlink
+  plist="$HOME/Library/LaunchAgents/com.moskills.self-update.plist"
+  if [ -f "$plist" ]; then
+    if [ "${MOSKILLS_NO_LAUNCHCTL:-0}" != 1 ] && command -v launchctl >/dev/null 2>&1; then
+      launchctl unload "$plist" 2>/dev/null || true
+    fi
+    rm -f "$plist"
+    log 'Daily update removed.'
+  fi
+  if [ -f "$SCRIPT_DIR/.moskills-standalone" ] && [ "$SCRIPT_DIR" != "$HOME" ] && [ "$SCRIPT_DIR" != / ]; then
+    rm -rf "$SCRIPT_DIR"
+    log "Removed $SCRIPT_DIR"
+  else
+    log "Install folder kept: $SCRIPT_DIR (not a standalone install, delete it yourself if you want)"
+  fi
+  log 'Claude Code plugin, if installed: /plugin uninstall moskills@moskills'
+}
+
 # ---------- arg parsing ----------
 [ "$#" -ge 1 ] || { usage; exit 1; }
 CMD=$1; shift
@@ -492,6 +620,8 @@ HOOK=0
 AGENTS=0
 AGENTS_ON=0
 REPLACE=0
+YES=${MOSKILLS_YES:-0}
+NO_TTY=0
 ALL_ROOT=''
 
 while [ "$#" -gt 0 ]; do
@@ -503,6 +633,7 @@ while [ "$#" -gt 0 ]; do
     --hook)   HOOK=1; shift ;;
     --agents) AGENTS=1; shift ;;
     --replace) REPLACE=1; shift ;;
+    --yes)    YES=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
@@ -525,6 +656,9 @@ case "$CMD" in
   doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
   notice)  cmd_notice ;;
   link)    cmd_link ;;
+  setup)   cmd_setup ;;
+  status)  cmd_status ;;
+  uninstall) cmd_uninstall ;;
   unlink)  cmd_unlink ;;
   self-update)     cmd_self_update ;;
   schedule-update) cmd_schedule_update ;;
