@@ -432,6 +432,15 @@ set_project_version() { # $1 = project, $2 = version
   mv "$1/.moskills.json.tmp" "$1/.moskills.json"
 }
 
+test_sync_restores_deleted_managed_file() {
+  project=$(make_project sync-restore)
+  run_moskills init --target "$project" >/dev/null
+  rm "$project/.claude/skills/tdd/SKILL.md"
+  run_moskills sync --target "$project" >/dev/null || fail 'sync must not abort when a managed file is missing'
+  assert_file "$project/.claude/skills/tdd/SKILL.md"
+  pass 'sync restores a deleted managed file'
+}
+
 test_notice_reports_outdated_project() {
   project=$(make_project notice-outdated)
   run_moskills init --target "$project" >/dev/null
@@ -493,6 +502,137 @@ test_plugin_registers_session_start_notice() {
   assert_contains "$hooks_file" 'SessionStart'
   assert_contains "$hooks_file" 'notice'
   pass 'plugin registers SessionStart version notice'
+}
+
+make_home() { # $1 = name; fake HOME with antigravity + codex dirs
+  h="$TMP_ROOT/home-$1"
+  mkdir -p "$h/.gemini/config/skills" "$h/.agents/skills"
+  printf '%s\n' "$h"
+}
+
+test_link_symlinks_skills_into_detected_agents() {
+  h=$(make_home link)
+  HOME=$h run_moskills link >/dev/null
+  [ -L "$h/.gemini/config/skills/tdd" ] || fail 'expected antigravity tdd symlink'
+  [ -L "$h/.agents/skills/learn" ] || fail 'expected codex learn symlink'
+  [ "$(readlink "$h/.gemini/config/skills/tdd")" = "$ROOT_DIR/templates/claude/skills/tdd" ] || fail 'wrong symlink target'
+  pass 'link symlinks skills into detected agents'
+}
+
+test_link_skips_agents_that_are_not_installed() {
+  h="$TMP_ROOT/home-noagents"; mkdir -p "$h"
+  HOME=$h run_moskills link >/dev/null
+  assert_not_exists "$h/.gemini"
+  assert_not_exists "$h/.agents"
+  pass 'link skips agents that are not installed'
+}
+
+test_link_is_idempotent_and_retargets_stale_links() {
+  h=$(make_home relink)
+  ln -s /nonexistent/old "$h/.gemini/config/skills/tdd"
+  HOME=$h run_moskills link >/dev/null
+  HOME=$h run_moskills link >/dev/null
+  [ "$(readlink "$h/.gemini/config/skills/tdd")" = "$ROOT_DIR/templates/claude/skills/tdd" ] || fail 'expected stale link retargeted'
+  pass 'link is idempotent and retargets stale links'
+}
+
+test_link_keeps_real_folders_without_replace() {
+  h=$(make_home keep)
+  mkdir -p "$h/.gemini/config/skills/tdd"; printf 'old\n' > "$h/.gemini/config/skills/tdd/SKILL.md"
+  out="$TMP_ROOT/link-keep.txt"
+  HOME=$h run_moskills link >"$out"
+  [ ! -L "$h/.gemini/config/skills/tdd" ] || fail 'real folder must not be replaced'
+  assert_contains "$out" 'rerun with --replace'
+  pass 'link keeps real folders without --replace'
+}
+
+test_link_replace_backs_up_real_folders() {
+  h=$(make_home replace)
+  mkdir -p "$h/.gemini/config/skills/tdd"; printf 'old\n' > "$h/.gemini/config/skills/tdd/SKILL.md"
+  HOME=$h run_moskills link --replace >/dev/null
+  [ -L "$h/.gemini/config/skills/tdd" ] || fail 'expected symlink after --replace'
+  ls "$h"/.moskills-backups/antigravity/tdd-*/SKILL.md >/dev/null 2>&1 || fail 'expected backup of old folder'
+  pass 'link --replace backs up real folders'
+}
+
+test_link_installs_working_launcher() {
+  h=$(make_home launcher)
+  HOME=$h run_moskills link >/dev/null
+  [ -L "$h/.local/bin/moskills" ] || fail 'expected launcher symlink'
+  [ "$(sh "$h/.local/bin/moskills" version)" = "$(cat "$ROOT_DIR/VERSION")" ] || fail 'launcher must resolve its install dir'
+  pass 'link installs a working launcher'
+}
+
+test_unlink_removes_only_moskills_links() {
+  h=$(make_home unlink)
+  mkdir -p "$h/.agents/skills/mine"
+  ln -s /somewhere/else "$h/.agents/skills/foreign"
+  HOME=$h run_moskills link >/dev/null
+  HOME=$h run_moskills unlink >/dev/null
+  assert_not_exists "$h/.gemini/config/skills/tdd"
+  assert_not_exists "$h/.local/bin/moskills"
+  [ -d "$h/.agents/skills/mine" ] || fail 'real folder must survive unlink'
+  [ -L "$h/.agents/skills/foreign" ] || fail 'foreign symlink must survive unlink'
+  pass 'unlink removes only moskills links'
+}
+
+test_init_agents_installs_project_skills_and_agents_md() {
+  project=$(make_project init-agents)
+  printf '# My rules\n' > "$project/AGENTS.md"
+  run_moskills init --target "$project" --agents >/dev/null
+  assert_file "$project/.agents/skills/tdd/SKILL.md"
+  assert_contains "$project/AGENTS.md" '# My rules'
+  assert_contains "$project/AGENTS.md" 'moskills:begin'
+  assert_contains "$project/AGENTS.md" '.claude/standard/base.md'
+  assert_contains "$project/.moskills.json" '"agents": true'
+  pass 'init --agents installs project skills and AGENTS.md block'
+}
+
+test_init_without_agents_skips_agent_files() {
+  project=$(make_project init-noagents)
+  run_moskills init --target "$project" >/dev/null
+  assert_not_exists "$project/.agents"
+  assert_not_exists "$project/AGENTS.md"
+  pass 'init without --agents skips agent files'
+}
+
+test_sync_maintains_agent_files() {
+  project=$(make_project sync-agents)
+  run_moskills init --target "$project" --agents >/dev/null
+  rm -rf "$project/.agents/skills/tdd"
+  run_moskills sync --target "$project" >/dev/null
+  assert_file "$project/.agents/skills/tdd/SKILL.md"
+  assert_contains "$project/.moskills.json" '"agents": true'
+  pass 'sync maintains agent files'
+}
+
+test_doctor_flags_missing_agents_block() {
+  project=$(make_project doctor-agents)
+  run_moskills init --target "$project" --agents >/dev/null
+  printf '# wiped\n' > "$project/AGENTS.md"
+  out="$TMP_ROOT/doctor-agents.txt"
+  run_moskills doctor --target "$project" >"$out" && fail 'doctor must fail when AGENTS.md block is missing'
+  assert_contains "$out" 'AGENTS.md missing managed block'
+  pass 'doctor flags missing AGENTS.md block'
+}
+
+test_self_update_refuses_outside_git_checkout() {
+  copy="$TMP_ROOT/nogit-install"; mkdir -p "$copy"
+  cp -R "$ROOT_DIR/moskills" "$ROOT_DIR/VERSION" "$ROOT_DIR/templates" "$copy/"
+  out="$TMP_ROOT/self-update.txt"
+  sh "$copy/moskills" self-update >"$out" 2>&1 && fail 'self-update must fail outside a git checkout'
+  assert_contains "$out" 'not a git checkout'
+  pass 'self-update refuses outside a git checkout'
+}
+
+test_schedule_update_writes_launch_agent() {
+  h=$(make_home schedule)
+  HOME=$h MOSKILLS_NO_LAUNCHCTL=1 run_moskills schedule-update >/dev/null
+  plist="$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  assert_file "$plist"
+  assert_contains "$plist" 'self-update'
+  assert_contains "$plist" "$ROOT_DIR/moskills"
+  pass 'schedule-update writes a LaunchAgent'
 }
 
 test_version_files_are_consistent() {
@@ -563,12 +703,26 @@ test_sync_adds_missing_gitignore_entry
 test_moskills_init_with_hooks_installs_git_hook
 test_moskills_init_without_hooks_flag_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
+test_sync_restores_deleted_managed_file
 test_notice_reports_outdated_project
 test_notice_reports_plugin_older_than_project
 test_notice_is_silent_when_current
 test_notice_is_silent_without_moskills
 test_notice_hook_format_is_json
 test_plugin_registers_session_start_notice
+test_link_symlinks_skills_into_detected_agents
+test_link_skips_agents_that_are_not_installed
+test_link_is_idempotent_and_retargets_stale_links
+test_link_keeps_real_folders_without_replace
+test_link_replace_backs_up_real_folders
+test_link_installs_working_launcher
+test_unlink_removes_only_moskills_links
+test_init_agents_installs_project_skills_and_agents_md
+test_init_without_agents_skips_agent_files
+test_sync_maintains_agent_files
+test_doctor_flags_missing_agents_block
+test_self_update_refuses_outside_git_checkout
+test_schedule_update_writes_launch_agent
 test_version_files_are_consistent
 test_documentation_exists
 

@@ -5,7 +5,16 @@
 # Project-owned files (CLAUDE.md, STATE.md, tasks/) are seeded once, never overwritten.
 set -eu
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# resolve symlinks so a launcher in ~/.local/bin finds the real install
+self=$0
+while [ -L "$self" ]; do
+  link_target=$(readlink "$self")
+  case "$link_target" in
+    /*) self=$link_target ;;
+    *)  self=$(dirname "$self")/$link_target ;;
+  esac
+done
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$self")" && pwd)
 STANDARD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
 MANAGED_DIR="$SCRIPT_DIR/templates/managed"
 LEGACY_DIR="$SCRIPT_DIR/templates/claude"
@@ -23,12 +32,22 @@ usage() {
 Usage: moskills <command> [options]
 
 Commands:
-  init    [--target <path>] [--with-hooks]  Install the standard into a project.
-  sync    [--target <path>] [--force]       Upgrade managed files to the latest version.
+  init    [--target <path>] [--with-hooks] [--agents]
+                                            Install the standard into a project.
+  sync    [--target <path>] [--force] [--agents]
+                                            Upgrade managed files to the latest version.
   doctor  [--target <path>]                 Report drift (read-only, exit 1 on drift).
   notice  [--target <path>] [--hook]        One line if the project version differs
                                             from the plugin; silent otherwise. Never fails.
   version                                   Print the standard version.
+
+Other agents (Antigravity, Codex):
+  link    [--replace]    Link moskills skills into every detected agent
+                         (~/.gemini/config/skills, ~/.agents/skills) and add
+                         the launcher ~/.local/bin/moskills.
+  unlink                 Remove only the links created by link.
+  self-update            git pull this install (clean main only), then link.
+  schedule-update        macOS: run self-update daily via a LaunchAgent.
 
 Multi-repo:
   init|sync|doctor --all <root>        Run against every subdirectory of <root>
@@ -38,6 +57,9 @@ Options:
   --force       sync only: overwrite managed files even if hand-edited.
   --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
   --hook        notice only: print Claude Code SessionStart hook JSON instead of text.
+  --agents      init/sync: also install skills in .agents/skills and a managed
+                block in AGENTS.md (read by Antigravity, Codex, and others).
+  --replace     link only: back up existing real skill folders, then link.
 USAGE
 }
 
@@ -59,6 +81,11 @@ managed_pairs() {
     printf '%s|%s\n' "$f" ".claude/skills/${f#"$LEGACY_DIR/skills/"}"
   done
   printf '%s|%s\n' "$LEGACY_DIR/hooks/agent-guard.sh" ".claude/hooks/agent-guard.sh"
+  if [ "$AGENTS_ON" -eq 1 ]; then
+    find "$LEGACY_DIR/skills" -type f | while IFS= read -r f; do
+      printf '%s|%s\n' "$f" ".agents/skills/${f#"$LEGACY_DIR/skills/"}"
+    done
+  fi
 }
 
 SUM_FILE='.claude/standard/.manifest.sum'
@@ -79,6 +106,7 @@ write_manifest() { # $1 = target
   "standard": "moskills",
   "version": "$STANDARD_VERSION",
   "layout": "1",
+  "agents": $(if [ "$AGENTS_ON" -eq 1 ]; then echo true; else echo false; fi),
   "updated": "$(date +%Y-%m-%d)"
 }
 EOF
@@ -86,6 +114,10 @@ EOF
 
 manifest_version() { # $1 = target
   sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$1/.moskills.json" 2>/dev/null | head -1
+}
+
+manifest_agents() { # $1 = target — prints 1 when the project opted into other agents
+  if grep -q '"agents": *true' "$1/.moskills.json" 2>/dev/null; then echo 1; else echo 0; fi
 }
 
 # ---------- CLAUDE.md marker block ----------
@@ -98,11 +130,34 @@ marker_block() { # imports every managed standard file, so new files need no CLI
   printf '%s\n' "$MARKER_END"
 }
 
+agents_block() { # AGENTS.md has no @imports, so name the files to read
+  printf '%s\n' "$MARKER_BEGIN"
+  printf 'This project follows the moskills standard. Before any task, read:\n'
+  for f in "$MANAGED_DIR"/*.md; do
+    [ -e "$f" ] || continue
+    printf -- '- .claude/standard/%s\n' "$(basename "$f")"
+  done
+  printf 'Project skills live in .agents/skills/.\n'
+  printf 'At session start, if the moskills command is available, run `moskills notice` and tell the user any line it prints.\n'
+  printf '%s\n' "$MARKER_END"
+}
+
 ensure_marker() { # $1 = target
-  cm="$1/CLAUDE.md"
-  [ -f "$cm" ] || return 0
+  ensure_block "$1/CLAUDE.md" marker_block 0
+  [ "$AGENTS_ON" -eq 1 ] && ensure_block "$1/AGENTS.md" agents_block 1
+  return 0
+}
+
+ensure_block() { # $1 = file, $2 = block function, $3 = 1 to create the file when missing
+  cm=$1
+  if [ ! -f "$cm" ]; then
+    [ "$3" -eq 1 ] || return 0
+    "$2" > "$cm"
+    log "Created $(basename "$cm") with managed block"
+    return 0
+  fi
   if grep -q 'moskills:begin' "$cm"; then
-    marker_block > "$cm.blk"
+    "$2" > "$cm.blk"
     awk -v blkfile="$cm.blk" '
       index($0,"moskills:begin") { while ((getline line < blkfile) > 0) print line; inblk=1; next }
       index($0,"moskills:end")   { inblk=0; next }
@@ -110,8 +165,8 @@ ensure_marker() { # $1 = target
     ' "$cm" > "$cm.tmp" && mv "$cm.tmp" "$cm"
     rm -f "$cm.blk"
   else
-    { printf '\n'; marker_block; } >> "$cm"
-    log "Added managed import block to CLAUDE.md"
+    { printf '\n'; "$2"; } >> "$cm"
+    log "Added managed block to $(basename "$cm")"
   fi
 }
 
@@ -195,6 +250,7 @@ drift_lines() { # $1 = target
 # ---------- commands ----------
 cmd_init() {
   t=$TARGET
+  AGENTS_ON=$AGENTS
   [ -d "$t" ] || die "target does not exist: $t"
   log "Installing moskills standard v$STANDARD_VERSION into $t"
   install_managed "$t"
@@ -210,13 +266,15 @@ cmd_sync() {
   t=$TARGET
   [ -f "$t/.moskills.json" ] || die "no .moskills.json in $t — run 'moskills init' first"
   from=$(manifest_version "$t")
+  AGENTS_ON=$AGENTS
+  [ "$(manifest_agents "$t")" -eq 1 ] && AGENTS_ON=1
   log "Sync $t: v$from -> v$STANDARD_VERSION"
 
   skipped=0
   drift=$(drift_lines "$t")
   if [ -n "$drift" ] && [ "$FORCE" -ne 1 ]; then
     printf '%s\n' "$drift" | while IFS=' ' read -r kind dest; do
-      [ "$kind" = "edited" ] && warn "hand-edited managed file kept (use --force to overwrite): $dest"
+      if [ "$kind" = "edited" ]; then warn "hand-edited managed file kept (use --force to overwrite): $dest"; fi
     done
     skipped=1
   fi
@@ -286,6 +344,10 @@ cmd_doctor() {
     printf '%-20s CLAUDE.md missing managed import block\n' "$name"
     issues=1
   fi
+  if [ "$(manifest_agents "$t")" -eq 1 ] && ! grep -q 'moskills:begin' "$t/AGENTS.md" 2>/dev/null; then
+    printf '%-20s AGENTS.md missing managed block (run moskills sync)\n' "$name"
+    issues=1
+  fi
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
   return "$issues"
 }
@@ -320,6 +382,106 @@ cmd_notice() {
   return 0
 }
 
+# ---------- other agents (global links) ----------
+agent_targets() { # prints "agent|skills dir" for each detected agent
+  if [ -d "$HOME/.gemini" ]; then printf 'antigravity|%s\n' "$HOME/.gemini/config/skills"; fi
+  if [ -d "$HOME/.agents" ] || [ -d "$HOME/.codex" ]; then printf 'codex|%s\n' "$HOME/.agents/skills"; fi
+}
+
+link_path() { # $1 = source, $2 = link path, $3 = agent (for backups)
+  if [ -L "$2" ]; then
+    rm "$2"
+  elif [ -e "$2" ]; then
+    if [ "$REPLACE" -ne 1 ]; then
+      warn "kept existing folder $2 (rerun with --replace to back it up and link)"
+      return 0
+    fi
+    bk="$HOME/.moskills-backups/$3/$(basename "$2")-$(date +%Y%m%d%H%M%S)"
+    mkdir -p "$(dirname "$bk")"
+    mv "$2" "$bk"
+    log "Backed up $2 -> $bk"
+  fi
+  ln -s "$1" "$2"
+}
+
+cmd_link() {
+  found=0
+  agents=$(agent_targets)
+  if [ -n "$agents" ]; then
+    printf '%s\n' "$agents" | while IFS='|' read -r agent dir; do
+      mkdir -p "$dir"
+      for sk in "$LEGACY_DIR"/skills/*/; do
+        sk=${sk%/}
+        link_path "$sk" "$dir/$(basename "$sk")" "$agent"
+      done
+      log "Linked moskills skills for $agent: $dir"
+    done
+  else
+    log 'No other agents found (looked for ~/.gemini, ~/.agents, ~/.codex).'
+  fi
+  launcher="$HOME/.local/bin/moskills"
+  if [ -e "$launcher" ] && [ ! -L "$launcher" ]; then
+    warn "kept existing file $launcher (not a moskills link)"
+  else
+    mkdir -p "$(dirname "$launcher")"
+    rm -f "$launcher"
+    ln -s "$SCRIPT_DIR/moskills" "$launcher"
+    log "Launcher: $launcher (make sure ~/.local/bin is on PATH)"
+  fi
+}
+
+cmd_unlink() {
+  for dir in "$HOME/.gemini/config/skills" "$HOME/.agents/skills"; do
+    [ -d "$dir" ] || continue
+    for entry in "$dir"/*; do
+      [ -L "$entry" ] || continue
+      case "$(readlink "$entry")" in "$SCRIPT_DIR"/*) rm "$entry" ;; esac
+    done
+  done
+  launcher="$HOME/.local/bin/moskills"
+  if [ -L "$launcher" ]; then
+    case "$(readlink "$launcher")" in "$SCRIPT_DIR"/*) rm "$launcher" ;; esac
+  fi
+  log 'Removed moskills links.'
+}
+
+cmd_self_update() {
+  git -C "$SCRIPT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+    || die "not a git checkout: $SCRIPT_DIR (install with: git clone https://github.com/Mouad1/moskills ~/.moskills)"
+  branch=$(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD)
+  [ "$branch" = main ] || die "self-update only runs on main (current branch: $branch)"
+  [ -z "$(git -C "$SCRIPT_DIR" status --porcelain)" ] || die "local changes in $SCRIPT_DIR, refusing to update"
+  git -C "$SCRIPT_DIR" pull --ff-only --quiet || die 'git pull failed'
+  log "moskills v$STANDARD_VERSION -> v$(cat "$SCRIPT_DIR/VERSION")"
+  sh "$SCRIPT_DIR/moskills" link
+}
+
+cmd_schedule_update() {
+  plist="$HOME/Library/LaunchAgents/com.moskills.self-update.plist"
+  mkdir -p "$(dirname "$plist")"
+  cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.moskills.self-update</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/sh</string><string>$SCRIPT_DIR/moskills</string><string>self-update</string></array>
+  <key>StartCalendarInterval</key><dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
+  <key>RunAtLoad</key><true/>
+  <key>StandardOutPath</key><string>/tmp/moskills-self-update.log</string>
+  <key>StandardErrorPath</key><string>/tmp/moskills-self-update.log</string>
+</dict>
+</plist>
+EOF
+  if [ "${MOSKILLS_NO_LAUNCHCTL:-0}" != 1 ] && command -v launchctl >/dev/null 2>&1; then
+    launchctl unload "$plist" 2>/dev/null || true
+    launchctl load "$plist"
+  fi
+  log "Daily self-update scheduled: $plist (log: /tmp/moskills-self-update.log)"
+  log "Remove with: launchctl unload $plist && rm $plist"
+}
+
 # ---------- arg parsing ----------
 [ "$#" -ge 1 ] || { usage; exit 1; }
 CMD=$1; shift
@@ -327,6 +489,9 @@ TARGET=$(pwd)
 FORCE=0
 WITH_HOOKS=0
 HOOK=0
+AGENTS=0
+AGENTS_ON=0
+REPLACE=0
 ALL_ROOT=''
 
 while [ "$#" -gt 0 ]; do
@@ -336,6 +501,8 @@ while [ "$#" -gt 0 ]; do
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
     --hook)   HOOK=1; shift ;;
+    --agents) AGENTS=1; shift ;;
+    --replace) REPLACE=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
@@ -357,5 +524,9 @@ case "$CMD" in
   sync)    if [ -n "$ALL_ROOT" ]; then run_all cmd_sync; else cmd_sync; fi ;;
   doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
   notice)  cmd_notice ;;
+  link)    cmd_link ;;
+  unlink)  cmd_unlink ;;
+  self-update)     cmd_self_update ;;
+  schedule-update) cmd_schedule_update ;;
   *) usage; exit 1 ;;
 esac
