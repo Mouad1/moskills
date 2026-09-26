@@ -9,6 +9,10 @@ pass_count=0
 # never touch a real Claude Code install: tests that need it point this at a stub
 MOSKILLS_CLAUDE=/nonexistent/claude
 export MOSKILLS_CLAUDE
+# never look for new releases online, except in the tests that point it at a local file
+MOSKILLS_NO_UPDATE_CHECK=1
+export MOSKILLS_NO_UPDATE_CHECK
+unset CLAUDE_CONFIG_DIR MOSKILLS_LATEST_URL MOSKILLS_CACHE_DIR
 # evolvebooks resolve their home from HOME and XDG_CONFIG_HOME only
 unset EVOLVEBOOKS_HOME XDG_CONFIG_HOME
 
@@ -1188,6 +1192,107 @@ test_diagrams_folder_is_complete_and_in_sync() {
   pass 'docs/diagrams holds every diagram as source, SVG and PNG, in sync with the docs'
 }
 
+# ---------- plugin updates ----------
+notice_latest() { # $1 = name, $2 = latest version on "GitHub"; rest = notice args
+  n=$1; lv=$2; shift 2
+  printf '%s\n' "$lv" > "$TMP_ROOT/latest-$n"
+  MOSKILLS_NO_UPDATE_CHECK=0 MOSKILLS_LATEST_URL="file://$TMP_ROOT/latest-$n" \
+    MOSKILLS_CACHE_DIR="$TMP_ROOT/cache-$n" run_moskills notice "$@"
+}
+
+test_notice_reports_newer_release() {
+  project=$(make_project notice-latest)
+  out="$TMP_ROOT/notice-latest.txt"
+  notice_latest newer 99.0.0 --target "$project" --hook >"$out"
+  assert_contains "$out" 'moskills v99.0.0 is available'
+  assert_contains "$out" '/plugin update moskills@moskills'
+  assert_contains "$out" '"hookEventName": "SessionStart"'
+  notice_latest plain 99.0.0 --target "$project" >"$out"
+  assert_contains "$out" 'run moskills self-update'
+  notice_latest same "$(cat "$ROOT_DIR/VERSION")" --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'notice must be silent when the plugin is the latest release'
+  notice_latest older 0.0.1 --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'notice must be silent when GitHub is behind the plugin'
+  pass 'notice reports a newer moskills release, in and outside a project'
+}
+
+test_notice_caches_latest_and_survives_offline() {
+  project=$(make_project notice-cache)
+  out="$TMP_ROOT/notice-cache.txt"
+  notice_latest cache 99.0.0 --target "$project" >/dev/null
+  rm -f "$TMP_ROOT/latest-cache"
+  MOSKILLS_NO_UPDATE_CHECK=0 MOSKILLS_LATEST_URL="file://$TMP_ROOT/latest-cache" \
+    MOSKILLS_CACHE_DIR="$TMP_ROOT/cache-cache" run_moskills notice --target "$project" >"$out"
+  assert_contains "$out" 'v99.0.0 is available'
+  MOSKILLS_NO_UPDATE_CHECK=0 MOSKILLS_LATEST_URL="file://$TMP_ROOT/missing" \
+    MOSKILLS_CACHE_DIR="$TMP_ROOT/cache-offline" run_moskills notice --target "$project" >"$out" || fail 'notice must never fail'
+  [ ! -s "$out" ] || fail 'notice must be silent when the release check fails'
+  assert_file "$TMP_ROOT/cache-offline/latest-version"
+  printf '99.0.0\n' > "$TMP_ROOT/latest-off"
+  MOSKILLS_LATEST_URL="file://$TMP_ROOT/latest-off" MOSKILLS_CACHE_DIR="$TMP_ROOT/cache-off" \
+    run_moskills notice --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'MOSKILLS_NO_UPDATE_CHECK=1 must skip the release check'
+  pass 'notice caches the latest release daily, stays silent offline, can be turned off'
+}
+
+test_plugin_autoupdate_edits_claude_settings_safely() {
+  h="$TMP_ROOT/home-autoupdate"; mkdir -p "$h/.claude"
+  printf '{\n  "model": "opus",\n  "extraKnownMarketplaces": { "moskills": { "source": { "source": "directory", "path": "/dev/moskills" } } }\n}\n' > "$h/.claude/settings.json"
+  out="$TMP_ROOT/autoupdate.txt"
+  HOME=$h run_moskills plugin-autoupdate --check >"$out"; assert_contains "$out" ': off'
+  HOME=$h run_moskills plugin-autoupdate >"$out" || fail 'plugin-autoupdate must succeed'
+  python3 - "$h/.claude/settings.json" <<'PY' || fail 'settings must keep other keys and the existing source, with autoUpdate true'
+import json, sys
+d = json.load(open(sys.argv[1]))
+m = d["extraKnownMarketplaces"]["moskills"]
+assert d["model"] == "opus" and m["autoUpdate"] is True and m["source"]["source"] == "directory"
+PY
+  HOME=$h run_moskills plugin-autoupdate --check >"$out"; assert_contains "$out" ': on'
+  h2="$TMP_ROOT/home-autoupdate-new"; mkdir -p "$h2"
+  HOME=$h2 run_moskills plugin-autoupdate >/dev/null
+  assert_contains "$h2/.claude/settings.json" '"repo": "Mouad1/moskills"'
+  h3="$TMP_ROOT/home-autoupdate-bad"; mkdir -p "$h3/.claude"; printf '{ broken' > "$h3/.claude/settings.json"
+  HOME=$h3 run_moskills plugin-autoupdate >"$out" 2>&1 && fail 'invalid settings must not be rewritten'
+  [ "$(cat "$h3/.claude/settings.json")" = '{ broken' ] || fail 'invalid settings file was modified'
+  assert_contains "$out" '/plugin -> Marketplaces'
+  h4="$TMP_ROOT/home-autoupdate-ui"; mkdir -p "$h4/.claude/plugins"
+  printf '{ "moskills": { "autoUpdate": true } }\n' > "$h4/.claude/plugins/known_marketplaces.json"
+  HOME=$h4 run_moskills plugin-autoupdate --check >"$out"; assert_contains "$out" ': on'
+  pass 'plugin-autoupdate turns on Claude Code auto-update without breaking settings'
+}
+
+test_claude_settings_node_fallback_matches() {
+  command -v node >/dev/null 2>&1 || { pass 'claude-settings node fallback (skipped: no node)'; return 0; }
+  d="$TMP_ROOT/node-settings"; mkdir -p "$d"
+  printf '{ "theme": "dark" }\n' > "$d/settings.json"
+  node "$ROOT_DIR/lib/claude-settings.js" check "$d/settings.json" "$d/none.json" && fail 'node check must report off'
+  node "$ROOT_DIR/lib/claude-settings.js" enable "$d/settings.json" "$d/none.json" || fail 'node enable must succeed'
+  node "$ROOT_DIR/lib/claude-settings.js" check "$d/settings.json" "$d/none.json" || fail 'node check must report on'
+  assert_contains "$d/settings.json" '"theme": "dark"'
+  printf 'nope' > "$d/bad.json"
+  rc=0; node "$ROOT_DIR/lib/claude-settings.js" enable "$d/bad.json" "$d/none.json" || rc=$?
+  [ "$rc" -eq 3 ] || fail "node must exit 3 on invalid JSON, got $rc"
+  pass 'claude-settings node fallback behaves like the python one'
+}
+
+test_setup_turns_on_plugin_autoupdate() {
+  h=$(make_home setup-autoupdate)
+  stub="$TMP_ROOT/claude-installed"
+  printf '#!/bin/sh\necho "moskills@moskills"\n' > "$stub"; chmod +x "$stub"
+  out="$TMP_ROOT/setup-autoupdate.txt"
+  HOME=$h MOSKILLS_CLAUDE=$stub MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$out"
+  assert_contains "$h/.claude/settings.json" '"autoUpdate": true'
+  HOME=$h MOSKILLS_CLAUDE=$stub MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$out"
+  assert_contains "$out" 'automatic moskills updates are on'
+  pass 'setup turns on Claude Code auto-update for moskills'
+}
+
+test_plugin_commands_offer_autoupdate() {
+  assert_contains "$ROOT_DIR/commands/moskills-doctor.md" 'plugin-autoupdate --check'
+  assert_contains "$ROOT_DIR/commands/moskills-sync.md" 'plugin-autoupdate --check'
+  pass '/moskills-doctor and /moskills-sync offer automatic updates'
+}
+
 mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
 test_dry_run_writes_nothing
@@ -1219,6 +1324,12 @@ test_notice_is_silent_when_current
 test_notice_is_silent_without_moskills
 test_notice_hook_format_is_json
 test_plugin_registers_session_start_notice
+test_notice_reports_newer_release
+test_notice_caches_latest_and_survives_offline
+test_plugin_autoupdate_edits_claude_settings_safely
+test_claude_settings_node_fallback_matches
+test_setup_turns_on_plugin_autoupdate
+test_plugin_commands_offer_autoupdate
 test_link_symlinks_skills_into_detected_agents
 test_link_skips_agents_that_are_not_installed
 test_link_is_idempotent_and_retargets_stale_links

@@ -1,7 +1,7 @@
 {
   "name": "moskills",
   "description": "A small, composable skill pack that keeps AI agent work structured: explore and spec ideas first, align intent, share a language, map the system, run tight feedback loops, checkpoint progress, validate before done, hand off cleanly, track every implementation decision as a reproducible recipe, and grow evolvebooks: guides for one kind of job that improve every run.",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "author": {
     "name": "Mouad Belghiti",
     "url": "https://belghitis.com"

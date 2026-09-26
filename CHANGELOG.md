@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.1
+
+- Automatic plugin updates, so a project never gets synced to an old plugin:
+  - The session-start notice also says when a newer moskills is on GitHub
+    (checked at most once a day, cached, silent offline;
+    `MOSKILLS_NO_UPDATE_CHECK=1` turns it off), with the exact update commands.
+  - `moskills plugin-autoupdate [--check]` turns on Claude Code auto-update
+    for the moskills marketplace (`extraKnownMarketplaces.moskills.autoUpdate`
+    in `~/.claude/settings.json`), keeping every other setting and never
+    rewriting a settings file it cannot parse.
+  - `moskills setup` (and the one-line install) turns it on when it installs
+    or finds the Claude Code plugin; `/moskills-doctor` and `/moskills-sync`
+    check it and offer to turn it on.
+
 ## 0.7.0
 
 - **Evolvebooks**: a guide for one kind of job (an article, a landing page, a

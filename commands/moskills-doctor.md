@@ -25,4 +25,15 @@ Interpret the output for the user:
 - `missing project file` — seed it via `/moskills-init` (init never overwrites existing files).
 - `NOT INSTALLED` — offer to run `/moskills-init`.
 
-This command is read-only; it never modifies files.
+Then make sure this plugin keeps itself up to date:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate --check
+```
+
+If it prints `off`, ask the user: "Turn on automatic moskills updates? New
+releases then install when Claude Code starts. (yes/no)". On yes, run
+`sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate` and show its output
+(it takes effect at the next Claude Code start).
+
+Apart from that opt-in auto-update switch, this command is read-only; it never modifies files.

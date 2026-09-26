@@ -40,7 +40,11 @@ Commands:
                                             Upgrade managed files to the latest version.
   doctor  [--target <path>]                 Report drift (read-only, exit 1 on drift).
   notice  [--target <path>] [--hook]        One line if the project version differs
-                                            from the plugin; silent otherwise. Never fails.
+                                            from the plugin, or a newer moskills is on
+                                            GitHub (checked once a day); silent
+                                            otherwise. Never fails.
+  plugin-autoupdate [--check]               Turn on Claude Code auto-update for the
+                                            moskills marketplace (--check: report only).
   version                                   Print the standard version.
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
@@ -71,6 +75,9 @@ Options:
                 block in AGENTS.md (read by Antigravity, Codex, and others).
   --replace     link only: back up existing real skill folders, then link.
   --yes         setup/uninstall: accept every default without asking.
+
+Environment:
+  MOSKILLS_NO_UPDATE_CHECK=1   notice: never look for a newer version online.
 USAGE
 }
 
@@ -282,7 +289,43 @@ install_claude_plugin() {
     log 'Claude Code: moskills plugin installed (restart Claude Code to load it)'
   else
     warn 'could not install the Claude Code plugin. Inside Claude Code run: /plugin marketplace add Mouad1/moskills then /plugin install moskills@moskills'
+    return 1
   fi
+}
+
+# Claude Code auto-update for the moskills marketplace, via lib/claude-settings.{py,js}.
+# $1 = check | enable. Exit: 0 ok / on, 1 off, 2 no python3 or node, 3 settings not valid JSON.
+plugin_autoupdate() {
+  cfg=${CLAUDE_CONFIG_DIR:-$HOME/.claude}
+  if command -v python3 >/dev/null 2>&1; then
+    python3 "$SCRIPT_DIR/lib/claude-settings.py" "$1" "$cfg/settings.json" "$cfg/plugins/known_marketplaces.json"
+  elif command -v node >/dev/null 2>&1; then
+    node "$SCRIPT_DIR/lib/claude-settings.js" "$1" "$cfg/settings.json" "$cfg/plugins/known_marketplaces.json"
+  else
+    return 2
+  fi
+}
+
+cmd_plugin_autoupdate() {
+  settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+  manual='In Claude Code: /plugin -> Marketplaces -> moskills -> enable auto-update'
+  rc=0
+  if [ "$CHECK" -eq 1 ]; then
+    plugin_autoupdate check || rc=$?
+    case "$rc" in
+      0) log 'Claude Code auto-update for moskills: on' ;;
+      1) log 'Claude Code auto-update for moskills: off (turn it on: moskills plugin-autoupdate)' ;;
+      3) warn "$settings is not valid JSON"; log "$manual" ;;
+      *) log 'Claude Code auto-update for moskills: unknown (needs python3 or node)'; log "$manual" ;;
+    esac
+    return 0
+  fi
+  plugin_autoupdate enable || rc=$?
+  case "$rc" in
+    0) log "Claude Code auto-update for moskills: on ($settings). New releases install when Claude Code starts." ;;
+    3) warn "left $settings untouched: it is not valid JSON"; log "$manual"; return 1 ;;
+    *) warn 'could not turn on auto-update (needs python3 or node)'; log "$manual"; return 1 ;;
+  esac
 }
 
 # ---------- commands ----------
@@ -410,16 +453,44 @@ version_lt() { # $1 < $2 for dotted numeric versions
   }'
 }
 
+latest_version() { # newest VERSION on GitHub main, cached for a day; empty when offline or disabled
+  [ "${MOSKILLS_NO_UPDATE_CHECK:-0}" = 1 ] && return 0
+  cache="${MOSKILLS_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/moskills}/latest-version"
+  if [ -f "$cache" ] && [ -z "$(find "$cache" -mmin +1440 2>/dev/null)" ]; then
+    cat "$cache"; return 0
+  fi
+  command -v curl >/dev/null 2>&1 || return 0
+  url=${MOSKILLS_LATEST_URL:-https://raw.githubusercontent.com/Mouad1/moskills/main/VERSION}
+  lv=$(curl -fsSL --max-time 3 "$url" 2>/dev/null | head -1 | tr -d ' \r' || true)
+  printf '%s' "$lv" | grep -Eq '^[0-9]+(\.[0-9]+)*$' || lv=''
+  # failures are cached too, so an offline machine waits for the timeout at most once a day
+  { mkdir -p "$(dirname "$cache")" && printf '%s\n' "$lv" > "$cache"; } 2>/dev/null || true
+  [ -z "$lv" ] || printf '%s\n' "$lv"
+}
+
 cmd_notice() {
   t=$TARGET
-  [ -f "$t/.moskills.json" ] || return 0
-  v=$(manifest_version "$t")
-  [ -n "$v" ] && [ "$v" != "$STANDARD_VERSION" ] || return 0
-  if version_lt "$v" "$STANDARD_VERSION"; then
-    msg="moskills standard v$v is older than the plugin v$STANDARD_VERSION: run /moskills-sync"
-  else
-    msg="moskills standard v$v is newer than the plugin v$STANDARD_VERSION: update the moskills plugin"
+  msg=''
+  if [ -f "$t/.moskills.json" ]; then
+    v=$(manifest_version "$t")
+    if [ -n "$v" ] && [ "$v" != "$STANDARD_VERSION" ]; then
+      if version_lt "$v" "$STANDARD_VERSION"; then
+        msg="moskills standard v$v is older than the plugin v$STANDARD_VERSION: run /moskills-sync"
+      else
+        msg="moskills standard v$v is newer than the plugin v$STANDARD_VERSION: update the moskills plugin"
+      fi
+    fi
   fi
+  lv=$(latest_version)
+  if [ -n "$lv" ] && version_lt "$STANDARD_VERSION" "$lv"; then
+    if [ "$HOOK" -eq 1 ]; then
+      up="moskills v$lv is available (installed v$STANDARD_VERSION): run /plugin marketplace update moskills, then /plugin update moskills@moskills and restart. To get updates automatically, run /moskills-doctor"
+    else
+      up="moskills v$lv is available (installed v$STANDARD_VERSION): run moskills self-update"
+    fi
+    if [ -n "$msg" ]; then msg="$up. Also: $msg"; else msg=$up; fi
+  fi
+  [ -n "$msg" ] || return 0
   if [ "$HOOK" -eq 1 ]; then
     printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s. Tell the user before starting work."}}\n' "$msg" "$msg"
   else
@@ -592,10 +663,19 @@ cmd_setup() {
     log 'Other folder (Obsidian vault, projects only): moskills evolvebook setup'
   fi
   if command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
+    has_plugin=0
     if claude_plugin_installed; then
       log 'Claude Code: moskills plugin already installed'
+      has_plugin=1
     elif ask 'Claude Code found. Install the moskills plugin there too?'; then
-      install_claude_plugin
+      install_claude_plugin && has_plugin=1
+    fi
+    if [ "$has_plugin" -eq 1 ]; then
+      if plugin_autoupdate check 2>/dev/null; then
+        log 'Claude Code: automatic moskills updates are on'
+      elif ask 'Update the moskills plugin automatically when Claude Code starts?'; then
+        cmd_plugin_autoupdate || true
+      fi
     fi
   fi
   if ! is_git_install; then
@@ -676,6 +756,7 @@ HOOK=0
 AGENTS=0
 AGENTS_ON=0
 REPLACE=0
+CHECK=0
 YES=${MOSKILLS_YES:-0}
 NO_TTY=0
 ALL_ROOT=''
@@ -690,6 +771,7 @@ while [ "$#" -gt 0 ]; do
     --agents) AGENTS=1; shift ;;
     --replace) REPLACE=1; shift ;;
     --yes)    YES=1; shift ;;
+    --check)  CHECK=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
@@ -711,6 +793,7 @@ case "$CMD" in
   sync)    if [ -n "$ALL_ROOT" ]; then run_all cmd_sync; else cmd_sync; fi ;;
   doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
   notice)  cmd_notice ;;
+  plugin-autoupdate) cmd_plugin_autoupdate ;;
   link)    cmd_link ;;
   setup)   cmd_setup ;;
   status)  cmd_status ;;
