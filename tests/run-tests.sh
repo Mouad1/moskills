@@ -6,6 +6,12 @@ TMP_ROOT="${TMPDIR:-/tmp}/moskills-tests-$$"
 
 pass_count=0
 
+# never touch a real Claude Code install: tests that need it point this at a stub
+MOSKILLS_CLAUDE=/nonexistent/claude
+export MOSKILLS_CLAUDE
+# evolvebooks resolve their home from HOME and XDG_CONFIG_HOME only
+unset EVOLVEBOOKS_HOME XDG_CONFIG_HOME
+
 cleanup() {
   rm -rf "$TMP_ROOT"
 }
@@ -52,13 +58,13 @@ assert_not_exists() {
 assert_contains() {
   file=$1
   text=$2
-  grep -F "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' in $file"
+  grep -F -e "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' in $file"
 }
 
 assert_not_contains() {
   file=$1
   text=$2
-  ! grep -F "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' to be absent from $file"
+  ! grep -F -e "$text" "$file" >/dev/null 2>&1 || fail "expected '$text' to be absent from $file"
 }
 
 assert_heading_before() {
@@ -670,16 +676,23 @@ test_setup_yes_links_backs_up_and_schedules() {
   HOME=$h MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$out"
   [ -L "$h/.gemini/config/skills/tdd" ] || fail 'setup --yes must replace old copies'
   ls "$h"/.moskills-backups/antigravity/tdd-*/SKILL.md >/dev/null 2>&1 || fail 'expected backup'
-  assert_file "$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  if [ "$(uname)" = Darwin ]; then
+    assert_file "$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  else
+    assert_contains "$out" 'crontab -e'
+  fi
   assert_contains "$out" 'moskills init --agents'
-  pass 'setup --yes links, backs up and schedules updates'
+  assert_file "$h/.evolvebooks/EVOLVEBOOKS.md"
+  assert_contains "$out" '/evolvebook new'
+  pass 'setup --yes links, backs up, sets up evolvebooks and schedules updates'
 }
 
 test_setup_answers_no_changes_nothing() {
   h=$(make_home setup-no)
-  answers="$TMP_ROOT/answers-no.txt"; printf 'n\nn\nn\n' > "$answers"
+  answers="$TMP_ROOT/answers-no.txt"; printf 'n\nn\nn\nn\nn\n' > "$answers"
   HOME=$h MOSKILLS_TTY=$answers MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup >/dev/null
   assert_not_exists "$h/.gemini/config/skills/tdd"
+  assert_not_exists "$h/.evolvebooks"
   assert_not_exists "$h/Library/LaunchAgents/com.moskills.self-update.plist"
   pass 'setup respects no answers'
 }
@@ -799,6 +812,382 @@ test_documentation_exists() {
   pass 'documentation exists'
 }
 
+# ---------- evolvebooks ----------
+EB_SCRIPT="$ROOT_DIR/templates/claude/skills/evolvebook/scripts/evolvebook.sh"
+
+eb_home() { # $1 = name -> fresh fake HOME
+  h="$TMP_ROOT/ebhome-$1"
+  mkdir -p "$h"
+  printf '%s\n' "$h"
+}
+
+eb() { # runs the helper with HOME=$EBH from directory $EBD (default: TMP_ROOT)
+  (cd "${EBD:-$TMP_ROOT}" && HOME=$EBH sh "$EB_SCRIPT" "$@")
+}
+
+eb_book() { # $1 = name; configured default home with one book
+  EBH=$(eb_home "$1")
+  eb setup --default >/dev/null
+  eb new article --purpose 'Dev articles' --use-when 'writing a dev article' --choices 'topic, format, hook, length' >/dev/null
+  BOOK="$EBH/.evolvebooks/article"
+}
+
+test_evolvebook_skill_is_registered_and_valid() {
+  assert_contains "$ROOT_DIR/.claude-plugin/plugin.json" './templates/claude/skills/evolvebook'
+  sk="$ROOT_DIR/templates/claude/skills/evolvebook/SKILL.md"
+  [ "$(sed -n 1p "$sk")" = '---' ] || fail 'SKILL.md must start with frontmatter'
+  sed -n '2,4p' "$sk" | grep -qx 'name: evolvebook' || fail 'frontmatter name must be evolvebook'
+  sed -n '2,4p' "$sk" | grep -q '^description: "Use when: ' || fail 'frontmatter description must start with Use when:'
+  assert_contains "$sk" 'Primary goal: Turn one kind of job into a guide that gets better every run.'
+  assert_contains "$sk" '${CLAUDE_SKILL_DIR}/scripts/evolvebook.sh'
+  # the skill is the slash command: a same-named command file would shadow it in Claude Code
+  assert_not_exists "$ROOT_DIR/templates/claude/commands/evolvebook.md"
+  assert_contains "$sk" '`/evolvebook` is this skill'
+  tpl="$ROOT_DIR/templates/claude/skills/evolvebook/book/SKILL.md.tpl"
+  sed -n '2,4p' "$tpl" | grep -qx 'name: {{name}}' || fail 'book template must carry a name'
+  assert_not_exists "$ROOT_DIR/templates/claude/skills/evolvebook/book/SKILL.md"
+  pass 'evolvebook skill is registered, valid, and is its own slash command'
+}
+
+test_evolvebook_unconfigured_asks_for_setup() {
+  EBH=$(eb_home unconfigured)
+  out="$TMP_ROOT/eb-unconf.txt"
+  eb where >"$out"
+  assert_contains "$out" 'configured=no'
+  rc=0; eb new article >"$out" 2>&1 || rc=$?
+  [ "$rc" -eq 3 ] || fail "new without a home must exit 3, got $rc"
+  assert_contains "$out" '/evolvebook setup'
+  eb list >"$out"; assert_contains "$out" 'not configured'
+  eb hook >"$out"; [ ! -s "$out" ] || fail 'hook must be silent when not configured'
+  assert_not_exists "$EBH/.evolvebooks"
+  pass 'evolvebook without a home points to setup and writes nothing'
+}
+
+test_evolvebook_home_resolution_order() {
+  EBH=$(eb_home order)
+  proj="$TMP_ROOT/eb-order-proj"; mkdir -p "$proj/sub/deep"
+  EBD="$proj/sub/deep"
+  mkdir -p "$EBH/.evolvebooks"; : > "$EBH/.evolvebooks/EVOLVEBOOKS.md"
+  eb where | grep -qx "home=$EBH/.evolvebooks" || fail 'default home must be used last'
+  mkdir -p "$EBH/.config/evolvebooks"; printf '{ "home": "~/from-config" }\n' > "$EBH/.config/evolvebooks/config.json"
+  eb where | grep -qx "home=$EBH/from-config" || fail 'user config must beat the default'
+  printf '{ "home": "books" }\n' > "$proj/.evolvebooks.json"
+  eb where | grep -qx "home=$proj/books" || fail '.evolvebooks.json (walking up) must beat the user config'
+  (cd "$EBD" && HOME=$EBH EVOLVEBOOKS_HOME=/tmp/from-env sh "$EB_SCRIPT" where) | grep -qx 'home=/tmp/from-env' || fail 'EVOLVEBOOKS_HOME must win'
+  EBD=''
+  pass 'evolvebook home order: env > .evolvebooks.json > user config > default'
+}
+
+test_evolvebook_setup_modes() {
+  EBH=$(eb_home setup)
+  out="$TMP_ROOT/eb-setup.txt"
+  eb setup --default >"$out"
+  assert_file "$EBH/.evolvebooks/EVOLVEBOOKS.md"
+  [ -d "$EBH/.evolvebooks/shared" ] || fail 'setup must create shared/'
+  assert_contains "$EBH/.config/evolvebooks/config.json" "$EBH/.evolvebooks"
+  assert_contains "$out" '/evolvebook new'
+  vault="$TMP_ROOT/eb-vault"; mkdir -p "$vault"
+  eb setup --obsidian "$vault" >"$out"
+  assert_contains "$out" 'does not look like an Obsidian vault'
+  assert_file "$vault/Evolvebooks/EVOLVEBOOKS.md"
+  eb setup --project-only >"$out"
+  eb where | grep -qx 'home=project-only' || fail 'project-only mode expected'
+  printf '2\n%s\nBooks\n' "$vault" > "$TMP_ROOT/eb-answers.txt"
+  (cd "$TMP_ROOT" && HOME=$EBH MOSKILLS_TTY="$TMP_ROOT/eb-answers.txt" sh "$EB_SCRIPT" setup) >"$out"
+  assert_file "$vault/Books/EVOLVEBOOKS.md"
+  pass 'evolvebook setup: default, Obsidian, project-only, one interactive question'
+}
+
+test_evolvebook_new_creates_a_complete_book() {
+  eb_book new
+  for f in SKILL.md brief.md examples.md choices.md never.md check.md done.md mistakes.md toolbox/README.md; do
+    assert_file "$BOOK/$f"
+  done
+  assert_contains "$BOOK/SKILL.md" 'name: article'
+  assert_contains "$BOOK/SKILL.md" 'description: "Use when: writing a dev article.'
+  assert_contains "$BOOK/SKILL.md" 'Purpose: Dev articles'
+  assert_contains "$BOOK/done.md" '| Date | What | topic | format | hook | length | Manual steps |'
+  assert_contains "$BOOK/choices.md" '## hook'
+  assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 0 | 0 | - | home |'
+  ! grep -rq '{{' "$BOOK" || fail 'no template marker may remain'
+  out="$TMP_ROOT/eb-new.txt"
+  eb new article >"$out" 2>&1 && fail 'duplicate book must be refused'
+  eb new tdd >"$out" 2>&1 && fail 'a book must not shadow a moskills skill'
+  assert_contains "$out" 'already a moskills skill'
+  eb new 'Bad Name' >"$out" 2>&1 && fail 'invalid name must be refused'
+  pass 'evolvebook new creates a complete book and refuses bad names'
+}
+
+test_evolvebook_repeat_check() {
+  eb_book repeat
+  out="$TMP_ROOT/eb-repeat.txt"
+  eb repeat article topic=angular format=tutorial hook=story length=long >"$out" || fail 'first run must pass'
+  assert_contains "$out" 'PASS: no earlier runs'
+  eb record article 'Signals intro' topic=angular format=tutorial hook=story length=long >/dev/null
+  eb repeat article topic=Angular format=tutorial hook=question length=long >"$out" && fail '1 of 4 differing must fail'
+  assert_contains "$out" 'FAIL: too close'
+  assert_contains "$out" 'Same: topic, format, length'
+  eb repeat article topic=nestjs format=tutorial hook=question length=long >"$out" || fail '2 of 4 differing must pass'
+  rc=0; eb repeat article topic=nestjs >"$out" 2>&1 || rc=$?
+  [ "$rc" -eq 5 ] || fail "missing choices must exit 5, got $rc"
+  assert_contains "$out" 'missing choices: format, hook, length'
+  eb repeat article topic=a format=b hook=c length=d colour=e >"$out" 2>&1 && fail 'unknown choice must be refused'
+  printf 'Repeat threshold: 4\n' >> "$BOOK/choices.md"
+  eb repeat article topic=nestjs format=tutorial hook=question length=short >"$out" && fail 'threshold 4 must fail at 3 differing'
+  pass 'evolvebook repeat check: pass, fail, missing choices, threshold'
+}
+
+test_evolvebook_record_updates_done_list_and_index() {
+  eb_book record
+  eb record article 'Guards | pipes' topic=nestjs format=howto hook=stat length=short --steps 'resize images; check links' >/dev/null
+  assert_contains "$BOOK/done.md" "| $(date +%Y-%m-%d) | Guards / pipes | nestjs | howto | stat | short | resize images; check links |"
+  printf '\n## 2026-01-01 — First\n- Verdict: good\n' >> "$BOOK/examples.md"
+  out="$TMP_ROOT/eb-list.txt"; eb list >"$out"
+  assert_contains "$out" "| article | Dev articles | 1 | 1 | $(date +%Y-%m-%d) | home |"
+  assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 1 | 1 |'
+  pass 'evolvebook record appends a Done row and rebuilds the index'
+}
+
+test_evolvebook_suggest_promotions() {
+  eb_book suggest
+  out="$TMP_ROOT/eb-suggest.txt"
+  eb suggest article >"$out"; assert_contains "$out" 'Nothing to propose.'
+  printf '\n## 2026-01-01 — Heavy hero image\n- Rule: webp under 200KB\n- Seen: 2\n\n## 2026-01-02 — Old one\n- Seen: 5\n- Promoted: never.md\n' >> "$BOOK/mistakes.md"
+  eb record article one topic=a format=a hook=a length=a --steps 'Resize images; write alt' >/dev/null
+  eb record article two topic=b format=b hook=b length=b --steps 'resize images' >/dev/null
+  eb suggest article >"$out"
+  assert_not_contains "$out" 'Toolbox'
+  eb record article three topic=c format=c hook=c length=c --steps 'resize  images' >/dev/null
+  eb suggest article >"$out"
+  assert_contains "$out" 'Never list: "Heavy hero image" was seen 2 times'
+  assert_not_contains "$out" 'Old one'
+  assert_contains "$out" 'Toolbox: "resize images" was done by hand in 3 runs'
+  assert_not_contains "$out" 'write alt'
+  printf -- '- resize images -> resize.sh\n' >> "$BOOK/toolbox/README.md"
+  eb suggest article >"$out"; assert_not_contains "$out" 'Toolbox'
+  pass 'evolvebook suggest: Mistake at Seen 2 -> Never list, step in 3 runs -> Toolbox'
+}
+
+test_evolvebook_scan_refuses_secrets() {
+  EBH=$(eb_home scan)
+  s="$TMP_ROOT/eb-secret.md"
+  printf 'aws AKIAABCDEFGHIJKLMNOP\n' > "$s"; eb scan "$s" >/dev/null && fail 'AWS key must be flagged'
+  printf 'iban FR76 3000 6000 0112 3456 7890 189\n' > "$s"; eb scan "$s" >/dev/null && fail 'IBAN must be flagged'
+  printf 'api_key = "abcd1234efgh5678"\n' > "$s"; eb scan "$s" >/dev/null && fail 'api key assignment must be flagged'
+  printf -- '-----BEGIN RSA PRIVATE KEY-----\n' > "$s"; eb scan "$s" >/dev/null && fail 'private key must be flagged'
+  out="$TMP_ROOT/eb-scan.txt"
+  printf 'aws AKIAABCDEFGHIJKLMNOP\n' > "$s"; eb scan "$s" >"$out" || true
+  assert_not_contains "$out" 'AKIA'
+  eb scan "$ROOT_DIR"/templates/claude/skills/evolvebook/book/* >/dev/null || fail 'book templates must scan clean'
+  pass 'evolvebook scan flags secrets without printing them'
+}
+
+test_evolvebook_export_is_one_self_contained_file() {
+  eb_book export
+  printf 'voice: [direct]\n' > "$EBH/.evolvebooks/shared/brand.md"
+  printf 'resize\n' > "$BOOK/toolbox/resize.sh"
+  out="$TMP_ROOT/eb-export.md"
+  eb export article --out "$out" >/dev/null
+  for f in SKILL.md brief.md examples.md choices.md never.md check.md done.md mistakes.md toolbox/resize.sh shared/brand.md; do
+    assert_contains "$out" "<!-- file: $f -->"
+  done
+  assert_contains "$out" 'paste them back'
+  printf '\nkey AKIAABCDEFGHIJKLMNOP\n' >> "$BOOK/examples.md"
+  eb export article --out "$TMP_ROOT/eb-export2.md" >/dev/null 2>&1 && fail 'export with a secret must be refused'
+  assert_not_exists "$TMP_ROOT/eb-export2.md"
+  pass 'evolvebook export bundles one file and refuses secrets'
+}
+
+test_evolvebook_link_and_unlink() {
+  eb_book link
+  mkdir -p "$EBH/.claude" "$EBH/.agents/skills" "$EBH/.gemini"
+  mkdir -p "$EBH/.agents/skills/mine"
+  eb new mine --choices a >/dev/null
+  out="$TMP_ROOT/eb-link.txt"
+  eb link >"$out"
+  for d in .claude/skills .agents/skills .gemini/config/skills; do
+    [ "$(readlink "$EBH/$d/article")" = "$BOOK" ] || fail "expected article link in $d"
+  done
+  [ ! -L "$EBH/.agents/skills/mine" ] || fail 'a real folder must never be replaced'
+  assert_contains "$out" 'skipped mine'
+  eb link >"$out"; assert_contains "$out" 'ok      article'
+  rm -rf "$BOOK"
+  eb status >"$out"; assert_contains "$out" 'broken link'
+  eb unlink >/dev/null
+  assert_not_exists "$EBH/.claude/skills/article"
+  [ -d "$EBH/.agents/skills/mine" ] || fail 'unlink must keep real folders'
+  pass 'evolvebook link symlinks books into agents, never replaces, unlink cleans up'
+}
+
+test_evolvebook_project_books_win_and_link_relative() {
+  eb_book project
+  proj="$TMP_ROOT/eb-proj"; mkdir -p "$proj/src"
+  git -C "$proj" init >/dev/null 2>&1
+  EBD="$proj/src"
+  eb new article --project --purpose 'Team articles' --choices 'topic' >/dev/null
+  assert_file "$proj/.evolvebooks/article/SKILL.md"
+  eb path article | grep -qx "$proj/.evolvebooks/article" || fail 'project book must win'
+  out="$TMP_ROOT/eb-proj-list.txt"; eb list >"$out"
+  assert_contains "$out" '| article | Team articles | 0 | 0 | - | project |'
+  eb link >/dev/null
+  [ "$(readlink "$proj/.claude/skills/article")" = '../../.evolvebooks/article' ] || fail 'project book must link relatively'
+  assert_file "$proj/.claude/skills/article/SKILL.md"
+  EBD=''
+  pass 'evolvebook project books override personal ones and link relatively'
+}
+
+test_evolvebook_obsidian_home_stays_inside_its_folder() {
+  EBH=$(eb_home vault)
+  vault="$TMP_ROOT/eb-vault-scope"; mkdir -p "$vault/.obsidian" "$vault/Daily"
+  printf 'private\n' > "$vault/Daily/note.md"
+  before=$(cd "$vault" && find . -path ./Evolvebooks -prune -o -type f -print | sort | xargs cksum)
+  eb setup --obsidian "$vault" >/dev/null
+  eb new article --choices 'topic,format' >/dev/null
+  eb record article one topic=a format=b >/dev/null
+  eb export article --out "$vault/Evolvebooks/article-export.md" >/dev/null
+  after=$(cd "$vault" && find . -path ./Evolvebooks -prune -o -type f -print | sort | xargs cksum)
+  [ "$before" = "$after" ] || fail 'nothing outside the vault subfolder may change'
+  assert_file "$vault/Evolvebooks/article/SKILL.md"
+  pass 'evolvebook home inside a vault writes only inside its folder'
+}
+
+test_evolvebook_hook_lists_books() {
+  eb_book hook
+  out="$TMP_ROOT/eb-hook.json"
+  eb hook >"$out"
+  assert_contains "$out" '"systemMessage": "Evolvebooks: article"'
+  assert_contains "$out" '"hookEventName": "SessionStart"'
+  assert_contains "$ROOT_DIR/hooks/hooks.json" 'evolvebook.sh\" hook'
+  pass 'evolvebook hook lists books at session start'
+}
+
+test_moskills_cli_reports_evolvebooks() {
+  h=$(eb_home cli)
+  project=$(make_project eb-cli)
+  out="$TMP_ROOT/eb-cli.txt"
+  HOME=$h run_moskills init --target "$project" >"$out"
+  assert_contains "$out" 'Evolvebooks: not configured. Run /evolvebook setup'
+  HOME=$h run_moskills doctor --target "$project" >"$out" || fail 'evolvebooks must not fail doctor'
+  assert_contains "$out" 'evolvebooks home: not configured'
+  HOME=$h run_moskills evolvebook setup --default >/dev/null
+  HOME=$h run_moskills doctor --target "$project" >"$out" || fail 'doctor must still pass'
+  assert_contains "$out" "evolvebooks home: $h/.evolvebooks (0 books)"
+  HOME=$h run_moskills evolvebook where >"$out"
+  assert_contains "$out" 'configured=yes'
+  HOME=$h run_moskills status >"$out"
+  assert_contains "$out" "Evolvebooks: $h/.evolvebooks"
+  pass 'moskills init, doctor, status and evolvebook passthrough report evolvebooks'
+}
+
+test_project_book_passes_commit_guard() {
+  h=$(eb_home guard)
+  project=$(make_project eb-guard)
+  git -C "$project" init >/dev/null 2>&1
+  git -C "$project" config user.email tests@example.invalid
+  git -C "$project" config user.name Tests
+  run_moskills init --target "$project" --with-hooks >/dev/null
+  (cd "$project" && HOME=$h sh "$EB_SCRIPT" setup --project-only >/dev/null && HOME=$h sh "$EB_SCRIPT" new article --choices 'topic' >/dev/null)
+  git -C "$project" add -A
+  git -C "$project" commit -qm init >"$TMP_ROOT/eb-guard.txt" 2>&1 || fail 'a new project book must pass the commit guard'
+  pass 'a new project evolvebook passes the pre-commit guard'
+}
+
+test_one_line_install_sets_up_evolvebooks() {
+  h=$(make_home eb-install)
+  dest="$h/.moskills"
+  out="$TMP_ROOT/eb-install.txt"
+  run_install "$h" "$dest" >"$out" 2>&1 || fail 'install.sh must succeed'
+  assert_file "$h/.evolvebooks/EVOLVEBOOKS.md"
+  [ -L "$h/.agents/skills/evolvebook" ] || fail 'evolvebook skill must be linked into agents'
+  (cd "$TMP_ROOT" && HOME=$h sh "$h/.local/bin/moskills" evolvebook new article --choices topic) >/dev/null || fail 'moskills evolvebook must work from the launcher'
+  assert_file "$h/.evolvebooks/article/SKILL.md"
+  pass 'one-line install gives moskills and a ready evolvebooks home'
+}
+
+test_setup_installs_claude_code_plugin() {
+  h=$(make_home eb-claude)
+  stub="$TMP_ROOT/claude-stub"; log="$TMP_ROOT/claude-calls.txt"
+  printf '#!/bin/sh\nprintf "%%s\\n" "$*" >> "%s"\n' "$log" > "$stub"; chmod +x "$stub"
+  : > "$log"
+  HOME=$h MOSKILLS_CLAUDE=$stub MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$TMP_ROOT/eb-claude.txt"
+  assert_contains "$log" 'plugin marketplace add Mouad1/moskills'
+  assert_contains "$log" 'plugin install moskills@moskills'
+  assert_contains "$TMP_ROOT/eb-claude.txt" 'moskills plugin installed'
+  printf '#!/bin/sh\necho "moskills@moskills"\n' > "$stub"
+  HOME=$h MOSKILLS_CLAUDE=$stub MOSKILLS_NO_LAUNCHCTL=1 run_moskills setup --yes >"$TMP_ROOT/eb-claude2.txt"
+  assert_contains "$TMP_ROOT/eb-claude2.txt" 'already installed'
+  pass 'setup installs the Claude Code plugin when Claude Code is found'
+}
+
+test_related_skills_know_evolvebooks() {
+  sk="$ROOT_DIR/templates/claude/skills"
+  assert_contains "$sk/gatekeeper/SKILL.md" 'Human Check:'
+  assert_contains "$sk/gatekeeper/SKILL.md" 'check.md'
+  assert_contains "$sk/learn/SKILL.md" 'mistakes.md'
+  assert_contains "$sk/learn/SKILL.md" 'Seen: 2'
+  assert_contains "$sk/align-intent/SKILL.md" 'Self-authored under delegation'
+  assert_contains "$sk/preview/SKILL.md" 'Self-authored under delegation'
+  assert_contains "$ROOT_DIR/templates/managed/base.md" '/evolvebook'
+  assert_contains "$ROOT_DIR/templates/managed/base.md" 'EVOLVEBOOKS.md'
+  assert_contains "$ROOT_DIR/templates/managed/base.md" '/align-intent -> /evolvebook use (if a book matches)'
+  pass 'gatekeeper, learn, align-intent, preview and base.md know evolvebooks'
+}
+
+test_evolvebook_documentation() {
+  doc="$ROOT_DIR/docs/evolvebook.md"
+  assert_file "$doc"
+  [ "$(grep -c '^```mermaid' "$doc")" -ge 2 ] || fail 'docs/evolvebook.md needs the anatomy and lifecycle diagrams'
+  assert_contains "$doc" '## Anatomy'
+  assert_contains "$doc" '## Lifecycle'
+  assert_contains "$ROOT_DIR/README.md" '## Configure evolvebooks'
+  assert_contains "$ROOT_DIR/README.md" 'EVOLVEBOOKS_HOME'
+  assert_contains "$ROOT_DIR/docs/command-reference.md" '## /evolvebook'
+  assert_contains "$ROOT_DIR/docs/lifecycle.md" '/evolvebook use'
+  pass 'evolvebook documentation and diagrams exist'
+}
+
+test_evolvebook_grow_commands_write_exact_formats() {
+  eb_book grow
+  out="$TMP_ROOT/eb-grow.txt"
+  eb example article --verdict good --title 'Signals intro' --why 'bug story opener' --where posts/a.md >/dev/null
+  assert_contains "$BOOK/examples.md" "## $(date +%Y-%m-%d) — Signals intro"
+  assert_contains "$BOOK/examples.md" '- Verdict: good'
+  eb example article --verdict maybe --title x --why y >"$out" 2>&1 && fail 'verdict must be good or bad'
+  eb example article --verdict bad --title leak --why 'key AKIAABCDEFGHIJKLMNOP' >"$out" 2>&1 && fail 'an example with a secret must be refused'
+  assert_not_contains "$BOOK/examples.md" 'AKIA'
+  eb never article --never 'emojis in headings' --instead 'plain headings' >/dev/null
+  assert_contains "$BOOK/never.md" '- Never: emojis in headings'
+  assert_contains "$BOOK/never.md" '  Instead: plain headings'
+  eb never article --never 'no instead' >"$out" 2>&1 && fail 'a Never rule without Instead must be refused'
+  eb mistake article --title 'Heavy hero image' --context publish --mistake '3MB png' --rule 'webp under 200KB' >/dev/null
+  eb mistake article --title 'heavy hero image' >"$out"
+  assert_contains "$out" 'Seen: 2'
+  [ "$(grep -c 'Heavy hero image' "$BOOK/mistakes.md")" = 1 ] || fail 'same title must raise Seen, not add an entry'
+  eb suggest article >"$out"; assert_contains "$out" 'Never list: "Heavy hero image"'
+  eb never article --never 'png heroes' --instead 'webp under 200KB' --from-mistake 'Heavy hero image' >/dev/null
+  assert_contains "$BOOK/mistakes.md" '- Promoted: never.md'
+  eb suggest article >"$out"; assert_contains "$out" 'Nothing to propose.'
+  pass 'evolvebook example, never and mistake write exact formats and refuse secrets'
+}
+
+test_diagrams_folder_is_complete_and_in_sync() {
+  dir="$ROOT_DIR/docs/diagrams"
+  assert_file "$dir/README.md"
+  assert_file "$dir/render.sh"
+  for d in moskills-workflow evolvebook-anatomy evolvebook-lifecycle; do
+    assert_file "$dir/$d.mmd"; assert_file "$dir/$d.svg"; assert_file "$dir/$d.png"
+    assert_contains "$dir/README.md" "$d.svg"
+  done
+  n=0
+  for d in evolvebook-anatomy evolvebook-lifecycle; do
+    n=$((n + 1))
+    awk -v want="$n" '/^```mermaid/ { k++; on=(k==want); next } /^```/ { on=0 } on' "$ROOT_DIR/docs/evolvebook.md" > "$TMP_ROOT/inline-$d.mmd"
+    cmp -s "$TMP_ROOT/inline-$d.mmd" "$dir/$d.mmd" || fail "$d.mmd differs from the diagram inlined in docs/evolvebook.md"
+  done
+  assert_contains "$ROOT_DIR/README.md" 'docs/diagrams/moskills-workflow.svg'
+  pass 'docs/diagrams holds every diagram as source, SVG and PNG, in sync with the docs'
+}
+
 mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
 test_dry_run_writes_nothing
@@ -855,5 +1244,28 @@ test_first_commit_after_init_with_hooks_passes
 test_guard_still_blocks_placeholders_in_project_files
 test_version_files_are_consistent
 test_documentation_exists
+
+test_evolvebook_skill_is_registered_and_valid
+test_evolvebook_unconfigured_asks_for_setup
+test_evolvebook_home_resolution_order
+test_evolvebook_setup_modes
+test_evolvebook_new_creates_a_complete_book
+test_evolvebook_repeat_check
+test_evolvebook_record_updates_done_list_and_index
+test_evolvebook_suggest_promotions
+test_evolvebook_grow_commands_write_exact_formats
+test_evolvebook_scan_refuses_secrets
+test_evolvebook_export_is_one_self_contained_file
+test_evolvebook_link_and_unlink
+test_evolvebook_project_books_win_and_link_relative
+test_evolvebook_obsidian_home_stays_inside_its_folder
+test_evolvebook_hook_lists_books
+test_moskills_cli_reports_evolvebooks
+test_project_book_passes_commit_guard
+test_one_line_install_sets_up_evolvebooks
+test_setup_installs_claude_code_plugin
+test_related_skills_know_evolvebooks
+test_evolvebook_documentation
+test_diagrams_folder_is_complete_and_in_sync
 
 printf 'All tests passed: %s\n' "$pass_count"

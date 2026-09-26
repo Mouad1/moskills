@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.7.0
+
+- **Evolvebooks**: a guide for one kind of job (an article, a landing page, a
+  NestJS module) that remembers what good looks like, what we already made and
+  what went wrong, so every run is better than the last.
+  - `/evolvebook` skill, which is also its own slash command (no separate
+    command file, so Claude Code always loads the full skill): `setup`,
+    `new <job>`, `use <job>`, `list`, `link`, `export <job>`. Growing needs no
+    command ("add this as a good example", "never do X again").
+  - A book is plain markdown: Brief, Examples, Choices, Never list, Check,
+    Done list, Mistakes list, Toolbox, plus a `SKILL.md` any agent can follow.
+  - Helper script (`evolvebook.sh`) for everything that must be the same every
+    time: home lookup (`EVOLVEBOOKS_HOME` > `.evolvebooks.json` > user config
+    > `~/.evolvebooks`), index, repeat check, Done rows, Examples, Never-list
+    rules and Mistakes in their exact format (a repeated Mistake raises
+    `Seen`), promotion proposals
+    (Mistake seen 2 times -> Never list, step in 3 runs -> Toolbox), secret
+    scan, links into agents, one-file export, session-start line.
+  - Homes: default folder, an Obsidian vault folder (the rest of the vault
+    stays off-limits), any folder, or project-only (`.evolvebooks/`).
+  - Diagrams: `docs/evolvebook.md` (anatomy, and the run mapped onto the
+    moskills flow).
+- `docs/diagrams/`: every diagram as Mermaid source, SVG and PNG (moskills
+  workflow, evolvebook anatomy, evolvebook lifecycle), a render script, and
+  a README quick tour.
+- `moskills evolvebook <command>` runs the helper from a terminal.
+- `moskills setup` (and so the one-line install) also sets up the evolvebooks
+  home and, when Claude Code is installed, the moskills plugin there.
+- `moskills doctor` and `moskills status` show the evolvebooks home (never
+  fails the drift check); `moskills init` says when it is not configured.
+- `gatekeeper` reports a `Human Check:` line and runs an active book's
+  `check.md`; `learn` writes to the active book's Mistakes list and proposes
+  the Never list at `Seen: 2`; `preview` and `align-intent` accept "you
+  decide" and label the answers `Self-authored under delegation`.
+- Managed `base.md`: `/evolvebook` command, lifecycle step, home-scope rule.
+- Tests: the daily-update setup test no longer fails on Linux (it checks the
+  cron hint there, the LaunchAgent on macOS); `assert_contains` accepts
+  patterns that start with a dash.
+
 ## 0.6.5
 
 - Fix: the pre-commit guard blocked the first commit after `init --with-hooks`

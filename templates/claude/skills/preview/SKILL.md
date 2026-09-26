@@ -15,7 +15,7 @@ Do NOT write code, invoke implementation skills, or scaffold anything until the 
 
 1. **Explore context** — read project files, docs, recent commits.
 2. **Detect frontend** — check rules below; start Visual Companion if triggered.
-3. **Ask clarifying questions** — one at a time, max five. Prefer multiple choice.
+3. **Ask clarifying questions** — one at a time, max five. Prefer multiple choice. If the user says "you decide", answer the remaining questions yourself, label them `Self-authored under delegation` in the spec, and do not re-ask.
 4. **Propose 2–3 approaches** — with tradeoffs; lead with your recommendation.
 5. **Present design** — section by section, get approval after each section.
 6. **Write spec** — save to `docs/specs/YYYY-MM-DD-<topic>.md` and commit.

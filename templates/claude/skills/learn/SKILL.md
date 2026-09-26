@@ -29,6 +29,16 @@ prevent it. Together they make every session improve the next one.
 4. Check `tasks/lessons.md` for an existing entry covering the same pattern.
    If one exists, increment its `Seen:` counter instead of duplicating.
 
+## Active Evolvebook
+
+When an evolvebook is active (the run started with "Using the <name>
+evolvebook"), write the lesson to that book's `mistakes.md` instead of
+`tasks/lessons.md`, through the evolvebook helper:
+`evolvebook.sh mistake <book> --title ... --context ... --mistake ... --rule ...`
+(reusing an existing title raises its `Seen` counter). At
+`Seen: 2` (not 3), propose moving the rule to the book's `never.md`, with an
+"Instead" line. The user decides; mark the entry `Promoted: never.md` on yes.
+
 ## Entry Format
 
 ```markdown
