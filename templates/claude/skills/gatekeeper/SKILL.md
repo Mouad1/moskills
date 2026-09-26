@@ -15,6 +15,8 @@ Primary goal: Validate work before completion.
 4. Run available checks when safe.
 5. Compare observed results against the intent model.
 6. Report passing, failing, and unknown checks separately.
+   When an evolvebook is active, also run its `check.md` (automatic items
+   first, then human items) and report them under the same headings.
 7. Append validation result to `.claude/STATE.md` under `Validation History`.
 
 ## Report Format
@@ -26,6 +28,7 @@ Feedback Loops:
 Passing:
 Failing:
 Unknown:
+Human Check:
 Regression Risk:
 Final Decision:
 ```
@@ -37,3 +40,4 @@ Final Decision:
 - Do not say done when required validation failed.
 - Prefer automated tests, static checks, and browser checks over visual guessing.
 - If no feedback loop exists, name it as `Unknown` and suggest the smallest next loop.
+- `Human Check:` lists what a person must still judge (taste, tone, fit). Never leave it out; write `none` only when nothing needs a person.

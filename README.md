@@ -22,6 +22,34 @@ The goal is simple: install once (the Claude Code plugin, or one terminal line f
 - `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
 - `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
+- `/evolvebook`: turn one kind of job (an article, a landing page, a NestJS module) into a guide that improves every run. See [Evolvebooks](#evolvebooks).
+
+## Evolvebooks
+
+> An evolvebook is a guide for one kind of job. It remembers what good looks
+> like, what we already made, and what went wrong, so every run is better than
+> the last.
+
+moskills says *how we work on any task*; an evolvebook says *how we do one
+specific job well*. Three moments, no files to learn:
+
+| Moment | You say | What happens |
+|---|---|---|
+| Create, once | `/evolvebook new article` | One message with the examples it found and three short questions, one summary, you reply "ok" |
+| Use, every run | "write an article about signals" | "Using the article evolvebook (5 examples, 7 runs)", one Brief message, a plan that must differ from past runs, a Check, two closing questions |
+| Grow, any time | "add this as a good example", "never do X again" | Saved after your yes. Mistakes seen twice and steps repeated in 3 runs are proposed as rules and Toolbox items |
+
+Two diagrams, the anatomy of a book and how a run fits the moskills flow, are
+in **[docs/evolvebook.md](docs/evolvebook.md)**.
+
+| Command | Does |
+|---|---|
+| `/evolvebook` | List your books |
+| `/evolvebook new <job>` | Create a book |
+| `/evolvebook use <job>` | Run with a book (usually automatic) |
+| `/evolvebook setup` | Choose where books live (asked the first time) |
+| `/evolvebook link` | Use your books in Codex and Antigravity too |
+| `/evolvebook export <job>` | One file for ChatGPT or Claude web |
 
 ## How the Agent Knows When to Use Skills
 
@@ -174,7 +202,12 @@ three questions. Enter accepts the default (yes):
 
 1. Link moskills to the agents it found (Antigravity, Codex)?
 2. Back up and replace old copies of moskills skills? (only asked if some exist)
-3. Update moskills automatically every day? (macOS; on Linux it prints a cron line)
+3. Set up evolvebooks in `~/.evolvebooks`? (skipped when already configured)
+4. Claude Code found: install the moskills plugin there too? (only asked if `claude` is installed)
+5. Update moskills automatically every day? (macOS; on Linux it prints a cron line)
+
+So one line gives you moskills and evolvebooks in every agent on the machine,
+Claude Code included.
 
 Prefer to read the script first:
 
@@ -221,6 +254,7 @@ default, so start it with `agy --add-dir .`.
 | `moskills setup` | Run the questions again (new agent installed, changed your mind) |
 | `moskills self-update` | Update now instead of waiting for the daily run |
 | `moskills uninstall` | Remove the links, the daily update and `~/.moskills` |
+| `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
 
 Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
 Automatic updates need the git install.
@@ -228,6 +262,33 @@ Automatic updates need the git install.
 For development, keep a separate clone and do not point `MOSKILLS_HOME` at
 it: `self-update` refuses to run on a branch other than `main` or with local
 changes, and `uninstall` never deletes a folder it did not install.
+
+## Configure evolvebooks
+
+Your evolvebooks live in one folder, the **Home**. The first `/evolvebook`
+command asks one question when none is set:
+
+1. Default folder `~/.evolvebooks/` (recommended if unsure)
+2. A folder inside your Obsidian vault (default subfolder `Evolvebooks/`)
+3. Any other folder of markdown files
+4. Only inside projects (`.evolvebooks/` in each repo)
+
+Run it again anytime with `/evolvebook setup` (terminal:
+`moskills evolvebook setup`). The Home is looked up in this order, first hit
+wins:
+
+| Order | Where | Use it for |
+|---|---|---|
+| 1 | `EVOLVEBOOKS_HOME` environment variable | A one-off or CI override |
+| 2 | nearest `.evolvebooks.json` walking up: `{ "home": "<path>" }` | A repo or folder that points to shared books |
+| 3 | `~/.config/evolvebooks/config.json` (written by setup) | Your normal choice |
+| 4 | `~/.evolvebooks/` | The default |
+
+Team books live in `<repo>/.evolvebooks/` and win over a personal book with
+the same name. `moskills doctor` and `moskills status` show the Home;
+`moskills init` tells you when it is not configured yet. Agents read and write
+only inside the Home and `.evolvebooks/`: a Home inside an Obsidian vault
+keeps the rest of the vault off-limits.
 
 ## What users get
 
@@ -262,7 +323,7 @@ This repo keeps the source of the pack:
 
 Project Start -> /shared-language
 
-New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
+New Feature -> /preview -> /align-intent -> /evolvebook use (if a book matches) -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
 
 If work must pause, use `/handoff`.
 
@@ -310,6 +371,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     memorize.md
     handoff.md
     project-dna.md
+    learn.md
   skills/
     preview/
       SKILL.md
@@ -343,6 +405,13 @@ tasks/                  # seeded todo + lessons files, project-owned
       SKILL.md
       references/
         templates.md
+    learn/
+      SKILL.md
+    evolvebook/
+      SKILL.md
+      book/             # files copied into each new evolvebook
+      scripts/
+        evolvebook.sh   # helper: home, index, repeat check, record, link, export
   hooks/
     agent-guard.sh
 .git/
@@ -366,6 +435,7 @@ project hook.
 
 ## More Docs
 
+- [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
 - [docs/lifecycle.md](docs/lifecycle.md)
 - [docs/command-reference.md](docs/command-reference.md)
 - [docs/pain-points.md](docs/pain-points.md)

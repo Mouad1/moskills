@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# moskills — portfolio standard manager (init | sync | doctor | notice)
+# moskills — portfolio standard manager (init | sync | doctor | notice | evolvebook)
 # Managed files live under .claude/standard, .claude/commands, .claude/skills,
 # .claude/hooks/agent-guard.sh and are OWNED by this tool (never hand-edit).
 # Project-owned files (CLAUDE.md, STATE.md, tasks/) are seeded once, never overwritten.
@@ -19,6 +19,8 @@ STANDARD_VERSION=$(cat "$SCRIPT_DIR/VERSION")
 MANAGED_DIR="$SCRIPT_DIR/templates/managed"
 LEGACY_DIR="$SCRIPT_DIR/templates/claude"
 PROJECT_TPL="$SCRIPT_DIR/templates/project"
+EVOLVEBOOK="$LEGACY_DIR/skills/evolvebook/scripts/evolvebook.sh"
+CLAUDE_BIN=${MOSKILLS_CLAUDE:-claude}
 
 MARKER_BEGIN='<!-- moskills:begin (managed imports - do not edit inside markers) -->'
 MARKER_END='<!-- moskills:end -->'
@@ -40,10 +42,14 @@ Commands:
   notice  [--target <path>] [--hook]        One line if the project version differs
                                             from the plugin; silent otherwise. Never fails.
   version                                   Print the standard version.
+  evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
+                                            improve every run (setup, new, list, link,
+                                            export, ...). Run: moskills evolvebook help
 
 Other agents (Antigravity, Codex):
   setup   [--yes]        Guided first run: link agents, replace old copies,
-                         turn on daily updates. Safe to run again.
+                         evolvebooks home, Claude Code plugin, daily updates.
+                         Safe to run again.
   status                 Version, linked agents, launcher, daily update.
   uninstall [--yes]      Remove links, daily update and a standalone install.
   link    [--replace]    Link moskills skills into every detected agent
@@ -252,6 +258,33 @@ drift_lines() { # $1 = target
   done < "$t/$SUM_FILE"
 }
 
+# ---------- evolvebooks ----------
+evolvebook_next() { # $1 = target — one line telling the user what to configure next
+  st=$( (cd "$1" && sh "$EVOLVEBOOK" status 2>/dev/null) | head -1)
+  case "$st" in
+    *'not configured'*) log 'Evolvebooks: not configured. Run /evolvebook setup (terminal: moskills evolvebook setup)' ;;
+    '') ;;
+    *) log "Evolvebooks: ${st#evolvebooks }" ;;
+  esac
+}
+
+evolvebooks_configured() {
+  sh "$EVOLVEBOOK" where 2>/dev/null | grep -q '^configured=yes'
+}
+
+claude_plugin_installed() {
+  "$CLAUDE_BIN" plugin list 2>/dev/null | grep -q 'moskills@moskills'
+}
+
+install_claude_plugin() {
+  "$CLAUDE_BIN" plugin marketplace add Mouad1/moskills >/dev/null 2>&1 || true
+  if "$CLAUDE_BIN" plugin install moskills@moskills >/dev/null 2>&1; then
+    log 'Claude Code: moskills plugin installed (restart Claude Code to load it)'
+  else
+    warn 'could not install the Claude Code plugin. Inside Claude Code run: /plugin marketplace add Mouad1/moskills then /plugin install moskills@moskills'
+  fi
+}
+
 # ---------- commands ----------
 cmd_init() {
   t=$TARGET
@@ -268,6 +301,7 @@ cmd_init() {
     log "Tip: Antigravity, Codex and other agents can use moskills too. Run: moskills sync --agents --target $t"
   fi
   log "Done. Next: edit CLAUDE.md 'Project constraints' section, then run: moskills doctor --target $t"
+  evolvebook_next "$t"
 }
 
 cmd_sync() {
@@ -357,6 +391,10 @@ cmd_doctor() {
     issues=1
   fi
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
+  # informational only: never changes the drift result
+  (cd "$t" && sh "$EVOLVEBOOK" status 2>/dev/null) | while IFS= read -r line; do
+    printf '%-20s %s\n' "$name" "$line"
+  done
   return "$issues"
 }
 
@@ -547,6 +585,19 @@ cmd_setup() {
     fi
   fi
   [ "${linked:-0}" -eq 1 ] || install_launcher
+  if evolvebooks_configured; then
+    log "Evolvebooks: $(sh "$EVOLVEBOOK" status | head -1 | sed 's/^evolvebooks //')"
+  elif ask 'Set up evolvebooks (guides for one kind of job that improve every run) in ~/.evolvebooks?'; then
+    sh "$EVOLVEBOOK" setup --default | sed -n '1p'
+    log 'Other folder (Obsidian vault, projects only): moskills evolvebook setup'
+  fi
+  if command -v "$CLAUDE_BIN" >/dev/null 2>&1; then
+    if claude_plugin_installed; then
+      log 'Claude Code: moskills plugin already installed'
+    elif ask 'Claude Code found. Install the moskills plugin there too?'; then
+      install_claude_plugin
+    fi
+  fi
   if ! is_git_install; then
     log 'Automatic updates need git. To update, run the install line again.'
   elif [ "$(uname)" = Darwin ]; then
@@ -556,6 +607,7 @@ cmd_setup() {
   fi
   log ''
   log 'Next: in a project, run: moskills init --agents'
+  log 'Then ask your agent: /evolvebook new <job> (or: create an evolvebook for <job>)'
   log 'Check anytime: moskills status'
 }
 
@@ -576,6 +628,7 @@ cmd_status() {
     done
     log "$agent: $n skills linked ($dir)"
   done
+  sh "$EVOLVEBOOK" status 2>/dev/null | sed 's/^evolvebooks home:/Evolvebooks:/'
   if command -v moskills >/dev/null 2>&1; then log "Command: $(command -v moskills)"
   else log 'Command: moskills is not on PATH (add ~/.local/bin to PATH)'
   fi
@@ -613,6 +666,9 @@ cmd_uninstall() {
 # ---------- arg parsing ----------
 [ "$#" -ge 1 ] || { usage; exit 1; }
 CMD=$1; shift
+case "$CMD" in
+  evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
+esac
 TARGET=$(pwd)
 FORCE=0
 WITH_HOOKS=0

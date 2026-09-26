@@ -306,6 +306,36 @@ Rules:
 - Steps must be precise enough for a fresh agent with zero context to follow.
 - One entry per feature or decision boundary.
 
+## /evolvebook
+
+Purpose: turn one kind of job into a guide that improves every run. Anatomy
+and lifecycle diagrams: [evolvebook.md](evolvebook.md).
+
+| Command | Does |
+|---|---|
+| `/evolvebook` or `/evolvebook list` | Show every book: examples, runs, last used, where |
+| `/evolvebook setup` | Choose the Home (asked automatically the first time) |
+| `/evolvebook new <job>` | Create: one message (found examples + 3 questions), one summary, "ok" |
+| `/evolvebook use <job>` | Run: Pick, Brief, Plan, Repeat check, Make, Check, Close. Usually automatic |
+| `/evolvebook link` | Symlink your books into Claude Code, Codex and Antigravity |
+| `/evolvebook export <job>` | One self-contained file for ChatGPT or Claude web |
+
+Growing needs no command: "add this as a good example", "never do X again".
+
+Close output (every run):
+
+```text
+Add this as an Example?
+Anything that went wrong?
+```
+
+Rules:
+
+- One message per question round; every question has a default; "you decide" is always valid.
+- The repeat check and the Done list are written by the helper, never by hand.
+- Nothing enters Examples, the Never list or the Toolbox without the user's yes.
+- Read and write only inside the Home and the project `.evolvebooks/`.
+
 ## Terminal commands (moskills CLI)
 
 Available as `moskills` after the one-line install
@@ -332,3 +362,20 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one |
+
+Evolvebooks (the same helper the `/evolvebook` skill uses):
+
+| Command | Purpose |
+|---|---|
+| `moskills evolvebook setup [--default \| --home <path> \| --obsidian <vault> \| --project-only]` | Choose the Home; one question without a flag |
+| `moskills evolvebook where` | Home, where it comes from, project books |
+| `moskills evolvebook list` | All books, rebuilt index |
+| `moskills evolvebook new <job> [--project] [--choices a,b,c]` | Create a book's files |
+| `moskills evolvebook repeat <job> k=v ...` | Repeat check of a plan against the Done list |
+| `moskills evolvebook record <job> "<what>" k=v ... [--steps "a; b"]` | Add a run to the Done list |
+| `moskills evolvebook example <job> --verdict good\|bad --title <t> --why <w>` | Add an Example (refuses secrets) |
+| `moskills evolvebook never <job> --never <x> --instead <y>` | Add a Never-list rule |
+| `moskills evolvebook mistake <job> --title <t> --rule <r>` | Add a Mistake, or raise `Seen` when the title exists |
+| `moskills evolvebook suggest <job>` | Promotions due (Never list, Toolbox) |
+| `moskills evolvebook link` / `unlink` | Symlink books into installed agents / remove those links |
+| `moskills evolvebook export <job>` | One file for web chats |

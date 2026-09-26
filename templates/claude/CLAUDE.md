@@ -27,6 +27,7 @@ If the session must stop before done, use `/handoff`.
 - Use `/project-dna` after building something significant, and before commit or push.
 - Use `/learn` after a correction, a rejected review, or a confirmed root cause.
 - Use `/handoff` when another agent may need to continue the work.
+- Use `/evolvebook` to create, use, list, link or export evolvebooks: guides for one kind of job that improve every run.
 
 ## Rules
 
