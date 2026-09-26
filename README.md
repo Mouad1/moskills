@@ -127,9 +127,27 @@ sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
 
 ### Updating
 
-Updates are automatic once auto-update is on for the marketplace
-(`/plugin` → **Marketplaces** → moskills → enable auto-update; third-party
-marketplaces start with it off). Claude Code then pulls every new release from
+Updates are automatic once auto-update is on for the marketplace. Third-party
+marketplaces start with it off, so turn it on once, any of these ways:
+
+- run `/moskills-doctor` and answer yes when it offers automatic updates;
+- `/plugin` → **Marketplaces** → moskills → enable auto-update;
+- or add this to `~/.claude/settings.json` (the one-line install and
+  `moskills plugin-autoupdate` write it for you):
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "moskills": {
+      "source": { "source": "github", "repo": "Mouad1/moskills" },
+      "autoUpdate": true
+    }
+  }
+}
+```
+
+Until it is on, the session-start line tells you when a newer moskills is
+available (checked once a day; `MOSKILLS_NO_UPDATE_CHECK=1` turns it off). Claude Code then pulls every new release from
 `main` at session start. A release is picked up only when `version` is bumped
 (the test suite keeps `VERSION`, `plugin.json`, `marketplace.json` and the
 CHANGELOG in step).
@@ -156,7 +174,7 @@ Then, inside that project:
 ```
 
 `/moskills-doctor` reports drift: outdated version, hand-edited managed files,
-missing project files. `moskills notice --target <path>` prints the same
+missing project files. It also checks that the plugin updates itself. `moskills notice --target <path>` prints the same
 one-line check from a terminal.
 
 ### Developing moskills locally

@@ -361,7 +361,8 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
-| `moskills notice [--hook]` | One line when the project version differs from the installed one |
+| `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
+| `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
 
 Evolvebooks (the same helper the `/evolvebook` skill uses):
 
