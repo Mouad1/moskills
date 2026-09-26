@@ -6,6 +6,10 @@ moskills is my small skill pack for working with AI agents without letting the w
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
 
+Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
+
+![moskills workflow](docs/diagrams/moskills-workflow.svg)
+
 The goal is simple: install once (the Claude Code plugin, or one terminal line for Antigravity, Codex and other agents), set up each project once, then use clear commands when the agent needs structure.
 
 ## Installed Commands
@@ -40,7 +44,8 @@ specific job well*. Three moments, no files to learn:
 | Grow, any time | "add this as a good example", "never do X again" | Saved after your yes. Mistakes seen twice and steps repeated in 3 runs are proposed as rules and Toolbox items |
 
 Two diagrams, the anatomy of a book and how a run fits the moskills flow, are
-in **[docs/evolvebook.md](docs/evolvebook.md)**.
+in **[docs/evolvebook.md](docs/evolvebook.md)** (images in
+[docs/diagrams](docs/diagrams/README.md)).
 
 | Command | Does |
 |---|---|
@@ -435,6 +440,7 @@ project hook.
 
 ## More Docs
 
+- [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
 - [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
 - [docs/lifecycle.md](docs/lifecycle.md)
 - [docs/command-reference.md](docs/command-reference.md)

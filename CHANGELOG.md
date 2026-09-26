@@ -22,6 +22,9 @@
     stays off-limits), any folder, or project-only (`.evolvebooks/`).
   - Diagrams: `docs/evolvebook.md` (anatomy, and the run mapped onto the
     moskills flow).
+- `docs/diagrams/`: every diagram as Mermaid source, SVG and PNG (moskills
+  workflow, evolvebook anatomy, evolvebook lifecycle), a render script, and
+  a README quick tour.
 - `moskills evolvebook <command>` runs the helper from a terminal.
 - `moskills setup` (and so the one-line install) also sets up the evolvebooks
   home and, when Claude Code is installed, the moskills plugin there.

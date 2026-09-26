@@ -1,0 +1,26 @@
+flowchart LR
+  subgraph BOOK["one evolvebook · a folder of plain markdown"]
+    direction LR
+    subgraph AFTER["after each run: written"]
+      direction TB
+      D["<b>Done list</b><br/>done.md<br/>one row per run"]
+      M["<b>Mistakes list</b><br/>mistakes.md<br/>what went wrong + rule"]
+    end
+    subgraph BEFORE["before the next run: read"]
+      direction TB
+      B["<b>Brief</b><br/>brief.md<br/>questions asked first"]
+      E["<b>Examples</b><br/>examples.md<br/>good and bad, approved"]
+      C["<b>Choices</b><br/>choices.md<br/>decisions made every run"]
+      N["<b>Never list</b><br/>never.md<br/>refused, with 'instead'"]
+    end
+    subgraph MAKING["while making: used"]
+      direction TB
+      T["<b>Toolbox</b><br/>toolbox/<br/>earned templates, scripts"]
+      K["<b>Check</b><br/>check.md<br/>automatic + human items"]
+    end
+  end
+  M -. "seen 2 times + your yes" .-> N
+  D -. "'add as an example?' + your yes" .-> E
+  D -. "same manual step in 3 runs + your yes" .-> T
+  classDef file fill:#eef3ff,stroke:#3b5bdb,color:#1b1b1b
+  class B,E,C,N,T,K,D,M file

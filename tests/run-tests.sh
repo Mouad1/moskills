@@ -1170,6 +1170,24 @@ test_evolvebook_grow_commands_write_exact_formats() {
   pass 'evolvebook example, never and mistake write exact formats and refuse secrets'
 }
 
+test_diagrams_folder_is_complete_and_in_sync() {
+  dir="$ROOT_DIR/docs/diagrams"
+  assert_file "$dir/README.md"
+  assert_file "$dir/render.sh"
+  for d in moskills-workflow evolvebook-anatomy evolvebook-lifecycle; do
+    assert_file "$dir/$d.mmd"; assert_file "$dir/$d.svg"; assert_file "$dir/$d.png"
+    assert_contains "$dir/README.md" "$d.svg"
+  done
+  n=0
+  for d in evolvebook-anatomy evolvebook-lifecycle; do
+    n=$((n + 1))
+    awk -v want="$n" '/^```mermaid/ { k++; on=(k==want); next } /^```/ { on=0 } on' "$ROOT_DIR/docs/evolvebook.md" > "$TMP_ROOT/inline-$d.mmd"
+    cmp -s "$TMP_ROOT/inline-$d.mmd" "$dir/$d.mmd" || fail "$d.mmd differs from the diagram inlined in docs/evolvebook.md"
+  done
+  assert_contains "$ROOT_DIR/README.md" 'docs/diagrams/moskills-workflow.svg'
+  pass 'docs/diagrams holds every diagram as source, SVG and PNG, in sync with the docs'
+}
+
 mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
 test_dry_run_writes_nothing
@@ -1248,5 +1266,6 @@ test_one_line_install_sets_up_evolvebooks
 test_setup_installs_claude_code_plugin
 test_related_skills_know_evolvebooks
 test_evolvebook_documentation
+test_diagrams_folder_is_complete_and_in_sync
 
 printf 'All tests passed: %s\n' "$pass_count"

@@ -9,6 +9,8 @@ evolvebook says *how we do one specific job well*: a dev article, a landing
 page, a NestJS module. You write it once, in three short answers; it improves
 every time it is used.
 
+Images of both diagrams (SVG and PNG) live in [diagrams/](diagrams/README.md).
+
 ## Anatomy
 
 What one evolvebook is made of, read left to right as a loop: what past runs
