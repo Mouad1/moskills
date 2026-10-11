@@ -1,26 +1,26 @@
 # Session Protocol
 
-Managed by moskills. Do not edit — update the standard and run `moskills sync`.
+Managed by moskills. Change this standard in the moskills repo, then run `moskills sync`.
 
-## Session start
+## Start
 
-1. Read `.claude/STATE.md` — current branch, blockers, next steps.
-2. Confirm the working branch (`git branch --show-current`). Never work on the default branch.
-3. Restate the task in one line before doing anything.
+1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present.
+2. Inspect the current branch and working tree. Preserve existing changes; choose an appropriate branch for implementation according to project rules.
+3. Restate the requested outcome briefly. Route ordinary language to needed capabilities without asking the user to remember commands.
+4. For non-trivial work, record a plan, dependency order, and acceptance/gate criteria before implementation. Continue authorized work without adding approval stops for routine choices.
 
-## During the session
+## During work
 
-- Commit granularly with clear messages; never batch a day of work into one commit.
-- If the user corrects you, immediately append the rule to `tasks/lessons.md` (or run `/learn`).
-- Before claiming anything works, show the command output that proves it.
+- Finish prerequisites before dependent tasks. Use scoped native delegation when useful; fall back to serial work explicitly.
+- Checkpoint meaningful changes and evidence: commands/checks, observed results, changed files, decisions, blockers, and next actions.
+- Keep gate statuses explicit: passed, failed, unknown, or not applicable. Record review pass count and unresolved findings.
+- After a user correction, rejected review, or confirmed root cause, capture the preventive rule in `tasks/lessons.md`.
+- Ask before installing dependencies; show the migration plan before changing database schemas. Obtain user validation before any commit, push, or merge.
 
-## Session end
+## End or pause
 
-1. Run `/checkpoint`: update `.claude/STATE.md` (branch, commits, gate status, blockers, next steps).
-2. Commit or stash everything — nothing uncommitted is left dangling.
-3. If work is incomplete and another session will continue it, run `/handoff`.
+1. Update `.claude/STATE.md` and `tasks/todo.md` with **Finished**, **Still not done**, gate evidence, review results, and next actions. Report unknown and failed checks plainly.
+2. Leave working changes intact. Ending a session does not require a commit or stash.
+3. If incomplete, record a short handoff: intended result, current branch/files, prerequisites satisfied, blockers, evidence, and exact next step. Do not label pending required validation as complete.
 
-## Parking a project
-
-If a project is paused for more than a week, write a full handoff in `.claude/STATE.md`:
-what was in progress, why it stopped, exactly what to do to resume.
+This protocol is an instruction-based audit trail, not an executable scheduler or persistent agent service. Record only work and evidence actually observed.

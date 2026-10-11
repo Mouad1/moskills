@@ -1,35 +1,46 @@
-# Agent State
+# STATE
 
-Local working state for the current project.
+> Durable working record for the next session. Update after meaningful progress and before ending. Record observed facts; this file is not an executable workflow engine.
 
-Use this file for active context that helps the next agent continue the same project: current intent, shared terms, system map, checkpoints, blockers, validation history, and handoffs.
+## Current run
 
-Use `/memorize` for durable lessons, user preferences, and project decisions that should survive beyond this project state file. When a memory affects current work, link or summarize it here instead of duplicating the full memory entry.
+- **Request / agreed outcome:**
+- **Acceptance criteria / exclusions:**
+- **Branch / changed files:**
+- **Status:** active | awaiting user | blocked | parked | finished
+- **Constraints / authorized actions:**
+- **Dependency order / prerequisites satisfied:**
+- **Delegation:** native scoped tasks | serial fallback (reason)
+- **Review passes:** 0 / 2; unresolved findings:
+- **Next action / blocker:**
 
-## Current Intent Model
+## Finished
 
-None yet.
+- None yet.
 
-## Shared Language
+## Still not done
 
-None yet.
-
-## Active System Map
-
-None yet.
-
-## Checkpoints
-
-None yet.
-
-## Open Blockers
-
-None yet.
+- None recorded yet; assess against acceptance criteria before claiming completion.
 
 ## Validation History
 
-None yet.
+| Gate | Required for this scope? | Status | Observed evidence or reason / next check |
+| --- | --- | --- | --- |
+| Behavior | undecided | unknown | |
+| Visual | undecided | unknown | |
+| Code / config / docs | undecided | unknown | |
+| Human completion validation | when requested | unknown | |
 
-## Handoffs
+Statuses: passed, failed, unknown, not applicable. Required failed/unknown gates prevent completion. User validation before commit, push, or merge is separate from completion checks.
 
-None yet.
+## Checkpoints
+
+### YYYY-MM-DD — <short title>
+
+- Changed / why:
+- Checks run and observed results (or evidence links):
+- Challenger/fixer pass, findings, fixes, remaining issues:
+- Decisions / limitations:
+- Finished / Still not done:
+- Next action / exact resume step:
+- Git actions and user validation, if any:

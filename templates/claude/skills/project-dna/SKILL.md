@@ -1,11 +1,6 @@
 ---
 name: project-dna
-description: >
-  Tracks every significant implementation decision, configuration, and action taken during a co-development session with Claude — so the exact same work can be reproduced in one shot by a fresh agent.
-  
-  ALWAYS use this skill when the user says "track this", "log this", "save this", "DNA this", or "wrap up this feature". Also trigger automatically before any git commit or push is detected. Trigger when the user says they want to document what was just built, configured, or decided.
-  
-  The skill writes structured entries to a PROJECT-DNA.md file (in the project root or a .claude/ folder, or an Obsidian vault if configured), and always ends each entry with a self-contained "Replay Prompt" that a fresh Claude agent could use to reimplement the feature from scratch with full precision.
+description: "Record significant implementation decisions and reproducible feature/configuration steps when requested or when durable project context changes. Save local evidence and a replay prompt; this does not authorize Git or external actions."
 ---
 
 # Project DNA Skill
@@ -20,31 +15,21 @@ Captures implementation knowledge as reproducible entries. Each entry is a compl
 User says: `"track this"`, `"log this"`, `"DNA this"`, `"save this feature"`, `"wrap this up"`, etc.
 
 ### Auto trigger
-Detected before: `git commit`, `git push`, or any equivalent (npm version bump, deployment command).
-→ Prompt the user: *"Before you commit — want me to write a DNA entry for what we just built?"*
+Record significant decisions or implementation changes locally as part of authorized work, including before an authorized commit or push when useful. Do not add a redundant documentation approval prompt. This trigger does not authorize commit, push, merge, deployment, or other external actions; obtain the required user permission before those actions.
 
 ---
 
 ## Step 1 — Locate or Initialize the DNA File
 
-1. Check if a `PROJECT-DNA.md` already exists:
-   - In `.claude/PROJECT-DNA.md` (preferred for code projects)
-   - In project root `PROJECT-DNA.md`
-   - In Obsidian vault if user has configured one (look for `.obsidian/` folder nearby)
-
-2. If none exists, ask the user:
-   > "Where should I create the DNA file? Options:
-   > - `.claude/PROJECT-DNA.md` (hidden, near skill files)
-   > - `PROJECT-DNA.md` (project root, visible)
-   > - Custom path (Obsidian vault, monorepo subfolder, etc.)"
-
+1. Reuse the project's existing `PROJECT-DNA.md` or an explicitly configured location. Default to `.claude/PROJECT-DNA.md` when none exists; do not ask the user to choose a default path.
+2. Do not search nearby unrelated vaults or write outside the project without authorization. A configured external destination still needs permission for external writes unless the user already authorized them.
 3. If creating fresh, initialize with the file header (see `references/templates.md` → `FILE_HEADER`).
 
 ---
 
 ## Step 2 — Gather Entry Information
 
-Before writing, collect all of the following. Pull from conversation history first; ask the user only for what's missing.
+Before writing, collect all of the following. Pull from conversation history and observed evidence first. Leave unavailable facts explicit; ask only about missing consequential information that blocks a useful entry.
 
 ### Required fields
 
@@ -99,7 +84,7 @@ Entry structure:
 context → decisions → validations/ACs → steps → configs → outputs → replay prompt
 ```
 
-Each entry is self-contained. A reader should never need to look at another entry to understand this one.
+Each entry is self-contained. A reader should never need to look at another entry to understand this one. Include a relevant, simple diagram in the documentation artifact, using Mermaid by default for its flow, structure, or dependencies.
 
 ---
 
@@ -143,18 +128,15 @@ Format:
 
 ---
 
-## Step 6 — Confirm with User
+## Step 6 — Report the Saved Entry
 
-After writing the entry:
-1. Show the user the entry in the conversation (summary + replay prompt)
-2. Ask: *"Anything missing or incorrect? I can update the entry before you move on."*
-3. Apply corrections if needed, then confirm the file is saved.
+Give a concise summary and the file/entry link. Include the replay prompt in the file rather than repeating the entire entry in chat. Apply any user corrections without requiring a routine confirmation round. State missing evidence or unresolved decisions plainly.
 
 ---
 
 ## DNA File Conventions
 
-- Entries are appended in chronological order (newest at bottom, or newest at top if user prefers — ask once, remember in file header)
+- Preserve an existing entry order; otherwise append chronologically with newest at bottom. Follow a known user preference without asking about routine ordering.
 - Each entry has a unique ID: `DNA-YYYY-MM-DD-NNN` (NNN = sequence number that day)
 - File includes a `## Index` section at the top that auto-updates with entry IDs + one-line summaries
 - Use `---` horizontal rules between entries
@@ -165,18 +147,16 @@ After writing the entry:
 ## Edge Cases
 
 **User says "track this" mid-conversation with no clear boundary:**
-→ Ask: *"Which part should I track — the full session so far, or just [most recent thing]?"*
+→ Use the most recent clearly bounded feature or decision when context identifies it. Ask only if selecting a boundary would materially change the requested record.
 
 **Multiple features were built in one session:**
-→ Create one entry per feature. Ask the user to confirm the split before writing.
+→ Create one local entry per independent feature without a redundant split confirmation when scope is already clear.
 
 **The feature spans multiple files with large diffs:**
 → Don't paste full file contents. Instead: file path + what changed (added/modified/deleted) + key code snippets only if critical to reproduction.
 
-**Pre-commit auto-trigger:**
-→ If the user is in a hurry, offer: *"Quick DNA or full DNA?"*
-- Quick: just steps + replay prompt (skip context/decisions)
-- Full: complete entry
+**Before an authorized Git action:**
+→ Record proportionate local context without an extra mode-selection prompt. Do not execute Git or other external actions merely because a DNA entry was saved.
 
 ---
 
