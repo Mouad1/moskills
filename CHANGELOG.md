@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+
+- Add dependency-free npm packaging with a Node launcher for durable project setup, concise output, and optional verbose diagnostics. Registry publication is a separate step.
+- Route ordinary requests to portable skills, scoped native delegation, bounded review, and evidence gates while preserving user validation for commits, pushes, and merges.
+- Preserve managed edits and agent opt-in during repeated init; detect missing checksum inventory and assets; refuse malformed marker blocks before writes; keep foreign skill and launcher links.
+- Keep npm-owned lifecycle operations under npm and provide npm update/sync notice guidance.
+- Include upstream evolvebook commands, book templates, public diagrams, and Claude plugin update helpers in packed installations.
+- Verify packed global installs, offline npx, cache removal, dynamically newer upgrades, uninstall, project-only evolvebook setup/repeat/link/export, and read-only plugin settings checks. Add Linux/macOS CI configuration.
+
 ## 0.7.1
 
 - Automatic plugin updates, so a project never gets synced to an old plugin:

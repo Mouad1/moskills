@@ -5,27 +5,22 @@ description: "Use when: turning a vague idea into a concrete design before codin
 
 # Preview
 
-Primary goal: Crystallise an idea into an approved spec before any code is written.
-
-<HARD-GATE>
-Do NOT write code, invoke implementation skills, or scaffold anything until the user has approved the design. No exceptions for "simple" requests.
-</HARD-GATE>
+Primary goal: Turn an unclear idea into a concrete spec before implementation. Respect design decisions and authorization already supplied by the user; do not reopen settled scope.
 
 ## Steps
 
 1. **Explore context** — read project files, docs, recent commits.
 2. **Detect frontend** — check rules below; start Visual Companion if triggered.
-3. **Ask clarifying questions** — one at a time, max five. Prefer multiple choice. If the user says "you decide", answer the remaining questions yourself, label them `Self-authored under delegation` in the spec, and do not re-ask.
-4. **Propose 2–3 approaches** — with tradeoffs; lead with your recommendation.
-5. **Present design** — section by section, get approval after each section.
-6. **Write spec** — save to `docs/specs/YYYY-MM-DD-<topic>.md` and commit.
-7. **Self-review spec** — scan for placeholders, contradictions, ambiguity, scope creep; fix inline.
-8. **User reviews spec** — wait for approval before proceeding.
-9. **Hand off** — invoke `/align-intent` to lock intent before coding starts.
+3. **Resolve missing decisions** — when the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Ask only questions necessary to settle consequential ambiguity. Infer routine choices from context; prefer concise multiple choice when useful.
+4. **Compare approaches if needed** — explain meaningful tradeoffs and recommend one; skip alternatives when the chosen approach is already clear.
+5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically.
+6. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.
+7. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec and ask once before implementation. Do not seek per-section approval or a second approval for the same design.
+8. **Continue** — apply align-intent only if consequential intent remains unresolved; otherwise proceed within the approved scope. No slash command is required from the user.
 
 ## Visual Companion
 
-Requires Node.js. Scripts are bundled in `.claude/skills/preview/scripts/` — no external plugin needed.
+Requires Node.js. Scripts are bundled in `.claude/skills/preview/scripts/` — no external plugin needed. If Node.js or the scripts are unavailable, record the limitation and use an available visual preview; ask before installing dependencies.
 
 ### When to auto-start (no consent)
 
@@ -118,6 +113,8 @@ Active server ≠ use browser for everything. For each question: would the user 
 
 ## Spec Format
 
+Include a relevant, simple diagram in every spec; use Mermaid by default to explain its flow, structure, or dependencies.
+
 ```text
 Date:
 Topic:
@@ -133,7 +130,7 @@ Open Questions:
 
 ## STATE.md Update
 
-After spec is approved, append to `.claude/STATE.md` under `Preview`:
+After the design is settled, append to `.claude/STATE.md` under `Checkpoints` (do not create a duplicate history):
 
 ```text
 Date:
@@ -144,12 +141,12 @@ Non-goals:
 
 ## Rules
 
-- One question per message.
-- Never start coding during this workflow.
+- Keep communication concise; ask only necessary questions.
+- Complete the spec before implementation; do not add an approval stop when the design is already authorized.
 - Never batch unrelated concerns into one spec.
 - YAGNI: cut any feature not needed for the stated goal.
 - Do not propose unrelated refactors.
 - Fix spec issues inline — no re-review cycle.
-- After user approval, next step is always `/align-intent`, never a direct implementation skill.
+- Preserve existing authorization. Never commit, push, or merge without user validation; spec creation alone does not authorize these actions.
 - If scope spans multiple independent subsystems, decompose first; run one sub-project through preview at a time.
 - Stop the Visual Companion server when the brainstorming session ends.

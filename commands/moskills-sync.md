@@ -34,4 +34,3 @@ If it prints `off`, ask the user: "Turn on automatic moskills updates? New
 releases then install when Claude Code starts. (yes/no)". On yes, run
 `sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate` and show its output
 (it takes effect at the next Claude Code start).
-

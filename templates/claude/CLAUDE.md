@@ -1,63 +1,47 @@
 # Agent Workflow Router
 
-Use this router to keep agent work deliberate, modular, easy to audit, and easy to hand off.
+Describe requests in ordinary language; route them automatically to relevant installed capabilities. Slash commands remain optional shortcuts. Communicate in concise natural language unless the user requests another style.
 
-## Lifecycle
+## Workflow
 
-Project Start -> /shared-language
-
-New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
-
-After any correction or found root cause -> /learn
-
-If the session must stop before done, use `/handoff`.
+- Clarify only missing decisions that block work. For non-trivial work, record intent, acceptance criteria, constraints, dependencies, and a checklist in `tasks/todo.md`.
+- Use preview/align intent for unclear outcomes, shared language for terms, system map for unfamiliar boundaries, TDD for testable behavior, and diagnose for failures.
+- Build foundations before dependent work. Use current platform's native scoped subagents when useful, with non-overlapping ownership and evidence reports; work serially when unavailable. No fixed model hierarchy is required.
+- Use checkpoint for progress, memorize for durable context, learn after corrections/root causes, Project DNA for significant decisions, and handoff when pausing. Update `.claude/STATE.md` with observed evidence and next actions.
+- Before claiming completion, use gatekeeper to check behavior, visual presentation when affected, code/config/document quality, and human validation when requested. Record every gate as passed, failed, unknown, or not applicable with evidence/reason. Required failed or unknown gates leave work **Still not done**.
+- For non-trivial work, run at most two challenger/fixer review passes. Use native reviewers or separate serial passes; disclose serial self-review. Record unresolved findings and escalate only decisions requiring the user.
+- Report **Finished** and **Still not done** for agreed scope. These instructions provide an audit trail, not a runtime workflow engine.
 
 ```mermaid
 flowchart LR
-    Goal["User goal"] --> Align["Preview and align intent"]
-    Align --> Map["Map relevant system"]
-    Map --> Work["Build or diagnose with checks"]
-    Work --> Gate["Validate result"]
-    Gate --> Record["Record or hand off"]
+  Request[Ordinary request] --> Plan[Intent and dependencies]
+  Plan --> Work[Foundations then dependent work]
+  Work --> Verify[Evidence and bounded review]
+  Verify --> State[Finished or Still not done]
 ```
 
-The diagram summarizes skill coordination; select only steps relevant to the task.
+## Evolvebooks
 
-## Commands
-
-- Use `/preview` to turn a vague idea into a written spec before any code.
-- Use `/shared-language` when project terms, domain words, acronyms, or repeated explanations are unclear.
-- Use `/align-intent` before coding when intent, scope, inputs, outputs, or success criteria are not fully agreed.
-- Use `/system-map` when a task touches multiple files, modules, data flows, or boundaries.
-- Use `/tdd` when building or changing behavior that can be protected by tests.
-- Use `/diagnose` when a bug, failing test, or unexpected behavior appears.
-- Use `/checkpoint` during long work, before context changes, and after meaningful file changes.
-- Use `/gatekeeper` before saying work is complete.
-- Use `/compress-input` when communication should be short, direct, and low-noise.
-- Use `/memorize` when durable memory should be checked or updated.
-- Use `/project-dna` after building something significant, and before commit or push.
-- Use `/learn` after a correction, a rejected review, or a confirmed root cause.
-- Use `/handoff` when another agent may need to continue the work.
-- Use `/evolvebook` to create, use, list, link or export evolvebooks: guides for one kind of job that improve every run.
+Use `/evolvebook` or ordinary requests to create, use, list, link, or export guides for recurring jobs. Read configured `EVOLVEBOOKS.md` and project `.evolvebooks/EVOLVEBOOKS.md` before matching work; follow the evolvebook skill when a book applies. Read and write only inside the configured evolvebooks home and project `.evolvebooks/`; other vault folders stay off-limits.
 
 ## Rules
 
-- Keep code modular and decoupled from business-specific logic.
-- Prefer small files with one clear responsibility.
-- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies or decisions.
-- Do not claim tests passed unless command output was observed.
-- Do not push directly to the default branch. Push a branch and open a pull request.
-- Update `.claude/STATE.md` when a command changes durable project context.
-- Name variables, functions, files, and modules with the shared project language when it exists.
+- Preserve existing changes and keep edits modular and scoped. Never force a commit or stash at session end.
+- User validation is required before commit, push, or merge. Use atomic commits when authorized and do not push directly to the default branch.
+- Ask before installing dependencies. Show a migration plan before schema changes; keep schema implementations internal and export only types and connection factories.
+- Never claim tests passed without observed output. Unavailable capabilities/checks remain explicit limitations; do not invent execution or evidence.
+- Use project terms when available. Secrets come from environment variables and project-approved environment files; never hardcode tokens or put them in URLs.
+- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies, or decisions.
 
 ## Hooks
 
-Hooks are optional. They are installed only when `setupskill.sh --with-hooks` is used.
+Hooks are optional and installed only with `setupskill.sh --with-hooks`.
 
-Flow:
-
-```text
-git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit
+```mermaid
+flowchart LR
+  Commit[Authorized git commit] --> Hook[pre-commit hook]
+  Hook --> Guard[agent-guard.sh]
+  Guard --> Result[Allow or block]
 ```
 
-The guard checks staged files for conflict markers and selected risky placeholder phrases. It also prints suggested validation commands for Node and Python projects.
+The guard checks staged files for conflict markers and selected risky placeholder phrases. It prints suggested validation commands for Node and Python projects. Hook checks supplement the workflow gates; they do not provide user validation or prove all behavior works.

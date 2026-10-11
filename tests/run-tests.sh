@@ -2,7 +2,8 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-TMP_ROOT="${TMPDIR:-/tmp}/moskills-tests-$$"
+TEST_TEMP_BASE=${TMPDIR:-/tmp}
+TMP_ROOT="${TEST_TEMP_BASE%/}/moskills-tests-$$"
 
 pass_count=0
 
@@ -329,8 +330,7 @@ test_init_installs_delegation_standard() {
   run_moskills init --target "$project" >/dev/null
 
   assert_file "$project/.claude/standard/delegation.md"
-  assert_contains "$project/.claude/standard/delegation.md" 'Tier 1 — Fable 5: The Orchestrator'
-  assert_contains "$project/.claude/standard/delegation.md" 'The Findings & Decision Rule (Mandatory)'
+  cmp "$ROOT_DIR/templates/managed/delegation.md" "$project/.claude/standard/delegation.md" >/dev/null || fail 'init must install the complete delegation standard'
   assert_contains "$project/CLAUDE.md" '@.claude/standard/base.md'
   assert_contains "$project/CLAUDE.md" '@.claude/standard/delegation.md'
   assert_contains "$project/CLAUDE.md" '@.claude/standard/session-protocol.md'
@@ -539,7 +539,7 @@ test_link_skips_agents_that_are_not_installed() {
 
 test_link_is_idempotent_and_retargets_stale_links() {
   h=$(make_home relink)
-  ln -s /nonexistent/old "$h/.gemini/config/skills/tdd"
+  ln -s "$ROOT_DIR/templates/claude/skills/old-tdd" "$h/.gemini/config/skills/tdd"
   HOME=$h run_moskills link >/dev/null
   HOME=$h run_moskills link >/dev/null
   [ "$(readlink "$h/.gemini/config/skills/tdd")" = "$ROOT_DIR/templates/claude/skills/tdd" ] || fail 'expected stale link retargeted'
@@ -809,11 +809,159 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills uninstall'
   assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
   assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |'
-  assert_contains "$ROOT_DIR/templates/claude/STATE.md" 'Local working state for the current project.'
+  assert_file "$ROOT_DIR/templates/claude/STATE.md"
   assert_contains "$ROOT_DIR/templates/claude/skills/memorize/SKILL.md" 'Use `.claude/STATE.md` for current project working state.'
-  assert_contains "$ROOT_DIR/templates/claude/CLAUDE.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
+  assert_file "$ROOT_DIR/templates/claude/CLAUDE.md"
   assert_contains "$ROOT_DIR/README.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   pass 'documentation exists'
+}
+
+test_repeat_init_preserves_managed_edits() {
+  project=$(make_project repeat-init)
+  run_moskills init --target "$project" >/dev/null
+  printf 'local managed edit\n' > "$project/.claude/standard/base.md"
+  run_moskills init --target "$project" >/dev/null
+  assert_contains "$project/.claude/standard/base.md" 'local managed edit'
+  run_moskills doctor --target "$project" >/dev/null && fail 'repeat init must keep edits visible to doctor'
+  pass 'repeat init preserves managed edits and drift'
+}
+
+test_repeat_init_without_inventory_preserves_unknown_edits() {
+  project=$(make_project repeat-init-no-sums)
+  run_moskills init --target "$project" >/dev/null
+  printf 'unverified local edit\n' > "$project/.claude/standard/base.md"
+  rm "$project/.claude/standard/.manifest.sum"
+  run_moskills init --target "$project" >"$TMP_ROOT/repeat-init-no-sums.txt" 2>"$TMP_ROOT/repeat-init-no-sums.err" || fail 'repeat init must handle missing inventory'
+  assert_contains "$project/.claude/standard/base.md" 'unverified local edit'
+  [ ! -s "$TMP_ROOT/repeat-init-no-sums.err" ] || fail 'missing inventory must not trigger shell errors'
+  run_moskills doctor --target "$project" >/dev/null && fail 'unverified files must remain visible as drift'
+  pass 'repeat init preserves unknown edits when inventory is missing'
+}
+
+test_repeat_init_restores_seeded_imports() {
+  project=$(make_project repeat-init-seed)
+  run_moskills init --target "$project" >/dev/null
+  rm "$project/CLAUDE.md"
+  run_moskills init --target "$project" >/dev/null
+  assert_contains "$project/CLAUDE.md" '@.claude/standard/delegation.md'
+  pass 'repeat init restores complete imports when reseeding CLAUDE.md'
+}
+
+test_repeat_init_force_overwrites_managed_edits() {
+  project=$(make_project repeat-init-force)
+  run_moskills init --target "$project" >/dev/null
+  printf 'local managed edit\n' > "$project/.claude/standard/base.md"
+  run_moskills init --force --target "$project" >/dev/null
+  cmp "$ROOT_DIR/templates/managed/base.md" "$project/.claude/standard/base.md" >/dev/null || fail 'init --force must restore managed files'
+  run_moskills doctor --target "$project" >/dev/null || fail 'forced init must leave a clean project'
+  pass 'repeat init --force overwrites managed edits'
+}
+
+test_repeat_init_preserves_agents_opt_in() {
+  project=$(make_project repeat-init-agents)
+  run_moskills init --agents --target "$project" >/dev/null
+  rm "$project/.agents/skills/tdd/SKILL.md"
+  run_moskills init --target "$project" >/dev/null
+  assert_contains "$project/.moskills.json" '"agents": true'
+  assert_file "$project/.agents/skills/tdd/SKILL.md"
+  pass 'repeat init preserves agents opt-in'
+}
+
+test_doctor_refuses_missing_checksum_inventory() {
+  project=$(make_project doctor-no-sums)
+  run_moskills init --target "$project" >/dev/null
+  rm "$project/.claude/standard/.manifest.sum"
+  run_moskills doctor --target "$project" >"$TMP_ROOT/doctor-no-sums.txt" && fail 'doctor must fail without checksum inventory'
+  assert_contains "$TMP_ROOT/doctor-no-sums.txt" '.manifest.sum'
+  pass 'doctor fails when checksum inventory is missing'
+}
+
+test_doctor_detects_assets_missing_from_inventory() {
+  project=$(make_project doctor-incomplete-sums)
+  run_moskills init --agents --target "$project" >/dev/null
+  sums="$project/.claude/standard/.manifest.sum"
+  sed '\|  .agents/skills/tdd/SKILL.md$|d' "$sums" > "$sums.tmp"
+  mv "$sums.tmp" "$sums"
+  rm "$project/.agents/skills/tdd/SKILL.md"
+  run_moskills doctor --target "$project" >"$TMP_ROOT/doctor-incomplete-sums.txt" && fail 'doctor must detect missing assets even when absent from inventory'
+  assert_contains "$TMP_ROOT/doctor-incomplete-sums.txt" '.agents/skills/tdd/SKILL.md'
+  pass 'doctor checks managed assets beyond checksum inventory'
+}
+
+test_init_refuses_malformed_markers_without_writes() {
+  for rules in CLAUDE.md AGENTS.md; do
+    project=$(make_project "bad-init-$rules")
+    printf 'keep before\n<!-- moskills:begin -->\nkeep after\n' > "$project/$rules"
+    cp "$project/$rules" "$TMP_ROOT/bad-init-original"
+    run_moskills init --agents --target "$project" >"$TMP_ROOT/bad-init.txt" 2>&1 && fail 'init must refuse an unmatched marker'
+    cmp "$project/$rules" "$TMP_ROOT/bad-init-original" >/dev/null || fail 'init must preserve malformed rules'
+    assert_not_exists "$project/.claude"
+    assert_not_exists "$project/.moskills.json"
+    assert_not_exists "$project/tasks"
+  done
+  pass 'init validates marker pairs before writing any files'
+}
+
+test_sync_refuses_malformed_markers_without_writes() {
+  for rules in CLAUDE.md AGENTS.md; do
+    for shape in begin-only end-only reversed nested duplicate duplicate-inline; do
+      project=$(make_project "bad-sync-$rules-$shape")
+      run_moskills init --agents --target "$project" >/dev/null
+      case "$shape" in
+        begin-only) printf '<!-- moskills:begin -->\n' > "$project/$rules" ;;
+        end-only) printf '<!-- moskills:end -->\n' > "$project/$rules" ;;
+        reversed) printf '<!-- moskills:end -->\nkeep\n<!-- moskills:begin -->\n' > "$project/$rules" ;;
+        nested) printf '<!-- moskills:begin -->\n<!-- moskills:begin -->\n<!-- moskills:end -->\n' > "$project/$rules" ;;
+        duplicate) printf '<!-- moskills:begin -->\n<!-- moskills:end -->\n<!-- moskills:begin -->\n<!-- moskills:end -->\n' > "$project/$rules" ;;
+        duplicate-inline) printf '<!-- moskills:begin --><!-- moskills:begin -->\n<!-- moskills:end -->\n' > "$project/$rules" ;;
+      esac
+      printf 'must survive refused force sync\n' > "$project/.claude/standard/base.md"
+      cp "$project/$rules" "$TMP_ROOT/bad-sync-original"
+      cp "$project/.moskills.json" "$TMP_ROOT/bad-sync-manifest"
+      cp "$project/.claude/standard/.manifest.sum" "$TMP_ROOT/bad-sync-sums"
+      run_moskills sync --force --target "$project" >"$TMP_ROOT/bad-sync.txt" 2>&1 && fail "sync must refuse $shape in $rules"
+      cmp "$project/$rules" "$TMP_ROOT/bad-sync-original" >/dev/null || fail 'sync must preserve malformed rules'
+      cmp "$project/.moskills.json" "$TMP_ROOT/bad-sync-manifest" >/dev/null || fail 'refused sync must preserve manifest'
+      cmp "$project/.claude/standard/.manifest.sum" "$TMP_ROOT/bad-sync-sums" >/dev/null || fail 'refused sync must preserve checksums'
+      assert_contains "$project/.claude/standard/base.md" 'must survive refused force sync'
+    done
+  done
+  pass 'sync validates marker pairs before destructive changes'
+}
+
+test_link_preserves_foreign_skill_and_launcher_symlinks() {
+  h=$(make_home foreign-links)
+  mkdir -p "$h/.local/bin" "$h/foreign-skill"
+  printf 'foreign data\n' > "$h/foreign-skill/SKILL.md"
+  ln -s "$h/foreign-skill" "$h/.agents/skills/tdd"
+  ln -s /missing/foreign-skill "$h/.gemini/config/skills/tdd"
+  ln -s /missing/foreign-command "$h/.local/bin/moskills"
+  HOME=$h run_moskills link --replace >/dev/null
+  [ "$(readlink "$h/.agents/skills/tdd")" = "$h/foreign-skill" ] || fail 'foreign live skill symlink must survive link --replace'
+  [ "$(readlink "$h/.gemini/config/skills/tdd")" = /missing/foreign-skill ] || fail 'foreign dangling skill symlink must survive link --replace'
+  [ "$(readlink "$h/.local/bin/moskills")" = /missing/foreign-command ] || fail 'foreign launcher symlink must survive link'
+  assert_contains "$h/foreign-skill/SKILL.md" 'foreign data'
+  pass 'link preserves live and dangling foreign symlinks'
+}
+
+test_npm_distribution_refuses_standalone_lifecycle_commands() {
+  h=$(make_home npm-lifecycle)
+  HOME=$h run_moskills link >/dev/null
+  plist="$h/Library/LaunchAgents/com.moskills.self-update.plist"
+  mkdir -p "$(dirname "$plist")"
+  printf 'keep scheduler\n' > "$plist"
+  for action in setup link unlink uninstall self-update schedule-update; do
+    out="$TMP_ROOT/npm-$action.txt"
+    HOME=$h MOSKILLS_DISTRIBUTION=npm MOSKILLS_NO_LAUNCHCTL=1 run_moskills "$action" --yes >"$out" 2>&1 && fail "npm distribution must refuse $action"
+    assert_contains "$out" 'npm'
+    [ "$(readlink "$h/.agents/skills/tdd")" = "$ROOT_DIR/templates/claude/skills/tdd" ] || fail "refused $action must preserve links"
+    assert_contains "$plist" 'keep scheduler'
+  done
+  HOME=$h MOSKILLS_DISTRIBUTION=npm run_moskills version >/dev/null || fail 'npm distribution must support version'
+  project=$(make_project npm-project)
+  HOME=$h MOSKILLS_DISTRIBUTION=npm run_moskills init --agents --target "$project" >/dev/null || fail 'npm distribution must support project init'
+  HOME=$h MOSKILLS_DISTRIBUTION=npm run_moskills doctor --target "$project" >/dev/null || fail 'npm project init must pass doctor'
+  pass 'npm distribution refuses standalone lifecycle mutations'
 }
 
 # ---------- evolvebooks ----------
@@ -1200,6 +1348,32 @@ notice_latest() { # $1 = name, $2 = latest version on "GitHub"; rest = notice ar
     MOSKILLS_CACHE_DIR="$TMP_ROOT/cache-$n" run_moskills notice "$@"
 }
 
+test_npm_notice_uses_available_update_commands() {
+  project=$(make_project npm-notice)
+  run_moskills init --target "$project" >/dev/null
+  sed 's/"version": "[^"]*"/"version": "0.0.1"/' "$project/.moskills.json" > "$project/.moskills.json.tmp"
+  mv "$project/.moskills.json.tmp" "$project/.moskills.json"
+  for mode in plain hook; do
+    out="$TMP_ROOT/npm-notice-$mode.txt"
+    if [ "$mode" = hook ]; then
+      MOSKILLS_DISTRIBUTION=npm run_moskills notice --target "$project" --hook > "$out"
+    else MOSKILLS_DISTRIBUTION=npm run_moskills notice --target "$project" > "$out"; fi
+    assert_contains "$out" 'moskills sync'
+    assert_not_contains "$out" '/moskills-sync'
+    if [ "$mode" = hook ]; then
+      MOSKILLS_DISTRIBUTION=npm notice_latest "npm-$mode" 99.0.0 --target "$project" --hook > "$out"
+    else MOSKILLS_DISTRIBUTION=npm notice_latest "npm-$mode" 99.0.0 --target "$project" > "$out"; fi
+    assert_contains "$out" 'npm update -g moskills'
+    assert_not_contains "$out" 'self-update'
+    assert_not_contains "$out" '/plugin'
+  done
+  printf '{ "version": "99.0.0" }\n' > "$project/.moskills.json"
+  MOSKILLS_DISTRIBUTION=npm run_moskills notice --target "$project" > "$out"
+  assert_contains "$out" 'npm update -g moskills'
+  assert_not_contains "$out" 'update the moskills plugin'
+  pass 'npm notice recommends npm update and project sync'
+}
+
 test_notice_reports_newer_release() {
   project=$(make_project notice-latest)
   out="$TMP_ROOT/notice-latest.txt"
@@ -1324,6 +1498,7 @@ test_notice_is_silent_when_current
 test_notice_is_silent_without_moskills
 test_notice_hook_format_is_json
 test_plugin_registers_session_start_notice
+test_npm_notice_uses_available_update_commands
 test_notice_reports_newer_release
 test_notice_caches_latest_and_survives_offline
 test_plugin_autoupdate_edits_claude_settings_safely
@@ -1355,6 +1530,19 @@ test_first_commit_after_init_with_hooks_passes
 test_guard_still_blocks_placeholders_in_project_files
 test_version_files_are_consistent
 test_documentation_exists
+
+test_repeat_init_preserves_managed_edits
+test_repeat_init_without_inventory_preserves_unknown_edits
+test_repeat_init_restores_seeded_imports
+test_repeat_init_force_overwrites_managed_edits
+test_repeat_init_preserves_agents_opt_in
+test_doctor_refuses_missing_checksum_inventory
+test_doctor_detects_assets_missing_from_inventory
+test_init_refuses_malformed_markers_without_writes
+test_sync_refuses_malformed_markers_without_writes
+test_link_preserves_foreign_skill_and_launcher_symlinks
+test_npm_distribution_refuses_standalone_lifecycle_commands
+
 
 test_evolvebook_skill_is_registered_and_valid
 test_evolvebook_unconfigured_asks_for_setup

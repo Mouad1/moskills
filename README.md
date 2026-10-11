@@ -6,11 +6,21 @@ moskills is my small skill pack for working with AI agents without letting the w
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
 
+Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
+
+**npm setup is implemented; registry publication is pending.** See [npm installation and everyday use](docs/npm-installation.md) for local tarball installation and supported platforms. After publication:
+
+```sh
+npm install -g moskills
+cd your-project
+moskills init
+```
+
+Open your agent in that project and ask: “Fix this bug” or “Build this feature.”
+
 Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
 
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
-
-The goal is simple: install once (the Claude Code plugin, or one terminal line for Antigravity, Codex and other agents), set up each project once, then use clear commands when the agent needs structure.
 
 ## Installed Commands
 
