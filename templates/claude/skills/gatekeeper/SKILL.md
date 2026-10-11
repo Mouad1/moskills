@@ -11,7 +11,7 @@ Primary goal: Validate work before completion.
 
 1. Read the agreed scope and acceptance criteria from `.claude/STATE.md` and `tasks/todo.md` when present.
 2. Determine applicable and required gates: behavior, visual presentation when affected, code/config/document quality, and human completion validation when requested. Derive actual commands from project files; do not invent them.
-3. Run relevant available checks within authorization. For changed behavior, inspect useful test feedback; inspect changed visual states when presentation matters.
+3. When an evolvebook is active, include its `check.md`: automatic items first, then human items. Run relevant available checks within authorization. For changed behavior, inspect useful test feedback; inspect changed visual states when presentation matters.
 4. Compare observed results with acceptance criteria. Record each gate as `passed`, `failed`, `unknown`, or `not applicable`, with evidence or a reason and next action.
 5. If a required gate is failed or unknown, including requested human validation still pending, report **Still not done**. Optional unavailable checks remain explicit limitations. Never count unknown as passed.
 6. Update `.claude/STATE.md` under `Validation History` and its current gate table; update Finished / Still not done in `tasks/todo.md`. Reuse existing headings rather than creating duplicate histories.
@@ -23,6 +23,7 @@ Scope checked:
 Gates: behavior / visual / code / human (status, required?, evidence or reason)
 Finished:
 Still not done:
+Human Check: pending judgement, or none when no human check applies
 Limitations / next action:
 ```
 

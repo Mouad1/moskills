@@ -6,9 +6,11 @@ const { spawnSync } = require('node:child_process');
 
 const input = process.argv.slice(2);
 const args = [];
+const helper = ['evolvebook', 'evolvebooks'].includes(input[0]);
 let verbose = false;
 for (let i = 0; i < input.length; i++) {
-  if (input[i] === '--verbose') verbose = true;
+  if (helper) args.push(input[i]);
+  else if (input[i] === '--verbose') verbose = true;
   else {
     args.push(input[i]);
     if (['--target', '--all'].includes(input[i]) && i + 1 < input.length) args.push(input[++i]);
@@ -20,12 +22,14 @@ const help = `moskills — structured agent work, short answers.
   moskills doctor   Check installed files and project readiness.
   moskills sync     Update project setup; preserve personal edits.
   moskills version  Show installed version.
+  moskills evolvebook <command>  Create, use, link, or export a recurring-job guide.
+  moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
 
 Options: --target <path>, --with-hooks, --force, --verbose.
 After setup, open your agent in this project and ask normally: "Fix this bug."
 Update CLI: npm install -g moskills@latest. Remove CLI: npm uninstall -g moskills.
 `;
-if (!args.length || ['help', '--help', '-h'].includes(args[0]) || args.includes('--help') || args.includes('-h')) {
+if (!args.length || (!helper && (['help', '--help', '-h'].includes(args[0]) || args.includes('--help') || args.includes('-h')))) {
   process.stdout.write(help);
   process.exit(0);
 }
@@ -40,7 +44,7 @@ if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);
   process.exit(1);
 }
-if (!['init', 'sync', 'doctor', 'notice', 'version'].includes(command)) {
+if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate'].includes(command)) {
   process.stderr.write(`moskills: unknown command '${command}'. Run moskills --help.\n`);
   process.exit(1);
 }

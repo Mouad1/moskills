@@ -11,7 +11,7 @@ Primary goal: Turn an unclear idea into a concrete spec before implementation. R
 
 1. **Explore context** — read project files, docs, recent commits.
 2. **Detect frontend** — check rules below; start Visual Companion if triggered.
-3. **Resolve missing decisions** — ask only questions necessary to settle consequential ambiguity. Infer routine choices from context; prefer concise multiple choice when useful.
+3. **Resolve missing decisions** — when the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Ask only questions necessary to settle consequential ambiguity. Infer routine choices from context; prefer concise multiple choice when useful.
 4. **Compare approaches if needed** — explain meaningful tradeoffs and recommend one; skip alternatives when the chosen approach is already clear.
 5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically.
 6. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.

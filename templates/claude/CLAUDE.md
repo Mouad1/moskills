@@ -20,6 +20,10 @@ flowchart LR
   Verify --> State[Finished or Still not done]
 ```
 
+## Evolvebooks
+
+Use `/evolvebook` or ordinary requests to create, use, list, link, or export guides for recurring jobs. Read configured `EVOLVEBOOKS.md` and project `.evolvebooks/EVOLVEBOOKS.md` before matching work; follow the evolvebook skill when a book applies. Read and write only inside the configured evolvebooks home and project `.evolvebooks/`; other vault folders stay off-limits.
+
 ## Rules
 
 - Preserve existing changes and keep edits modular and scoped. Never force a commit or stash at session end.

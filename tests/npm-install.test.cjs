@@ -11,7 +11,9 @@ const home = path.join(scratch, 'home');
 fs.mkdirSync(home);
 const env = { ...process.env, HOME: home, npm_config_cache: path.join(scratch, 'cache'),
   npm_config_userconfig: path.join(scratch, 'npmrc'), npm_config_globalconfig: path.join(scratch, 'global-npmrc'),
-  npm_config_audit: 'false', npm_config_fund: 'false', MOSKILLS_NO_LAUNCHCTL: '1' };
+  npm_config_audit: 'false', npm_config_fund: 'false', MOSKILLS_NO_LAUNCHCTL: '1',
+  XDG_CONFIG_HOME: path.join(scratch, 'config'), CLAUDE_CONFIG_DIR: path.join(scratch, 'claude'),
+  EVOLVEBOOKS_HOME: '', MOSKILLS_NO_UPDATE_CHECK: '1' };
 fs.writeFileSync(env.npm_config_userconfig, '');
 fs.writeFileSync(env.npm_config_globalconfig, '');
 function run(cmd, args, cwd = root, extra = {}) {
@@ -43,6 +45,12 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
       assert.ok(pkg.files.includes(f), f);
     assert.ok(!pkg.files.some(f => /^(tasks|tests|\.git|docs\/superpowers)\//.test(f)), pkg.files.join('\n'));
   });
+  await t.test('tarball includes evolvebook docs, diagrams, and settings helpers', () => {
+    for (const f of ['lib/claude-settings.js', 'lib/claude-settings.py', 'docs/evolvebook.md',
+      'docs/diagrams/evolvebook-anatomy.mmd', 'docs/diagrams/evolvebook-anatomy.svg',
+      'docs/diagrams/evolvebook-anatomy.png', 'templates/claude/skills/evolvebook/scripts/evolvebook.sh'])
+      assert.ok(pkg.files.includes(f), f);
+  });
   const prefix = path.join(scratch, 'global prefix');
   const install = file => ok(run('npm', ['install', '--global', '--prefix', prefix, '--offline', '--ignore-scripts', file]));
   install(pkg.file);
@@ -51,6 +59,41 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
   await t.test('help and version are short and usable', () => {
     assert.match(ok(call(['--help'])), /init/);
     assert.equal(ok(call(['--version'])).trim(), fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim());
+  });
+  await t.test('evolvebook aliases keep helper help', () => {
+    for (const args of [['evolvebook', 'help'], ['evolvebooks', '--help']])
+      assert.match(ok(call(args)), /repeat <name> key=value/);
+  });
+  await t.test('packed evolvebook supports isolated project-only setup and export', () => {
+    const bookProject = project('book project with spaces');
+    fs.mkdirSync(path.join(bookProject, '.agents/skills'), { recursive: true });
+    ok(call(['evolvebook', 'setup', '--project-only'], bookProject));
+    ok(call(['evolvebook', 'new', 'release-guide', '--project', '--purpose', 'Release guide',
+      '--use-when', 'shipping code', '--choices', 'topic,format'], bookProject));
+    const book = path.join(bookProject, '.evolvebooks/release-guide');
+    for (const f of ['SKILL.md', 'brief.md', 'examples.md', 'choices.md', 'never.md', 'check.md',
+      'done.md', 'mistakes.md', 'toolbox/README.md']) assert.ok(fs.statSync(path.join(book, f)).isFile(), f);
+    assert.match(ok(call(['evolvebooks', 'repeat', 'release-guide', 'topic=runtime', 'format=guide'], bookProject)), /PASS/);
+    ok(call(['evolvebook', 'link'], bookProject));
+    for (const dir of ['.claude/skills', '.agents/skills']) {
+      const link = path.join(bookProject, dir, 'release-guide');
+      assert.equal(fs.readlinkSync(link), '../../.evolvebooks/release-guide');
+      assert.equal(fs.realpathSync(link), fs.realpathSync(book));
+    }
+    const exported = path.join(bookProject, '--verbose');
+    ok(call(['evolvebook', 'export', 'release-guide', '--out', '--verbose'], bookProject));
+    assert.match(fs.readFileSync(exported, 'utf8'), /<!-- file: choices.md -->/);
+    assert.ok(!fs.existsSync(path.join(home, '.evolvebooks')));
+  });
+  await t.test('packed plugin-autoupdate check loads helpers without changing settings', () => {
+    fs.mkdirSync(env.CLAUDE_CONFIG_DIR, { recursive: true });
+    const settings = path.join(env.CLAUDE_CONFIG_DIR, 'settings.json');
+    const original = JSON.stringify({ theme: 'dark', extraKnownMarketplaces: { moskills: { autoUpdate: true } } });
+    fs.writeFileSync(settings, original);
+    const result = call(['plugin-autoupdate', '--check']);
+    assert.match(ok(result), /auto-update for moskills: on/);
+    assert.doesNotMatch(result.stdout + result.stderr, /unknown|not valid|No such file/);
+    assert.equal(fs.readFileSync(settings, 'utf8'), original);
   });
   const p = project('fresh project with spaces');
   await t.test('fresh init enables both agent entry points without flags', () => {
@@ -100,17 +143,22 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
   await t.test('local tarball upgrade followed by sync preserves user-owned files', () => {
     const staged = path.join(scratch, 'upgrade source');
     fs.mkdirSync(staged);
-    for (const f of ['package.json', 'bin', 'moskills', 'VERSION', 'templates', 'migrations'])
+    const sourceMeta = JSON.parse(fs.readFileSync(path.join(root, 'package.json')));
+    for (const f of ['package.json', ...sourceMeta.files])
       fs.cpSync(path.join(root, f), path.join(staged, f), { recursive: true });
     const meta = JSON.parse(fs.readFileSync(path.join(staged, 'package.json')));
-    meta.version = '0.6.6';
+    const sourceVersion = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
+    const parts = sourceVersion.split('.').map(Number);
+    parts[2] += 1;
+    const upgradeVersion = parts.join('.');
+    meta.version = upgradeVersion;
     fs.writeFileSync(path.join(staged, 'package.json'), JSON.stringify(meta));
-    fs.writeFileSync(path.join(staged, 'VERSION'), '0.6.6\n');
+    fs.writeFileSync(path.join(staged, 'VERSION'), upgradeVersion + '\n');
     fs.appendFileSync(path.join(staged, 'templates/managed/base.md'), '\nUpgrade sentinel.\n');
     const userFile = path.join(q, 'CLAUDE.md');
     fs.appendFileSync(userFile, '\nMy project notes.\n');
     install(pack(staged).file);
-    assert.equal(ok(call(['version'])).trim(), '0.6.6');
+    assert.equal(ok(call(['version'])).trim(), upgradeVersion);
     ok(call(['sync'], q));
     assert.match(fs.readFileSync(userFile, 'utf8'), /My project notes/);
     assert.match(fs.readFileSync(path.join(q, '.claude/standard/base.md'), 'utf8'), /Upgrade sentinel/);

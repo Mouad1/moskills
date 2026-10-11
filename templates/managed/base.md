@@ -19,6 +19,7 @@ Users describe work in ordinary language. Select relevant capabilities automatic
 | Correction, rejected review, or confirmed root cause | Learn |
 | Relevant past work or durable decision | Memorize |
 | Pause or continuation in another session | Handoff |
+| Create, use, list, link, or export a recurring-job guide | Evolvebook |
 
 Use installed skills when available. If a capability or tool is unavailable, perform its documented steps directly and record the limitation; never invent a tool, check, or result.
 
@@ -36,6 +37,12 @@ flowchart LR
   Work --> Gates[Evidence gates]
   Gates --> Record[Finished or Still not done]
 ```
+
+## Evolvebooks
+
+Use `/evolvebook` or ordinary requests to create, use, list, link, or export recurring-job guides. Optional command route: /preview -> /align-intent -> /evolvebook use (if a book matches) -> /system-map -> implementation and checks.
+
+If an evolvebooks home is configured, read its `EVOLVEBOOKS.md` and project `.evolvebooks/EVOLVEBOOKS.md` when present before matching work. Follow the evolvebook skill when a book applies. When the same kind of job has been done three times without a book, propose creating one.
 
 ## Completion gates
 
@@ -58,3 +65,5 @@ A required failed or unknown gate leaves work **Still not done**. Optional unava
 - Never claim a check passed without observed evidence. These files guide agent behavior; they are not a runtime workflow engine.
 - Use shared project terms when available. Secrets come from environment variables; follow project environment-file rules and never put tokens in URLs. Pass large payloads via stdin rather than argv.
 - Every documentation artifact must include a relevant diagram, using Mermaid by default. Keep diagrams useful, accurate, and simple; show the documented flow, dependency, structure, or relationship rather than decorative detail.
+
+- Evolvebooks: read and write only inside the evolvebooks home and project `.evolvebooks/`. When the home is inside a vault, the rest of the vault is off-limits.

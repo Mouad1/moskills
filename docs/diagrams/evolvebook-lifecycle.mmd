@@ -1,0 +1,27 @@
+flowchart TB
+  P["/preview<br/>vague idea → spec"] --> A["/align-intent<br/>agree on the goal"]
+  A --> U1
+
+  subgraph USE["/evolvebook use"]
+    direction LR
+    U1["<b>1 Pick</b><br/>'Using the article evolvebook<br/>(5 examples, 7 runs)'"]
+    U2["<b>2 Brief</b><br/>brief.md, one message,<br/>guesses filled in"]
+    U3["<b>3 Plan</b><br/>examples + never list →<br/>one value per Choice"]
+    U4{"<b>4 Repeat check</b><br/>differs from<br/>the Done list?"}
+    U1 --> U2 --> U3 --> U4
+    U4 -- "no: change the plan" --> U3
+  end
+
+  U4 -- "yes" --> S["/system-map"]
+  S --> MK["<b>5 Make</b><br/>/tdd · /checkpoint<br/>Toolbox when it fits"]
+  MK --> G["<b>6 Check</b> · /gatekeeper<br/>runs check.md: Passing · Failing<br/>Unknown · Human Check"]
+  G --> CL["<b>7 Close</b><br/>'Add as an Example?'<br/>'Anything that went wrong?'"]
+  CL --> R["writes done.md<br/>proposes promotions"]
+  CL -. "a problem" .-> L["/learn<br/>writes mistakes.md"]
+  R --> DNA["/project-dna"] --> DONE(["Done"])
+  L -.-> DNA
+
+  classDef ms fill:#eef3ff,stroke:#3b5bdb,color:#1b1b1b
+  classDef eb fill:#eaf6ec,stroke:#2e7d32,color:#1b1b1b
+  class P,A,S,DNA,L ms
+  class U1,U2,U3,U4,MK,G,CL,R eb
