@@ -1,0 +1,41 @@
+{
+  "name": "moskills",
+  "version": "0.6.5",
+  "description": "Structured AI agent skills with simple project setup and concise natural-language workflows.",
+  "license": "MIT",
+  "author": "Mouad Belghiti",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mouad1/moskills.git"
+  },
+  "homepage": "https://github.com/Mouad1/moskills#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "bin": {
+    "moskills": "bin/moskills.cjs"
+  },
+  "files": [
+    "bin/moskills.cjs",
+    "moskills",
+    "VERSION",
+    "templates/",
+    "migrations/",
+    "docs/npm-installation.md",
+    "CHANGELOG.md",
+    "docs/command-reference.md",
+    "docs/lifecycle.md",
+    "docs/pain-points.md",
+    "docs/examples/"
+  ],
+  "scripts": {
+    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs"
+  },
+  "keywords": [
+    "codex",
+    "claude-code",
+    "agents",
+    "skills",
+    "workflow"
+  ]
+}
