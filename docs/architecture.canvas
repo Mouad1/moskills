@@ -1,0 +1,214 @@
+{
+  "nodes": [
+    {
+      "id": "request",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 330,
+      "height": 170,
+      "color": "5",
+      "text": "## Describe the goal\n\nOrdinary request or evolvebook brief.\n\nThe router chooses a suitable workflow."
+    },
+    {
+      "id": "plan",
+      "type": "text",
+      "x": 0,
+      "y": 230,
+      "width": 330,
+      "height": 170,
+      "color": "5",
+      "text": "## Plan and prerequisites\n\nDefine scope, success criteria and dependencies.\n\nResolve material questions and required design approval."
+    },
+    {
+      "id": "foundation",
+      "type": "text",
+      "x": 0,
+      "y": 460,
+      "width": 330,
+      "height": 170,
+      "color": "5",
+      "text": "## Build and verify foundation\n\nScoped builder creates prerequisite contracts.\n\nRequired checks must pass before dependent work starts."
+    },
+    {
+      "id": "feature",
+      "type": "text",
+      "x": 0,
+      "y": 690,
+      "width": 330,
+      "height": 170,
+      "color": "5",
+      "text": "## Build the feature\n\nFresh context and explicit file ownership.\n\nIndependent tasks may run in parallel."
+    },
+    {
+      "id": "gates",
+      "type": "text",
+      "x": 0,
+      "y": 920,
+      "width": 330,
+      "height": 170,
+      "color": "3",
+      "text": "## Behavior / visual / code\n\nObserved checks and independent findings.\n\nRequired failures and unknowns block acceptance."
+    },
+    {
+      "id": "human",
+      "type": "text",
+      "x": 0,
+      "y": 1150,
+      "width": 330,
+      "height": 170,
+      "color": "4",
+      "text": "## User acceptance\n\nAccept this specific result.\n\nCommit, push, merge and deployment permissions remain distinct."
+    },
+    {
+      "id": "state",
+      "type": "text",
+      "x": 570,
+      "y": 420,
+      "width": 330,
+      "height": 170,
+      "color": "6",
+      "text": "## Run state: the notebook\n\nGoal, scope, task status, prerequisites, blockers and next action.\n\nOne authoritative record; updates survive interrupted chats."
+    },
+    {
+      "id": "evidence",
+      "type": "text",
+      "x": 570,
+      "y": 690,
+      "width": 330,
+      "height": 170,
+      "color": "6",
+      "text": "## Evidence: the proof\n\nTests, screenshots, review findings and explicit acceptance.\n\nCode changes reopen checks whose proof is stale."
+    },
+    {
+      "id": "ui",
+      "type": "text",
+      "x": 570,
+      "y": 150,
+      "width": 330,
+      "height": 170,
+      "color": "5",
+      "text": "## Brief / progress / review\n\nFriendly view of the same record.\n\nFinished and Still not done lists, including blockers and next actions."
+    },
+    {
+      "id": "blocked",
+      "type": "text",
+      "x": -480,
+      "y": 920,
+      "width": 330,
+      "height": 170,
+      "color": "1",
+      "text": "## Bounded review loop\n\nInitial review plus at most two fix/re-review rounds.\n\nIf blockers remain, show unresolved issues and options."
+    },
+    {
+      "id": "status",
+      "type": "text",
+      "x": 570,
+      "y": 1150,
+      "width": 330,
+      "height": 170,
+      "color": "2",
+      "text": "## Implementation status\n\nProposed architecture. Existing skills and installer are available.\n\nIntegrated run engine, dashboard and npm release remain planned."
+    }
+  ],
+  "edges": [
+    {
+      "id": "request-plan",
+      "fromNode": "request",
+      "fromSide": "bottom",
+      "toNode": "plan",
+      "toSide": "top"
+    },
+    {
+      "id": "plan-foundation",
+      "fromNode": "plan",
+      "fromSide": "bottom",
+      "toNode": "foundation",
+      "toSide": "top"
+    },
+    {
+      "id": "foundation-feature",
+      "fromNode": "foundation",
+      "fromSide": "bottom",
+      "toNode": "feature",
+      "toSide": "top"
+    },
+    {
+      "id": "feature-gates",
+      "fromNode": "feature",
+      "fromSide": "bottom",
+      "toNode": "gates",
+      "toSide": "top"
+    },
+    {
+      "id": "gates-human",
+      "fromNode": "gates",
+      "fromSide": "bottom",
+      "toNode": "human",
+      "toSide": "top"
+    },
+    {
+      "id": "gates-fix",
+      "fromNode": "gates",
+      "fromSide": "left",
+      "toNode": "feature",
+      "toSide": "left",
+      "label": "Fix and rerun affected checks",
+      "color": "1"
+    },
+    {
+      "id": "gates-blocked",
+      "fromNode": "gates",
+      "fromSide": "left",
+      "toNode": "blocked",
+      "toSide": "right",
+      "label": "Budget exhausted",
+      "color": "1"
+    },
+    {
+      "id": "state-ui",
+      "fromNode": "state",
+      "fromSide": "top",
+      "toNode": "ui",
+      "toSide": "bottom",
+      "label": "Display saved progress",
+      "color": "6"
+    },
+    {
+      "id": "evidence-state",
+      "fromNode": "evidence",
+      "fromSide": "top",
+      "toNode": "state",
+      "toSide": "bottom",
+      "label": "Attach proof and invalidate stale checks",
+      "color": "6"
+    },
+    {
+      "id": "state-plan",
+      "fromNode": "state",
+      "fromSide": "left",
+      "toNode": "plan",
+      "toSide": "right",
+      "label": "Resume and schedule",
+      "color": "6"
+    },
+    {
+      "id": "gates-evidence",
+      "fromNode": "gates",
+      "fromSide": "right",
+      "toNode": "evidence",
+      "toSide": "left",
+      "label": "Save observed results",
+      "color": "6"
+    },
+    {
+      "id": "human-state",
+      "fromNode": "human",
+      "fromSide": "right",
+      "toNode": "state",
+      "toSide": "bottom",
+      "label": "Record exact acceptance when implemented",
+      "color": "4"
+    }
+  ]
+}
