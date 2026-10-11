@@ -48,7 +48,8 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
   await t.test('tarball includes evolvebook docs, diagrams, and settings helpers', () => {
     for (const f of ['lib/claude-settings.js', 'lib/claude-settings.py', 'docs/evolvebook.md',
       'docs/diagrams/evolvebook-anatomy.mmd', 'docs/diagrams/evolvebook-anatomy.svg',
-      'docs/diagrams/evolvebook-anatomy.png', 'templates/claude/skills/evolvebook/scripts/evolvebook.sh'])
+      'docs/diagrams/evolvebook-anatomy.png', 'docs/architecture.md', 'docs/architecture.canvas',
+      'templates/claude/skills/evolvebook/scripts/evolvebook.sh'])
       assert.ok(pkg.files.includes(f), f);
   });
   const prefix = path.join(scratch, 'global prefix');

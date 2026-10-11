@@ -31,7 +31,7 @@ Use `/evolvebook` or ordinary requests to create, use, list, link, or export gui
 - Ask before installing dependencies. Show a migration plan before schema changes; keep schema implementations internal and export only types and connection factories.
 - Never claim tests passed without observed output. Unavailable capabilities/checks remain explicit limitations; do not invent execution or evidence.
 - Use project terms when available. Secrets come from environment variables and project-approved environment files; never hardcode tokens or put them in URLs.
-- Every documentation artifact must include a relevant diagram, using Mermaid by default. Keep it useful, accurate, and simple, showing the documented flow, dependency, structure, or relationship.
+- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies, or decisions.
 
 ## Hooks
 
