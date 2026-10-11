@@ -32,7 +32,7 @@ usage() {
 Usage: moskills <command> [options]
 
 Commands:
-  init    [--target <path>] [--with-hooks] [--agents]
+  init    [--target <path>] [--with-hooks] [--agents] [--force]
                                             Install the standard into a project.
   sync    [--target <path>] [--force] [--agents]
                                             Upgrade managed files to the latest version.
@@ -58,7 +58,7 @@ Multi-repo:
                                        that contains .moskills.json (init: skipped).
 
 Options:
-  --force       sync only: overwrite managed files even if hand-edited.
+  --force       init/sync: overwrite managed files even if hand-edited.
   --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
   --hook        notice only: print Claude Code SessionStart hook JSON instead of text.
   --agents      init/sync: also install skills in .agents/skills and a managed
@@ -145,6 +145,22 @@ agents_block() { # AGENTS.md has no @imports, so name the files to read
   printf 'Project skills live in .agents/skills/.\n'
   printf 'At session start, if the moskills command is available, run `moskills notice` and tell the user any line it prints.\n'
   printf '%s\n' "$MARKER_END"
+}
+
+validate_markers() { # refuse malformed blocks before changing any project files
+  for cm in "$1/CLAUDE.md" "$1/AGENTS.md"; do
+    [ -f "$cm" ] || continue
+    awk '
+      {
+        begin_count=gsub(/moskills:begin/, "&")
+        end_count=gsub(/moskills:end/, "&")
+        if (begin_count > 1 || end_count > 1 || (begin_count && end_count)) bad=1
+        if (begin_count && (begins++ || ends)) bad=1
+        if (end_count && (ends++ || !begins)) bad=1
+      }
+      END { exit (bad || begins != ends) }
+    ' "$cm" || die "malformed moskills marker pair in $cm; repair the begin/end block before retrying"
+  done
 }
 
 ensure_marker() { # $1 = target
@@ -242,14 +258,25 @@ ensure_gitignore() { # $1 = target — keep seeded local settings out of git
 # prints: "edited <dest>" / "missing <dest>" lines; returns 0 always
 drift_lines() { # $1 = target
   t=$1
-  [ -f "$t/$SUM_FILE" ] || return 0
-  while IFS= read -r line; do
-    expected=${line%%  *}
-    dest=${line#*  }
+  if [ -f "$t/$SUM_FILE" ]; then
+    while IFS= read -r line; do
+      expected=${line%%  *}
+      dest=${line#*  }
+      if [ ! -f "$t/$dest" ]; then printf 'missing %s\n' "$dest"
+      elif [ "$(sha "$t/$dest")" != "$expected" ]; then printf 'edited %s\n' "$dest"
+      fi
+    done < "$t/$SUM_FILE"
+  else
+    printf 'missing %s\n' "$SUM_FILE"
+  fi
+  # Inventory may be missing or incomplete. Check all expected assets independently.
+  managed_pairs | while IFS='|' read -r src dest; do
+    if [ -f "$t/$SUM_FILE" ] && awk -v dest="$dest" '
+      substr($0, 67) == dest { found=1 } END { exit !found }
+    ' "$t/$SUM_FILE"; then continue; fi
     if [ ! -f "$t/$dest" ]; then printf 'missing %s\n' "$dest"
-    elif [ "$(sha "$t/$dest")" != "$expected" ]; then printf 'edited %s\n' "$dest"
-    fi
-  done < "$t/$SUM_FILE"
+    else printf 'edited %s\n' "$dest"; fi
+  done
 }
 
 # ---------- commands ----------
@@ -257,6 +284,14 @@ cmd_init() {
   t=$TARGET
   AGENTS_ON=$AGENTS
   [ -d "$t" ] || die "target does not exist: $t"
+  validate_markers "$t"
+  if [ -f "$t/.moskills.json" ]; then
+    cmd_sync
+    seed_project "$t"
+    ensure_marker "$t"
+    install_git_hook "$t"
+    return 0
+  fi
   log "Installing moskills standard v$STANDARD_VERSION into $t"
   install_managed "$t"
   seed_project "$t"
@@ -273,6 +308,7 @@ cmd_init() {
 cmd_sync() {
   t=$TARGET
   [ -f "$t/.moskills.json" ] || die "no .moskills.json in $t — run 'moskills init' first"
+  validate_markers "$t"
   from=$(manifest_version "$t")
   AGENTS_ON=$AGENTS
   [ "$(manifest_agents "$t")" -eq 1 ] && AGENTS_ON=1
@@ -309,7 +345,10 @@ cmd_sync() {
     managed_pairs | while IFS='|' read -r src dest; do
       [ -f "$t/$dest" ] || continue
       case "$edited_list" in
-        *"$dest"*) grep "  $dest\$" "$t/$SUM_FILE" >> "$tmp" || true ;;
+        *"$dest"*)
+          if [ -f "$t/$SUM_FILE" ]; then
+            awk -v dest="$dest" 'substr($0, 67) == dest' "$t/$SUM_FILE" >> "$tmp"
+          fi ;;
         *) printf '%s  %s\n' "$(sha "$t/$dest")" "$dest" >> "$tmp" ;;
       esac
     done
@@ -331,6 +370,7 @@ cmd_doctor() {
     return 1
   fi
   v=$(manifest_version "$t")
+  AGENTS_ON=$(manifest_agents "$t")
   if [ "$v" != "$STANDARD_VERSION" ]; then
     printf '%-20s OUTDATED  v%s (latest v%s) -> run moskills sync\n' "$name" "$v" "$STANDARD_VERSION"
     issues=1
@@ -398,7 +438,10 @@ agent_targets() { # prints "agent|skills dir" for each detected agent
 
 link_path() { # $1 = source, $2 = link path, $3 = agent (for backups)
   if [ -L "$2" ]; then
-    rm "$2"
+    case "$(readlink "$2")" in
+      "$SCRIPT_DIR"/*) rm "$2" ;;
+      *) warn "kept foreign symlink $2 (remove it yourself before linking moskills)"; return 0 ;;
+    esac
   elif [ -e "$2" ]; then
     if [ "$REPLACE" -ne 1 ]; then
       warn "kept existing folder $2 (rerun with --replace to back it up and link)"
@@ -432,6 +475,12 @@ cmd_link() {
 
 install_launcher() {
   launcher="$HOME/.local/bin/moskills"
+  if [ -L "$launcher" ]; then
+    case "$(readlink "$launcher")" in
+      "$SCRIPT_DIR"/*) ;;
+      *) warn "kept foreign symlink $launcher (remove it yourself before linking moskills)"; return 0 ;;
+    esac
+  fi
   if [ -e "$launcher" ] && [ ! -L "$launcher" ]; then
     warn "kept existing file $launcher (not a moskills link)"
   else
@@ -648,6 +697,13 @@ run_all() { # $1 = command function
   done
   return "$rc"
 }
+
+if [ "${MOSKILLS_DISTRIBUTION:-}" = npm ]; then
+  case "$CMD" in
+    setup|link|unlink|uninstall|self-update|schedule-update)
+      die "npm manages this installation; '$CMD' is unavailable. Use npm update -g moskills or npm uninstall -g moskills for package maintenance." ;;
+  esac
+fi
 
 case "$CMD" in
   version) log "$STANDARD_VERSION" ;;
