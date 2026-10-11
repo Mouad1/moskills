@@ -6,9 +6,9 @@
       "x": 0,
       "y": 0,
       "width": 330,
-      "height": 170,
+      "height": 210,
       "color": "5",
-      "text": "## Describe the goal\n\nOrdinary request or evolvebook brief.\n\nThe router chooses a suitable workflow."
+      "text": "## Describe the goal\n\nOrdinary request or evolvebook brief.\n\nCopied routing instructions guide the agent today; an enforced router remains proposed."
     },
     {
       "id": "plan",
@@ -66,9 +66,9 @@
       "x": 570,
       "y": 420,
       "width": 330,
-      "height": 170,
+      "height": 210,
       "color": "6",
-      "text": "## Run state: the notebook\n\nGoal, scope, task status, prerequisites, blockers and next action.\n\nOne authoritative record; updates survive interrupted chats."
+      "text": "## Proposed run state: the notebook\n\nGoal, scope, task status, prerequisites, blockers and next action.\n\nTarget: one authoritative record. Today: agent-maintained project notes."
     },
     {
       "id": "evidence",
@@ -86,9 +86,9 @@
       "x": 570,
       "y": 150,
       "width": 330,
-      "height": 170,
+      "height": 210,
       "color": "5",
-      "text": "## Brief / progress / review\n\nFriendly view of the same record.\n\nFinished and Still not done lists, including blockers and next actions."
+      "text": "## Proposed brief / progress / review\n\nFriendly view of the same record.\n\nDashboard, forms and derived Finished / Still not done views remain planned."
     },
     {
       "id": "blocked",
@@ -96,9 +96,9 @@
       "x": -480,
       "y": 920,
       "width": 330,
-      "height": 170,
+      "height": 210,
       "color": "1",
-      "text": "## Bounded review loop\n\nInitial review plus at most two fix/re-review rounds.\n\nIf blockers remain, show unresolved issues and options."
+      "text": "## Proposed bounded review loop\n\nInitial review plus at most two fix/re-review rounds.\n\nInstructions can request this today; runtime enforcement remains planned."
     },
     {
       "id": "status",
@@ -106,9 +106,29 @@
       "x": 570,
       "y": 1150,
       "width": 330,
-      "height": 170,
+      "height": 290,
       "color": "2",
-      "text": "## Implementation status\n\nProposed architecture. Existing skills and installer are available.\n\nIntegrated run engine, dashboard and npm release remain planned."
+      "text": "## Shipped foundation \u00b7 0.8.0\n\nSafe reruns/inventory; copied routing and host fallbacks; evolvebook helper; source npm package.\n\nLocal checks: 95 shell + 14 npm tests passed.\n\nLinux/macOS CI passed on Node 18, 22 and 24. Public registry release and live host/WSL trials remain unfinished."
+    },
+    {
+      "id": "pending",
+      "type": "text",
+      "x": 990,
+      "y": 1150,
+      "width": 350,
+      "height": 290,
+      "color": "2",
+      "text": "## Still not done\n\nEnforced run engine, evidence service, dashboard and evolvebook forms.\n\nPreview decision persistence and launcher fixes.\n\nPublic npm trial, WSL, live Claude Code and automatic instruction loading need observed evidence."
+    },
+    {
+      "id": "docs",
+      "type": "text",
+      "x": 990,
+      "y": 820,
+      "width": 350,
+      "height": 220,
+      "color": "5",
+      "text": "## Try the shipped workflow\n\n[[npm-installation]]: source package and ownership.\n\n[[testing-from-a-to-z]]: isolated community trial, checklist and evidence.\n\nRegistry commands apply only after publication."
     }
   ],
   "edges": [
@@ -209,6 +229,24 @@
       "toSide": "bottom",
       "label": "Record exact acceptance when implemented",
       "color": "4"
+    },
+    {
+      "id": "status-pending",
+      "fromNode": "status",
+      "fromSide": "right",
+      "toNode": "pending",
+      "toSide": "left",
+      "label": "Remaining work",
+      "color": "2"
+    },
+    {
+      "id": "docs-status",
+      "fromNode": "docs",
+      "fromSide": "bottom",
+      "toNode": "status",
+      "toSide": "right",
+      "label": "Test available foundation",
+      "color": "5"
     }
   ]
 }

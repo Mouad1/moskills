@@ -1,12 +1,12 @@
 ---
 title: "moskills: a workflow you can trust and resume"
 description: "Community architecture guide for natural-language routing, scoped agents, quality gates, and durable progress."
-date: 2026-10-09
+date: 2026-10-11
 tags:
   - moskills
   - architecture
   - agent-workflows
-status: proposed-architecture
+status: proposed-architecture-with-shipped-foundation
 ---
 
 # moskills: a workflow you can trust and resume
@@ -18,11 +18,13 @@ The direction described here is simple: install once, initialize each project
 once, then ask for the result in ordinary language. The agent chooses the relevant
 workflow instead of expecting people to remember a sequence of slash commands.
 
-This guide explains the proposed architecture. The current repository already
-ships skills, project rules, installation tools, checkpoints, a validation workflow
-and a preview companion. The integrated scheduler, durable run engine, four-gate
-enforcement, workflow dashboard and public npm package are still planned work.
-Use the roadmap below to distinguish the existing foundation from the proposal.
+This guide explains the proposed architecture and its shipped foundation. Version
+0.8.0 includes skills, project rules, safe installation tools, copied routing
+instructions, checkpoints, a validation workflow, a preview companion, evolvebook
+helpers, and npm packaging in source. Public npm publication remains pending.
+The integrated scheduler, durable run engine, four-gate enforcement, workflow
+dashboard and forms remain proposed work. Use the roadmap below to distinguish
+available instruction-based workflows from the planned enforced system.
 
 ## The workflow at a glance
 
@@ -77,8 +79,8 @@ unknown and blocks acceptance.
 | Coordinator | Decide which task is ready, resolve findings and keep the run record current |
 | User | Make material product decisions and accept the specific finished result |
 
-Roles are responsibilities, not hardcoded model names. Host adapters use the tools
-and models actually available. A serial path remains available when delegation is
+Roles are responsibilities, not hardcoded model names. Proposed host adapters use
+the tools and models actually available. A serial path remains available when delegation is
 unsupported; it must disclose that independent agent review was unavailable.
 Projects requiring independent review wait for a supported reviewer or a human.
 
@@ -122,15 +124,20 @@ The proposed local layout separates installation metadata from execution records
   evidence/                   Check outputs and references to reviewed artifacts
 ```
 
-One coordinator owns state updates. Checkpoints and the dashboard derive their
-status from that source. Optional memory holds durable preferences and lessons,
-with short references to runs. If a host mandates a canonical work-state tool,
+The shipped workflow currently uses agent-maintained `.claude/STATE.md` and
+`tasks/todo.md`. The `.moskills/runs/` layout above is a proposal; this release
+has no authoritative run-state service or evidence database.
+
+In the proposed engine, one coordinator owns state updates. Checkpoints and the
+dashboard derive their status from that source. Optional memory holds durable
+preferences and lessons, with short references to runs. If a host mandates a canonical work-state tool,
 its adapter uses that source and labels local exports as derived records.
 
 ## Finished and Still not done
 
-Every run exposes both lists. They come from the saved state rather than two
-independently maintained documents.
+The target architecture exposes both lists for every run. They come from one
+saved state rather than two independently maintained documents. Today, the agent
+maintains these lists in project notes; the user must inspect their evidence.
 
 | List | What belongs there |
 | --- | --- |
@@ -223,7 +230,9 @@ cost savings.
 
 An evolvebook is a reusable guide for one kind of job, such as an article, a
 landing page or a backend module. It supplies an approved brief, examples, choices
-and checks. The common workflow handles scheduling, evidence and acceptance.
+and checks. The proposed common engine will handle scheduling, evidence and
+acceptance. Today, the installed instructions guide the agent through those steps;
+the evolvebook helper handles mechanical checks and records.
 
 ```mermaid
 flowchart LR
@@ -234,6 +243,12 @@ flowchart LR
     Result --> Consent["Ask before adding examples or changing permanent rules"]
     Consent --> Book["Improve approved reusable guide"]
 ```
+
+The shipped evolvebook helper creates project or personal books, compares planned
+Choices with past runs, records Done rows, lists books, proposes growth, scans for
+obvious secrets, links books when requested, and exports Markdown. Examples,
+Never-list entries and Toolbox additions require user consent. See the
+[evolvebook guide](evolvebook.md) for the current workflow.
 
 The proposed interface has three views: Brief, Progress and Review. It shows the
 goal, current work, proof and decisions needing the user's judgment. Technical
@@ -250,66 +265,87 @@ community users. Public operation must not depend on the author's private setup.
 
 ## Installation: available today and planned next
 
-The repository currently provides a Claude Code plugin and a standalone shell
-installation route for supported agents. Refer to the repository README for
-current installation instructions. Node is required for the preview companion;
-the full proposed workflow does not yet ship as an integrated runtime.
+Version 0.8.0 includes npm packaging in source alongside the Claude Code plugin
+and standalone shell installation route. The package targets Node.js 18+ and a
+POSIX shell on macOS, Linux, or WSL. It supplies a CLI and project assets, not an
+AI agent or account. The full proposed workflow does not ship as an integrated
+runtime.
 
-Simple npm/npx installation is a required future deliverable. These target
-commands are **planned, not working public installation instructions**:
+Public npm publication is pending. For a trial today, clone the merged source,
+run its checks, pack it locally, and install that tarball into an isolated prefix
+or use npx with the local tarball. Read the [npm installation guide](npm-installation.md)
+for the available package commands and ownership rules. The
+[A–Z testing guide](testing-from-a-to-z.md) provides a complete disposable-project
+recipe, uses the actual source version and commit, and keeps existing global
+installations untouched.
+
+After an authorized public release, these registry commands become available:
 
 ```sh
-# Planned: initialize a project without permanent global installation.
+# After publication: initialize without a permanent global installation.
 npx moskills@latest init
 
-# Planned alternative: keep the CLI available across projects.
+# After publication: keep the CLI available across projects.
 npm install -g moskills
 moskills init
 ```
 
-The audit on 2026-10-08 found no repository `package.json`, and the public registry
-query for `moskills` returned E404. The name is not reserved by this observation.
-Publication, clean installation and real supported-agent use must be verified
-before these commands are advertised as available.
+Project initialization copies durable routing instructions and skills into the
+project. Repeated init/sync preserve project-owned notes and edited managed copies;
+doctor reports drift and missing inventory. An explicit `--force` can replace
+managed edits. Open the initialized project in your coding agent and describe the
+task normally. Instructions provide serial or manual fallbacks when a host lacks
+required tools, with unavailable checks reported as unknown. Actual instruction
+loading and host behavior still require observation.
 
-Project initialization should detect supported agents, preserve user-owned files,
-install durable routing rules and ask only material project-specific questions.
-Afterward, users open the project in their coding agent and describe their task.
-Installing moskills does not install an AI subscription or another coding agent.
+The target initialization experience should detect supported hosts and ask only
+material project-specific questions rather than repeating decisions already made.
 
-An npm package must bundle its required assets, exclude private working records,
-avoid configuration writes during npm lifecycle scripts, and avoid permanent links
-into transient npx caches. Npm-owned installations use npm for update/uninstall;
-standalone installations retain their separate lifecycle.
+The npm package bundles the required assets, has no third-party runtime
+dependencies or installation lifecycle scripts, and copies files instead of
+leaving permanent links into transient npx caches. Project copies survive npm
+uninstall or cache deletion. npm owns updates and removal of npm installations;
+standalone installations retain their separate lifecycle. Project sync is a
+separate step after updating the CLI.
 
-Initial platform commitments remain macOS/Linux and Windows through WSL. Native
-Windows support needs end-to-end implementation and validation before being claimed.
-New dependencies and external publication require applicable user authorization.
+Distribution must continue excluding private working records and avoid
+configuration writes during npm lifecycle scripts.
+
+The supported shell target includes Windows through WSL; observed WSL trials
+remain unfinished. Native Windows support is not claimed. Live Claude Code and
+default automatic instruction loading also need separate host trials. Local
+package checks do not prove those host or platform behaviors. New dependencies
+and external publication require applicable user authorization.
 
 ## Finished: existing foundation and completed design work
 
 - [x] Focused skills for intent, mapping, testing, diagnosis, checkpoints and validation.
 - [x] Versioned managed rules, installer tools and optional staged-file guard.
+- [x] Installation safety: ownership, initialization reruns and managed-file inventory checks.
+- [x] Copied portable routing instructions with disclosed host-capability fallbacks.
+- [x] Evolvebook helper and book templates included in package distribution.
+- [x] npm/npx packaging and local packed-install lifecycle tests.
 - [x] Preview companion with local HTML and live reload.
-- [x] Repository audit and architectural proposal.
-- [x] Existing baseline test run: 55 tests passed on 2026-10-08.
-- [x] Explicit requirements for Finished / Still not done and simple public installation.
+- [x] Repository audit, architectural proposal, and Finished / Still not done requirements.
+- [x] Local 0.8.0 verification: 95 shell tests and 14 npm package tests passed.
+- [x] All six [Linux/macOS CI jobs on Node 18, 22, and 24](https://github.com/Mouad1/moskills/actions/runs/38147935144) passed.
 
-These items do not prove that the proposed engine is implemented. The existing
-guard checks staged hazards; it does not enforce all four quality gates.
+Local tests exercise package installation and its lifecycle, not every agent host.
+The separate CI run verifies its Linux/macOS matrix; neither result establishes
+public registry availability or live agent behavior.
+These items also do not prove that the proposed engine is implemented. The
+existing guard checks staged hazards; it does not enforce all four quality gates.
 
 ## Still not done: implementation roadmap
 
-- [ ] Fix installation ownership, safe initialization reruns and manifest validation.
-- [ ] Deliver portable default routing with supported capability fallbacks.
+- [ ] Publish an authorized npm release and verify installation from the public registry.
+- [ ] Observe WSL, live Claude Code, and default automatic instruction loading in fresh projects.
+- [ ] Observe broader community/platform trials.
 - [ ] Implement authoritative run state, dependency barriers and evidence invalidation.
 - [ ] Enforce gate transitions and bounded independent review loops.
 - [ ] Generate Finished / Still not done views from that shared state.
-- [ ] Fix preview decision persistence and shell-interpreter compatibility.
-- [ ] Build brief forms, progress and revision-bound review controls.
-- [ ] Package the reviewed evolvebook implementation for public users.
-- [ ] Build and test npm/npx package distribution.
-- [ ] Publish an authorized release and verify clean installation and agent use.
+- [ ] Fix preview decision persistence and launcher/shell-interpreter compatibility.
+- [ ] Build brief forms, progress and revision-bound review controls, including evolvebook forms.
 
 Deliver these as reviewable changes, with evidence attached to each milestone.
 Instruction-only operation remains advisory until a trusted validator actually
