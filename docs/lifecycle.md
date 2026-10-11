@@ -43,6 +43,19 @@ Non-goals:
 Risks:
 ```
 
+## 2.5 /evolvebook use (if a book matches)
+
+When the job matches an evolvebook (a guide for one kind of job, see
+[evolvebook.md](evolvebook.md)), the agent announces it and runs its steps:
+Pick, Brief, Plan, Repeat check. Making, Check and Close then ride on the
+steps below: the Toolbox during coding, the book's `check.md` inside
+`/gatekeeper`, and the Done list and Mistakes list at the end (`/learn`
+writes to the active book).
+
+```text
+/align-intent -> /evolvebook use: Pick -> Brief -> Plan -> Repeat check -> /system-map -> Make -> /gatekeeper (Check) -> Close -> Done
+```
+
 ## 3. /system-map
 
 Use `/system-map` when the work touches multiple files, modules, data flows, or ownership boundaries.

@@ -1,0 +1,18 @@
+flowchart LR
+  START(["New feature"]) --> P["/preview<br/>vague idea → spec"]
+  P --> A["/align-intent<br/>agree on the goal"]
+  A --> EB{"a book<br/>matches?"}
+  EB -- "yes" --> U["/evolvebook use<br/>brief · plan · repeat check"]
+  EB -- "no" --> S
+  U --> S["/system-map<br/>safe change boundary"]
+  S --> C["Coding<br/>/tdd or /diagnose<br/>+ /checkpoint"]
+  C --> G["/gatekeeper<br/>Passing · Failing · Unknown<br/>Human Check"]
+  G --> D["/project-dna<br/>replayable record"]
+  D --> DONE(["Done"])
+  C -. "correction or root cause" .-> L["/learn"]
+  C -. "session must stop" .-> H["/handoff"]
+
+  classDef ms fill:#eef3ff,stroke:#3b5bdb,color:#1b1b1b
+  classDef eb fill:#eaf6ec,stroke:#2e7d32,color:#1b1b1b
+  class P,A,S,C,G,D,L,H ms
+  class EB,U eb

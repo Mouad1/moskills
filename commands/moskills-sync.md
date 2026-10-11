@@ -20,3 +20,18 @@ sh "${CLAUDE_PLUGIN_ROOT}/moskills" doctor --target .
 ```
 
 4. Suggest committing: `git add -A && git commit -m "chore: sync moskills standard"`.
+5. If the version after sync is older than expected (the plugin itself is out
+   of date), tell the user to run `/plugin marketplace update moskills`, then
+   `/plugin update moskills@moskills`, restart, and sync again.
+
+Then make sure this plugin keeps itself up to date:
+
+```bash
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate --check
+```
+
+If it prints `off`, ask the user: "Turn on automatic moskills updates? New
+releases then install when Claude Code starts. (yes/no)". On yes, run
+`sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate` and show its output
+(it takes effect at the next Claude Code start).
+
