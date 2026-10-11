@@ -2,7 +2,8 @@
 set -eu
 
 ROOT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-TMP_ROOT="${TMPDIR:-/tmp}/moskills-tests-$$"
+TEST_TEMP_BASE=${TMPDIR:-/tmp}
+TMP_ROOT="${TEST_TEMP_BASE%/}/moskills-tests-$$"
 
 pass_count=0
 
