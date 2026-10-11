@@ -31,7 +31,8 @@
     "docs/evolvebook.md",
     "docs/diagrams/",
     "docs/architecture.md",
-    "docs/architecture.canvas"
+    "docs/architecture.canvas",
+    "docs/testing-from-a-to-z.md"
   ],
   "scripts": {
     "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs"

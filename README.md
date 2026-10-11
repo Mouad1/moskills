@@ -20,6 +20,8 @@ Open your agent in that project and ask: “Fix this bug” or “Build this fea
 
 Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
 
+Try the setup from installation to a verified result: [A–Z testing walkthrough](docs/testing-from-a-to-z.md).
+
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
 
 ## Installed Commands

@@ -1,6 +1,6 @@
 # moskills: install once, ask normally
 
-Status: npm packaging exists in source; public registry publication is pending. Use a local tarball until release.
+Status: npm packaging exists in source; public registry publication is pending. Use a local tarball until release. For a safe, complete trial, follow the [A–Z testing walkthrough](testing-from-a-to-z.md).
 
 ## Install and use
 
@@ -100,13 +100,13 @@ Passing tests do not prove appearance. Unavailable required checks stay `unknown
 
 Local package tests exercise packed global installs, npx cache cleanup, repeated init, dynamically newer upgrades, uninstall, paths with spaces, evolvebook setup/new/repeat/link/export, helper help, bundled assets, and read-only plugin update checks. The integrated suite includes upstream evolvebook and automatic-update regressions plus project safety checks. Local verification uses macOS with Node 26.5.0 and npm 11.17.0; other platform/version results require their own runs. An isolated Codex smoke scenario verifies ordinary bug routing after explicit instruction reads; host automatic loading and other agents remain separate checks.
 
-CI configuration runs the same suite on Ubuntu and macOS with Node 18, 22, and 24. CI has not run remotely yet; those platform/version results remain unverified. Configuration follows official [checkout](https://github.com/actions/checkout) and [setup-node](https://github.com/actions/setup-node) guidance.
+CI configuration runs the same suite on Ubuntu and macOS with Node 18, 22, and 24. All six jobs passed for the 0.8.0 setup in [PR #20 CI](https://github.com/Mouad1/moskills/actions/runs/38147935144). These results cover package behavior; live agent and WSL trials remain separate checks. Configuration follows official [checkout](https://github.com/actions/checkout) and [setup-node](https://github.com/actions/setup-node) guidance.
 
 Still not done:
 
 - Public npm publication, which is not authorized by the merge approval.
 - Native Windows support; use WSL.
-- Remote CI, live Claude Code, WSL, and broader community/platform trials.
+- Live Claude Code, WSL, automatic instruction loading, and broader community/platform trials.
 - Enforced run-state engine, interactive progress UI, and evolvebook UI forms from architecture roadmap. Plain Markdown evolvebook creation and export already work.
 
 Documentation must include useful diagrams for workflows, dependencies, or architecture. Keep diagrams close to explained text.
