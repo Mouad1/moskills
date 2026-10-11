@@ -458,6 +458,7 @@ project hook.
 
 ## More Docs
 
+- [Architecture and roadmap](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking. Distinguishes the existing setup from the proposed workflow.
 - [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
 - [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
 - [docs/lifecycle.md](docs/lifecycle.md)
@@ -465,6 +466,16 @@ project hook.
 - [docs/pain-points.md](docs/pain-points.md)
 - [docs/examples/node-project.md](docs/examples/node-project.md)
 - [docs/examples/python-project.md](docs/examples/python-project.md)
+
+```mermaid
+flowchart LR
+    Request["Describe the goal"] --> Skills["Use relevant moskills skills"]
+    Skills --> Checks["Verify and checkpoint"]
+    Checks --> Handoff["Complete or hand off"]
+```
+
+This diagram summarizes the current skill workflow. The architecture guide
+describes the proposed integrated coordinator and its implementation roadmap.
 
 ## Who Made This
 

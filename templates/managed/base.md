@@ -12,6 +12,17 @@ After any correction or found root cause -> /learn
 
 If the session must stop before done, use `/handoff`.
 
+```mermaid
+flowchart LR
+    Goal["User goal"] --> Align["Preview and align intent"]
+    Align --> Map["Map relevant system"]
+    Map --> Work["Build or diagnose with checks"]
+    Work --> Gate["Validate result"]
+    Gate --> Record["Record or hand off"]
+```
+
+The diagram summarizes skill coordination; select only steps relevant to the task.
+
 ## Commands
 
 - Use `/preview` to turn a vague idea into a written spec before any code.
@@ -41,6 +52,7 @@ The full three-tier delegation model (Orchestrator / Reasoner / Executor) is def
 
 - Keep code modular and decoupled from business-specific logic.
 - Prefer small files with one clear responsibility.
+- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies or decisions.
 - Do not claim tests passed unless command output was observed.
 - Do not push directly to the default branch. Push a branch and open a pull request.
 - Update `.claude/STATE.md` when a command changes durable project context.
