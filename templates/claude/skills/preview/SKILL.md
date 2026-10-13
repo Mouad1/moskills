@@ -20,7 +20,15 @@ Primary goal: Turn an unclear idea into a concrete spec before implementation. R
 
 ## Visual Companion
 
-Requires Node.js. Scripts are bundled in `.claude/skills/preview/scripts/` — no external plugin needed. If Node.js or the scripts are unavailable, record the limitation and use an available visual preview; ask before installing dependencies.
+Requires Node.js and Bash. Scripts are bundled in `.claude/skills/preview/scripts/` — no external plugin needed. If Node.js, Bash, or the scripts are unavailable, record the limitation and use an available visual preview; ask before installing dependencies.
+
+```mermaid
+flowchart LR
+    B[Bash launcher] --> P[Local preview server]
+    P --> R[Review screens]
+    R --> S[Stop server]
+    S --> K[Project screens retained]
+```
 
 ### When to auto-start (no consent)
 
@@ -52,7 +60,7 @@ curl -s --max-time 2 "http://localhost:${PORT}/health" || echo "dead"
 - **Alive** → resume. Parse `screen_dir` and `state_dir` from the same JSON. List `$SCREEN_DIR/*.html` sorted by mtime. Tell user: `"Active session at http://localhost:<port>. Previous mockups: [list]"`. Read `$STATE_DIR/events` to restore context.
 - **Dead but file exists** → restart (mockups preserved in `.preview/`):
   ```bash
-  sh .claude/skills/preview/scripts/start-server.sh --project-dir "$(pwd)"
+  bash .claude/skills/preview/scripts/start-server.sh --project-dir "$(pwd)"
   ```
   Then show summary.
 - **No file found** → start fresh.
@@ -60,7 +68,7 @@ curl -s --max-time 2 "http://localhost:${PORT}/health" || echo "dead"
 ### Start server (fresh)
 
 ```bash
-sh .claude/skills/preview/scripts/start-server.sh --project-dir "$(pwd)"
+bash .claude/skills/preview/scripts/start-server.sh --project-dir "$(pwd)"
 # Returns JSON: {"port":52341,"url":"http://localhost:52341",
 #   "screen_dir":"<project>/.preview/<id>/content",
 #   "state_dir":"<project>/.preview/<id>/state"}
@@ -99,7 +107,7 @@ cat "$STATE_DIR/events" 2>/dev/null | tail -5
 ```bash
 # SESSION_DIR is the parent of state_dir
 SESSION_DIR=$(dirname "$STATE_DIR")
-sh .claude/skills/preview/scripts/stop-server.sh "$SESSION_DIR"
+bash .claude/skills/preview/scripts/stop-server.sh "$SESSION_DIR"
 ```
 
 ### Per-question rule

@@ -103,6 +103,51 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
     assertSetup(p);
     ok(call(['doctor'], p));
   });
+  await t.test('packed preview documented commands launch and stop with a POSIX caller', async () => {
+    const skill = fs.readFileSync(path.join(p, '.claude/skills/preview/SKILL.md'), 'utf8');
+    const start = skill.match(/^(?:sh|bash) \.claude\/skills\/preview\/scripts\/start-server\.sh --project-dir "\$\(pwd\)"$/m)?.[0];
+    const stop = skill.match(/^(?:sh|bash) \.claude\/skills\/preview\/scripts\/stop-server\.sh "\$SESSION_DIR"$/m)?.[0];
+    assert.ok(start && stop, 'documented preview commands must be runnable');
+    const callerEnv = {};
+    const dash = spawnSync('sh', ['-c', 'command -v dash'], { encoding: 'utf8' });
+    if (dash.status === 0) {
+      const bin = path.join(scratch, 'POSIX shell bin');
+      fs.mkdirSync(bin);
+      fs.symlinkSync(dash.stdout.trim(), path.join(bin, 'sh'));
+      callerEnv.PATH = bin + path.delimiter + env.PATH;
+    }
+    const stale = path.join(p, '.preview/stale session');
+    fs.mkdirSync(path.join(stale, 'state'), { recursive: true });
+    fs.writeFileSync(path.join(stale, 'state/server.pid'), '999999999\n');
+    const stopped = run('sh', ['-c', stop], p, { ...callerEnv, SESSION_DIR: stale });
+    assert.equal(stopped.stderr, '', stopped.stderr);
+    assert.equal(JSON.parse(ok(stopped)).status, 'stopped');
+    assert.ok(!fs.existsSync(path.join(stale, 'state/server.pid')));
+    const launched = run('sh', ['-c', start + ' --background'], p, callerEnv);
+    assert.equal(launched.stderr, '', launched.stderr);
+    const info = JSON.parse(ok(launched));
+    const session = path.dirname(info.state_dir);
+    try {
+      assert.equal(fs.realpathSync(path.dirname(session)), fs.realpathSync(path.join(p, '.preview')));
+      const response = await fetch(`http://${info.host}:${info.port}/health`, { signal: AbortSignal.timeout(5000) });
+      assert.equal(response.status, 200);
+      const health = await response.json();
+      assert.equal(health.status, 'ok');
+      assert.equal(health.pid, Number(fs.readFileSync(path.join(info.state_dir, 'server.pid'), 'utf8').trim()));
+      assert.ok(fs.existsSync(path.join(info.state_dir, 'server.pid')));
+      const result = run('sh', ['-c', stop], p, { ...callerEnv, SESSION_DIR: session });
+      assert.equal(result.stderr, '', result.stderr);
+      assert.equal(JSON.parse(ok(result)).status, 'stopped');
+      assert.throws(() => process.kill(health.pid, 0), { code: 'ESRCH' });
+      assert.ok(!fs.existsSync(path.join(info.state_dir, 'server.pid')));
+      assert.ok(fs.existsSync(info.screen_dir), 'project preview content remains after stop');
+    } finally {
+      const pidFile = path.join(info.state_dir, 'server.pid');
+      if (fs.existsSync(pidFile)) {
+        try { process.kill(Number(fs.readFileSync(pidFile, 'utf8').trim()), 'SIGTERM'); } catch {}
+      }
+    }
+  });
   await t.test('repeated init preserves edits and reports warning', () => {
     const f = path.join(p, '.claude/standard/base.md');
     fs.appendFileSync(f, '\nPersonal rule: preserve me.\n');
@@ -171,5 +216,39 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
     assertSetup(q);
     assertSetup(p);
   });
+});
+test('documented preview stop preserves temp project content and removes only default sessions', () => {
+  const tmpProject = fs.mkdtempSync('/tmp/moskills preview cleanup ');
+  const helper = path.join(tmpProject, '.claude/skills/preview/scripts/stop-server.sh');
+  fs.mkdirSync(path.dirname(helper), { recursive: true });
+  fs.copyFileSync(path.join(root, 'templates/claude/skills/preview/scripts/stop-server.sh'), helper);
+  const skill = fs.readFileSync(path.join(root, 'templates/claude/skills/preview/SKILL.md'), 'utf8');
+  const stop = skill.match(/^bash \.claude\/skills\/preview\/scripts\/stop-server\.sh "\$SESSION_DIR"$/m)?.[0];
+  assert.ok(stop, 'documented stop command must be runnable');
+  const stamp = Date.now();
+  const ephemeral = [`/tmp/preview-${process.pid}-${stamp}`];
+  if (process.platform === 'darwin') ephemeral.push(`/private/tmp/preview-${process.pid}-${stamp + 1}`);
+  const persistent = path.join(tmpProject, '.preview', `preview-${process.pid}-${stamp}`);
+  const nested = path.join(ephemeral[0], '.preview', 'session with spaces');
+  try {
+    for (const session of [persistent, nested, ...ephemeral]) {
+      fs.mkdirSync(path.join(session, 'state'), { recursive: true });
+      fs.mkdirSync(path.join(session, 'content'), { recursive: true });
+      fs.writeFileSync(path.join(session, 'state/server.pid'), '999999999\n');
+      fs.writeFileSync(path.join(session, 'content/screen.html'), '<p>Keep this preview</p>');
+      const result = run('sh', ['-c', stop], tmpProject, { SESSION_DIR: session });
+      assert.equal(result.stderr, '', result.stderr);
+      assert.equal(JSON.parse(ok(result)).status, 'stopped');
+      assert.ok(!fs.existsSync(path.join(session, 'state/server.pid')));
+      if ([persistent, nested].includes(session)) {
+        assert.equal(fs.readFileSync(path.join(session, 'content/screen.html'), 'utf8'), '<p>Keep this preview</p>');
+      } else {
+        assert.ok(!fs.existsSync(session), 'default ephemeral session is removed');
+      }
+    }
+  } finally {
+    fs.rmSync(tmpProject, { recursive: true, force: true });
+    for (const session of ephemeral) fs.rmSync(session, { recursive: true, force: true });
+  }
 });
 test.after(() => fs.rmSync(scratch, { recursive: true, force: true }));
