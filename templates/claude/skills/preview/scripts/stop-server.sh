@@ -2,8 +2,9 @@
 # Stop the preview companion server
 # Usage: stop-server.sh <session_dir>
 #
-# Kills the server process. Only deletes the session directory when it's
-# under /tmp (ephemeral). Persistent .preview/ directories are kept so
+# Kills the server process. Only deletes generated preview-<pid>-<timestamp>
+# sessions directly under /tmp or its macOS /private/tmp alias.
+# Persistent .preview/ directories are kept, including projects under /tmp, so
 # mockups can be reviewed after the session ends.
 
 SESSION_DIR="$1"
@@ -40,7 +41,10 @@ if [[ -f "$PID_FILE" ]]; then
 
   rm -f "$PID_FILE" "${STATE_DIR}/server.log"
 
-  if [[ "$SESSION_DIR" == /tmp/* ]]; then
+  session_parent=$(dirname -- "$SESSION_DIR")
+  session_name=$(basename -- "$SESSION_DIR")
+  if [[ "$session_parent" == /tmp || "$session_parent" == /private/tmp ]] &&
+     [[ "$session_name" =~ ^preview-[0-9]+-[0-9]+$ ]]; then
     rm -rf "$SESSION_DIR"
   fi
 

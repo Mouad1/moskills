@@ -217,4 +217,38 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
     assertSetup(p);
   });
 });
+test('documented preview stop preserves temp project content and removes only default sessions', () => {
+  const tmpProject = fs.mkdtempSync('/tmp/moskills preview cleanup ');
+  const helper = path.join(tmpProject, '.claude/skills/preview/scripts/stop-server.sh');
+  fs.mkdirSync(path.dirname(helper), { recursive: true });
+  fs.copyFileSync(path.join(root, 'templates/claude/skills/preview/scripts/stop-server.sh'), helper);
+  const skill = fs.readFileSync(path.join(root, 'templates/claude/skills/preview/SKILL.md'), 'utf8');
+  const stop = skill.match(/^bash \.claude\/skills\/preview\/scripts\/stop-server\.sh "\$SESSION_DIR"$/m)?.[0];
+  assert.ok(stop, 'documented stop command must be runnable');
+  const stamp = Date.now();
+  const ephemeral = [`/tmp/preview-${process.pid}-${stamp}`];
+  if (process.platform === 'darwin') ephemeral.push(`/private/tmp/preview-${process.pid}-${stamp + 1}`);
+  const persistent = path.join(tmpProject, '.preview', `preview-${process.pid}-${stamp}`);
+  const nested = path.join(ephemeral[0], '.preview', 'session with spaces');
+  try {
+    for (const session of [persistent, nested, ...ephemeral]) {
+      fs.mkdirSync(path.join(session, 'state'), { recursive: true });
+      fs.mkdirSync(path.join(session, 'content'), { recursive: true });
+      fs.writeFileSync(path.join(session, 'state/server.pid'), '999999999\n');
+      fs.writeFileSync(path.join(session, 'content/screen.html'), '<p>Keep this preview</p>');
+      const result = run('sh', ['-c', stop], tmpProject, { SESSION_DIR: session });
+      assert.equal(result.stderr, '', result.stderr);
+      assert.equal(JSON.parse(ok(result)).status, 'stopped');
+      assert.ok(!fs.existsSync(path.join(session, 'state/server.pid')));
+      if ([persistent, nested].includes(session)) {
+        assert.equal(fs.readFileSync(path.join(session, 'content/screen.html'), 'utf8'), '<p>Keep this preview</p>');
+      } else {
+        assert.ok(!fs.existsSync(session), 'default ephemeral session is removed');
+      }
+    }
+  } finally {
+    fs.rmSync(tmpProject, { recursive: true, force: true });
+    for (const session of ephemeral) fs.rmSync(session, { recursive: true, force: true });
+  }
+});
 test.after(() => fs.rmSync(scratch, { recursive: true, force: true }));

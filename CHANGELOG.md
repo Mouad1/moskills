@@ -3,6 +3,7 @@
 ## 0.8.1
 
 - Invoke preview companion helpers with Bash so documented launch and stop commands work when the system `sh` is a POSIX shell such as dash. Declare Bash as a preview requirement.
+- Keep project preview content when projects live under `/tmp`; remove only generated default sessions directly under `/tmp` or its macOS `/private/tmp` alias.
 - Verify the packed preview's documented commands through a POSIX caller, including stale PID cleanup, real server launch, HTTP health, shutdown, and retained project previews.
 
 Release verification workflow:
