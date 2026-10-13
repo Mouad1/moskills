@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.8.1
+
+- Invoke preview companion helpers with Bash so documented launch and stop commands work when the system `sh` is a POSIX shell such as dash. Declare Bash as a preview requirement.
+- Verify the packed preview's documented commands through a POSIX caller, including stale PID cleanup, real server launch, HTTP health, shutdown, and retained project previews.
+
+Release verification workflow:
+
+```mermaid
+flowchart LR
+    V[Verified source] --> C[Pack checks]
+    C --> P[Publish package]
+    P --> R[Verify registry package]
+```
+
 ## 0.8.0
 
 - Add dependency-free npm packaging with a Node launcher for durable project setup, concise output, and optional verbose diagnostics. Registry publication is a separate step.
