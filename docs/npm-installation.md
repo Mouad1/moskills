@@ -1,12 +1,10 @@
 # moskills: install once, ask normally
 
-Status: npm packaging exists in source; public registry publication is pending. Use a local tarball until release. For a safe, complete trial, follow the [A–Z testing walkthrough](testing-from-a-to-z.md).
+Status: [moskills 0.8.1 is published on npm](https://www.npmjs.com/package/moskills/v/0.8.1). Registry integrity matches the reviewed artifact; fresh global npm and npx installs passed on 2026-10-13. For a safe, complete trial, follow the [A–Z testing walkthrough](testing-from-a-to-z.md).
 
 ## Install and use
 
 Requires Node.js 18+ and a POSIX shell on macOS, Linux, or WSL. Use your existing AI agent and account.
-
-After npm publication:
 
 ```sh
 npm install -g moskills
@@ -14,26 +12,26 @@ cd your-project
 moskills init
 ```
 
-Without a global install: run `npx moskills init` in your project after release. Open Claude Code, Codex, or another agent that reads `AGENTS.md` and project skills. Restart an existing session if it already loaded instructions.
+Without a global install: run `npx moskills init` in your project. Open Claude Code, Codex, or another agent that reads `AGENTS.md` and project skills. Restart an existing session if it already loaded instructions.
 
 Ask normally: “Fix this bug”, “Build this feature”, “Review this change”, or “What is still not done?” Agent selects skills from installed descriptions. Slash commands remain optional; host must support and follow project instructions.
 
 Default responses give outcome, evidence, and blocker/next step briefly. Ask for detail when needed. Installer warnings and errors remain visible; `--verbose` shows full output.
 
-## Try unpublished package locally
+## Test a source checkout locally
 
 From source checkout:
 
 ```sh
 npm test
-npm pack --pack-destination /tmp
-npm install -g /tmp/moskills-0.8.0.tgz
+MOSKILLS_PACKAGE=$(npm pack --pack-destination /tmp)
+npm install -g "/tmp/$MOSKILLS_PACKAGE"
 ```
 
 Then run `moskills init` in your project. Local npx trial:
 
 ```sh
-npx --yes --package /tmp/moskills-0.8.0.tgz moskills init
+npx --yes --package "/tmp/$MOSKILLS_PACKAGE" moskills init
 ```
 
 Package has no third-party npm runtime dependencies or installation lifecycle scripts. It bundles the shell CLI, copied skills/templates, evolvebook helper and guide, public diagram assets, the architecture guide and Obsidian canvas, and both Claude settings helpers in `lib/`.
@@ -54,7 +52,7 @@ flowchart LR
 
 Project copies survive npx cache deletion and npm uninstall. Project-owned notes are seeded once. Repeat init/sync preserve edited managed files unless you explicitly use `--force`; doctor reports drift.
 
-After registry release:
+Update, check, or remove the CLI:
 
 ```sh
 moskills doctor
@@ -100,11 +98,10 @@ Passing tests do not prove appearance. Unavailable required checks stay `unknown
 
 Local package tests exercise packed global installs, npx cache cleanup, repeated init, dynamically newer upgrades, uninstall, paths with spaces, evolvebook setup/new/repeat/link/export, helper help, bundled assets, and read-only plugin update checks. The integrated suite includes upstream evolvebook and automatic-update regressions plus project safety checks. Local verification uses macOS with Node 26.5.0 and npm 11.17.0; other platform/version results require their own runs. An isolated Codex smoke scenario verifies ordinary bug routing after explicit instruction reads; host automatic loading and other agents remain separate checks.
 
-CI configuration runs the same suite on Ubuntu and macOS with Node 18, 22, and 24. All six jobs passed for the 0.8.0 setup in [PR #20 CI](https://github.com/Mouad1/moskills/actions/runs/38147935144). These results cover package behavior; live agent and WSL trials remain separate checks. Configuration follows official [checkout](https://github.com/actions/checkout) and [setup-node](https://github.com/actions/setup-node) guidance.
+CI configuration runs the same suite on Ubuntu and macOS with Node 18, 22, and 24. All six jobs passed for the 0.8.1 release in [PR #22 CI](https://github.com/Mouad1/moskills/actions/runs/38379523977). These results cover package behavior; live agent and WSL trials remain separate checks. Configuration follows official [checkout](https://github.com/actions/checkout) and [setup-node](https://github.com/actions/setup-node) guidance.
 
 Still not done:
 
-- Public npm publication, which is not authorized by the merge approval.
 - Native Windows support; use WSL.
 - Live Claude Code, WSL, automatic instruction loading, and broader community/platform trials.
 - Enforced run-state engine, interactive progress UI, and evolvebook UI forms from architecture roadmap. Plain Markdown evolvebook creation and export already work.

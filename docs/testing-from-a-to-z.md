@@ -1,5 +1,7 @@
 # Test moskills from A to Z
 
+Want a concrete first project? Start with [Build something useful with moskills](quick-start.md).
+
 This is a hands-on trial you can run alone, then share with the community. You will fix a small bug, build a small feature, resume work, review it, and try an evolvebook. Everything happens in a disposable folder.
 
 Run one step at a time in a fresh terminal. Read each expected result before continuing. Stop at unexpected failures; the deliberately failing bug, repeat, drift, and guard checks are labeled below.
@@ -44,7 +46,7 @@ The solid path is the main trial. Dotted branches add checks when relevant. Acce
 
 ## 2. Make a disposable lab and pack the source
 
-Public npm publication is pending. Start with the merged repository source, then install its local tarball. These commands use the actual source version, not a guessed package filename. Keep this terminal open so the variables remain available.
+moskills 0.8.1 is published on npm. This walkthrough deliberately tests the merged repository source and its local tarball in an isolated lab. These commands use the actual source version, not a guessed package filename. Keep this terminal open so the variables remain available.
 
 **Commands**
 
@@ -113,7 +115,7 @@ The local evolvebook location and cache settings keep this trial separate from p
 
 **Record:** CLI version and doctor result. Restart a chat that already loaded old instructions.
 
-After public publication, `npx moskills@latest init` is an alternative in a project folder. Do not use the registry path as evidence for this unpublished local trial.
+`npx moskills@latest init` is available in a project folder. Keep this walkthrough on its local tarball path so its evidence refers to the source you tested.
 
 ## 4. Start the agent and keep a scorecard
 
