@@ -32,7 +32,9 @@
     "docs/diagrams/",
     "docs/architecture.md",
     "docs/architecture.canvas",
-    "docs/testing-from-a-to-z.md"
+    "docs/testing-from-a-to-z.md",
+    "docs/quick-start.md",
+    "docs/run-state-next.md"
   ],
   "scripts": {
     "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs"

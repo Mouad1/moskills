@@ -8,7 +8,7 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
 
-**npm setup is implemented; registry publication is pending.** See [npm installation and everyday use](docs/npm-installation.md) for local tarball installation and supported platforms. After publication:
+**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
 
 ```sh
 npm install -g moskills
@@ -20,9 +20,58 @@ Open your agent in that project and ask: “Fix this bug” or “Build this fea
 
 Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
 
+Start with a short, practical trial: [Build something useful with moskills](docs/quick-start.md).
+
+Next implementation milestone: [saved progress with verifiable proof](docs/run-state-next.md).
+
 Try the setup from installation to a verified result: [A–Z testing walkthrough](docs/testing-from-a-to-z.md).
 
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
+
+## What Has Already Been Implemented (Completed & Shipped)
+
+```mermaid
+mindmap
+  root((moskills Shipped))
+    v0.8.1 Distribution
+      npm package & npx support
+      Zero runtime dependencies
+      Safe copies & drift detection
+      Clean uninstalls & cache resilience
+    Core Skills Suite
+      /preview (UI & Spec + Live Companion)
+      /align-intent (Goals, Risks, Constraints)
+      /shared-language (Domain Glossary)
+      /system-map (Dependencies & Blast Radius)
+      /tdd (Red-Green-Refactor)
+      /diagnose (Root-cause debugging)
+      /checkpoint (Durable factual progress)
+      /gatekeeper (Completion audit)
+      /compress-input (Terse technical comms)
+      /memorize (Durable lessons & rules)
+      /handoff (Clean agent compaction)
+      /project-dna (Reproducible build recipes)
+    Evolvebooks Subsystem
+      /evolvebook new, use, setup, link, export
+      Never-list and Toolbox progression
+      Vault integration (Obsidian)
+    Multi-Agent & Platform Support
+      Claude Code Plugin & marketplace
+      Codex ~/.agents/skills
+      Antigravity ~/.gemini/config/skills
+      Git pre-commit guard (--with-hooks)
+```
+
+### Core Architecture Overview
+
+| Area | Features & Components | Shipped Status |
+|---|---|---|
+| **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
+| **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
+| **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
+| **Skills Engine** | 13 core agent workflow skills with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
+| **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
 
 ## Installed Commands
 
