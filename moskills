@@ -54,7 +54,8 @@ Other agents (Antigravity, Codex):
   setup   [--yes]        Guided first run: link agents, replace old copies,
                          evolvebooks home, Claude Code plugin, daily updates.
                          Safe to run again.
-  status                 Version, linked agents, launcher, daily update.
+  status [--target <path>] [--verbose]     Five saved-note lines in projects;
+                                            installation details elsewhere.
   uninstall [--yes]      Remove links, daily update and a standalone install.
   link    [--replace]    Link moskills skills into every detected agent
                          (~/.gemini/config/skills, ~/.agents/skills) and add
@@ -75,6 +76,7 @@ Options:
                 block in AGENTS.md (read by Antigravity, Codex, and others).
   --replace     link only: back up existing real skill folders, then link.
   --yes         setup/uninstall: accept every default without asking.
+  --verbose     status: also show installation details.
 
 Environment:
   MOSKILLS_NO_UPDATE_CHECK=1   notice: never look for a newer version online.
@@ -749,6 +751,22 @@ cmd_setup() {
 }
 
 cmd_status() {
+  [ -d "$TARGET" ] || die "target does not exist: $TARGET"
+  if [ -f "$TARGET/.moskills.json" ] || [ -f "$TARGET/.claude/STATE.md" ] ||
+     [ -f "$TARGET/STATE.md" ] || [ -f "$TARGET/tasks/todo.md" ]; then
+    state="$TARGET/.claude/STATE.md"
+    [ -f "$state" ] || state="$TARGET/STATE.md"
+    # stdin is empty when neither note exists; awk still prints five unknowns.
+    set --
+    [ ! -f "$state" ] || set -- "$@" "$state"
+    [ ! -f "$TARGET/tasks/todo.md" ] || set -- "$@" "$TARGET/tasks/todo.md"
+    LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
+    [ "$VERBOSE" -eq 1 ] || return 0
+  fi
+  cmd_install_status
+}
+
+cmd_install_status() {
   log "Version: $STANDARD_VERSION"
   if is_git_install; then
     log "Installed in: $SCRIPT_DIR (git, branch $(git -C "$SCRIPT_DIR" rev-parse --abbrev-ref HEAD))"
@@ -814,6 +832,7 @@ AGENTS=0
 AGENTS_ON=0
 REPLACE=0
 CHECK=0
+VERBOSE=0
 YES=${MOSKILLS_YES:-0}
 NO_TTY=0
 ALL_ROOT=''
@@ -829,6 +848,7 @@ while [ "$#" -gt 0 ]; do
     --replace) REPLACE=1; shift ;;
     --yes)    YES=1; shift ;;
     --check)  CHECK=1; shift ;;
+    --verbose) VERBOSE=1; shift ;;
     --help|-h) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac

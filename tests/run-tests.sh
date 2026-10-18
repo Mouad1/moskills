@@ -705,7 +705,7 @@ test_status_reports_links_and_updates() {
   h=$(make_home status)
   HOME=$h run_moskills link >/dev/null
   out="$TMP_ROOT/status.txt"
-  HOME=$h run_moskills status >"$out" || fail 'status must exit 0'
+  HOME=$h run_moskills status --target "$h" >"$out" || fail 'status must exit 0'
   count=$(ls "$ROOT_DIR/templates/claude/skills" | wc -l | tr -d ' ')
   assert_contains "$out" "antigravity: $count skills linked"
   assert_contains "$out" 'Daily update: off'
@@ -1226,7 +1226,7 @@ test_moskills_cli_reports_evolvebooks() {
   assert_contains "$out" "evolvebooks home: $h/.evolvebooks (0 books)"
   HOME=$h run_moskills evolvebook where >"$out"
   assert_contains "$out" 'configured=yes'
-  HOME=$h run_moskills status >"$out"
+  HOME=$h run_moskills status --target "$h" >"$out"
   assert_contains "$out" "Evolvebooks: $h/.evolvebooks"
   pass 'moskills init, doctor, status and evolvebook passthrough report evolvebooks'
 }

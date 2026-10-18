@@ -22,6 +22,7 @@ const help = `moskills — structured agent work, short answers.
   moskills doctor   Check installed files and project readiness.
   moskills sync     Update project setup; preserve personal edits.
   moskills version  Show installed version.
+  moskills status   Show five advisory saved-note lines; --verbose adds install details.
   moskills evolvebook <command>  Create, use, link, or export a recurring-job guide.
   moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
 
@@ -39,6 +40,7 @@ if (process.platform === 'win32') {
   process.exit(1);
 }
 const command = args[0];
+if (command === 'status' && verbose) args.push('--verbose');
 const blocked = ['setup', 'link', 'unlink', 'uninstall', 'self-update', 'schedule-update'];
 if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);

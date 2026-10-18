@@ -35,7 +35,7 @@
     "docs/testing-from-a-to-z.md"
   ],
   "scripts": {
-    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs"
+    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs"
   },
   "keywords": [
     "codex",
