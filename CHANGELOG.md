@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.2
+
+- Implement the **Verifiable Run-State & Evidence Engine** (`lib/run-state.cjs` & `moskills run-state`):
+  - Atomic state writes (`run.json`) and append-only event streams (`events.ndjson`) under `.moskills/runs/<runId>/`.
+  - Local command execution capturing exit codes, stdout/stderr, runtime duration, working directory, and cryptographic SHA-256 hashes of checked source files.
+  - Strict evidence gating: reject unsupported completion when required checks are missing, failed, or stale.
+  - Automatic staleness invalidation: modifying checked source files automatically flags evidence as stale and reopens tasks.
+  - Safe resume with task dependency DAG resolution and file locking (`run.lock`) preventing concurrent coordinator clobbering.
+  - Human acceptance binding: ties signoff cryptographically to reviewed scope file hashes and reopens acceptance if scoped files change.
+- **Track A (Bounded Review Budget & Challenger Gate)**:
+  - Formalize the Builder/Challenger review loop with configurable `reviewBudget` (default 2 passes).
+  - Record structured challenger reviews under `.moskills/runs/<runId>/evidence/review-*.json`.
+  - Escalate to the human gate with `blocked_review_exhausted` when budget is depleted.
+- **Track C (Interactive Run-State Dashboard)**:
+  - Launch a local web dashboard (`moskills run-state dashboard`) with zero external CDN dependencies.
+  - Interactive tabs for Brief, Task DAG Progress, Evidence Inspector, Challenger Reviews, and one-click Human Acceptance signoff.
+- Add five-line advisory project status (`moskills status`) from saved project notes (`.claude/STATE.md` and `tasks/todo.md`).
+- Add pragmatic community tutorial (`docs/quick-start.md`) and verified quote-builder reference demo with 28 passing tests.
+
 ## 0.8.1
 
 - Invoke preview companion helpers with Bash so documented launch and stop commands work when the system `sh` is a POSIX shell such as dash. Declare Bash as a preview requirement.

@@ -1,6 +1,6 @@
 {
   "name": "moskills",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Structured AI agent skills with simple project setup and concise natural-language workflows.",
   "license": "MIT",
   "author": "Mouad Belghiti",
@@ -37,7 +37,7 @@
     "docs/run-state-next.md"
   ],
   "scripts": {
-    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs tests/run-state.test.cjs"
+    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs tests/run-state.test.cjs tests/challenger-and-dashboard.test.cjs"
   },
   "keywords": [
     "codex",
