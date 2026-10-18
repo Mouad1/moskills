@@ -421,3 +421,15 @@ Evolvebooks (the same helper the `/evolvebook` skill uses):
 | `moskills evolvebook suggest <job>` | Promotions due (Never list, Toolbox) |
 | `moskills evolvebook link` / `unlink` | Symlink books into installed agents / remove those links |
 | `moskills evolvebook export <job>` | One file for web chats |
+
+Run-State & Evidence Engine (verifiable progress with cryptographic proof):
+
+| Command | Purpose |
+|---|---|
+| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>]` | Initialize run record, brief, and event history |
+| `moskills run-state check --id <id> --check <cid> --cmd <cmd> [--files <files>]` | Execute check, compute file hashes, and save evidence |
+| `moskills run-state complete --id <id> --task <tid> --checks <cid1,cid2>` | Verify evidence and mark task finished |
+| `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
+| `moskills run-state status --id <id>` | Inspect run tasks, evidence status, and acceptance state |
+| `moskills run-state accept --id <id> --by <user> [--notes <text>]` | Record human acceptance bound to current scope hashes |
+

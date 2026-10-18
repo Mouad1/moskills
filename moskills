@@ -49,6 +49,9 @@ Commands:
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
                                             export, ...). Run: moskills evolvebook help
+  run-state  <command> [args]               Verifiable run progress and proof (init,
+                                            check, complete, resume, status, accept).
+                                            Run: moskills run-state help
 
 Other agents (Antigravity, Codex):
   setup   [--yes]        Guided first run: link agents, replace old copies,
@@ -823,6 +826,7 @@ cmd_uninstall() {
 CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
+  run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
 esac
 TARGET=$(pwd)
 FORCE=0
