@@ -8,7 +8,8 @@ const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const version = fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim();
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'moskills status '));
-const env = { ...process.env, MOSKILLS_NO_UPDATE_CHECK: '1',
+const env = { ...process.env, MOSKILLS_NO_UPDATE_CHECK: '1', NO_UPDATE_NOTIFIER: '1',
+  npm_config_update_notifier: 'false',
   npm_config_cache: path.join(scratch, 'cache'), npm_config_userconfig: path.join(scratch, 'npmrc'),
   npm_config_globalconfig: path.join(scratch, 'global-npmrc'), npm_config_audit: 'false', npm_config_fund: 'false' };
 fs.writeFileSync(env.npm_config_userconfig, '');
@@ -25,7 +26,8 @@ function write(dir, file, text) {
 function run(cmd, args, cwd) {
   const result = spawnSync(cmd, args, { cwd, env, encoding: 'utf8', timeout: 120000 });
   assert.ifError(result.error); assert.equal(result.status, 0, result.stderr + result.stdout);
-  assert.equal(result.stderr, ''); return result.stdout;
+  const cleanStderr = result.stderr.replace(/npm notice[^\n]*\n?/g, '').trim();
+  assert.equal(cleanStderr, ''); return result.stdout;
 }
 function status(dir, args = []) { return run('sh', [path.join(root, 'moskills'), 'status', ...args], dir); }
 const unknown = 'Goal: unknown\nFinished (recorded): unknown\nStill not done: unknown\nBlocker: unknown\nNext: unknown\n';

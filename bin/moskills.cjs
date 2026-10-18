@@ -6,7 +6,7 @@ const { spawnSync } = require('node:child_process');
 
 const input = process.argv.slice(2);
 const args = [];
-const helper = ['evolvebook', 'evolvebooks'].includes(input[0]);
+const helper = ['evolvebook', 'evolvebooks', 'run-state'].includes(input[0]);
 let verbose = false;
 for (let i = 0; i < input.length; i++) {
   if (helper) args.push(input[i]);
@@ -23,7 +23,8 @@ const help = `moskills — structured agent work, short answers.
   moskills sync     Update project setup; preserve personal edits.
   moskills version  Show installed version.
   moskills status   Show five advisory saved-note lines; --verbose adds install details.
-  moskills evolvebook <command>  Create, use, link, or export a recurring-job guide.
+  moskills run-state <command>  Verifiable run progress and proof (init, check, resume, ...).
+  moskills evolvebook <command> Create, use, link, or export a recurring-job guide.
   moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
 
 Options: --target <path>, --with-hooks, --force, --verbose.
@@ -46,7 +47,7 @@ if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);
   process.exit(1);
 }
-if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate'].includes(command)) {
+if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state'].includes(command)) {
   process.stderr.write(`moskills: unknown command '${command}'. Run moskills --help.\n`);
   process.exit(1);
 }
