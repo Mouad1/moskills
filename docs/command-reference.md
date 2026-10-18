@@ -347,7 +347,7 @@ Machine:
 | Command | Purpose |
 |---|---|
 | `moskills setup [--yes]` | Guided first run: link agents, replace old copies, daily updates. Safe to repeat |
-| `moskills status` | Version, install folder, linked agents, command on PATH, daily update |
+| `moskills status [--verbose]` | Outside projects: version, install folder, linked agents, command on PATH, daily update |
 | `moskills link [--replace]` | Link the skills into every detected agent; `--replace` backs up old folders first |
 | `moskills unlink` | Remove only the links moskills created |
 | `moskills self-update` | Pull the latest `main` (clean git install only), then re-link |
@@ -361,8 +361,49 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
+| `moskills status [--verbose]` | Five advisory saved-note lines; `--verbose` also shows installation details |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
 | `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
+
+Project status reads saved notes without changing files or checking evidence:
+
+```text
+Goal: Build quote tool
+Finished (recorded): Draft calculator
+Still not done: Customer review
+Blocker: unknown
+Next: Review prices
+```
+
+```mermaid
+flowchart LR
+    State[Saved STATE.md] --> Summary[Five advisory lines]
+    Todo[tasks/todo.md fills missing fields] --> Summary
+```
+
+A `.moskills.json` file or any saved note enables project status. It prefers
+`.claude/STATE.md`, falls back to root `STATE.md` when absent, and uses
+`tasks/todo.md` for missing fields. Use `moskills status --target "path with spaces"`
+from another folder. Without a project marker or notes, the original installation
+status remains available.
+
+Recognized headings are `Goal`, `Finished` (or `Finished (recorded)`),
+`Still not done`, `Blocker`, and `Next` (or `Next action`). Inside `Current run`
+or `Agreed scope`, colon labels also work: `Goal`, `Request`, `Request / outcome`,
+`Request / agreed outcome`, `Blocker`, `Next`, `Next action`, or legacy
+`Next action / blocker`. The legacy label supplies Next only. Every heading ends
+the preceding section; validation tables, fenced code and checkpoint text are
+ignored. There is no date-based selection of a current task.
+
+Empty template placeholders and repeated recognized sections or labels yield
+`unknown` for affected fields. An ambiguous goal prevents using any other fields
+from that note, so historical work cannot fill a current task. Different nonempty goals across the two notes
+produce unknown task fields and ask to reconcile saved goals. An explicit
+blocker is required; silence stays unknown. Each value is limited to 240 bytes,
+with terminal control characters removed and list items joined by semicolons.
+`Finished (recorded)` repeats saved claims; it does not verify tests, evidence,
+gates or task completion. Keep current notes concise and remove ambiguous
+historical sections before relying on this summary.
 
 Evolvebooks (the same helper the `/evolvebook` skill uses):
 
