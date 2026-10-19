@@ -37,7 +37,7 @@
     "docs/run-state-next.md"
   ],
   "scripts": {
-    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs tests/run-state.test.cjs tests/challenger-and-dashboard.test.cjs tests/autonomous-challenger.test.cjs tests/dashboard-sse.test.cjs tests/run-state-wrap.test.cjs tests/dep-graph.test.cjs tests/semantic-invalidation.test.cjs"
+    "test": "sh tests/run-tests.sh && node --test tests/npm-install.test.cjs tests/status.test.cjs tests/run-state.test.cjs tests/challenger-and-dashboard.test.cjs tests/autonomous-challenger.test.cjs tests/dashboard-sse.test.cjs tests/run-state-wrap.test.cjs tests/dep-graph.test.cjs tests/semantic-invalidation.test.cjs tests/dashboard-diff.test.cjs"
   },
   "keywords": [
     "codex",
