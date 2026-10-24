@@ -1,0 +1,8 @@
+{
+  "id": "run-state",
+  "title": "Runs",
+  "zone": "center",
+  "order": 50,
+  "refreshMs": 5000,
+  "entry": "panel.cjs"
+}

@@ -18,6 +18,8 @@ Merged since 0.8.2, not yet released or published to npm:
 - **Skill overlap cleanup:** `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
 - **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
 - **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.
+- Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
+- **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
 - **Docs:** add `docs/roadmap.md`; refresh README, command reference, architecture roadmap, and the run-state milestone note.
 
 Hashes detect changes to checked files; they are not signatures. Leases coordinate agents sharing one filesystem.

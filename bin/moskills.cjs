@@ -6,7 +6,7 @@ const { spawnSync } = require('node:child_process');
 
 const input = process.argv.slice(2);
 const args = [];
-const helper = ['evolvebook', 'evolvebooks', 'run-state'].includes(input[0]);
+const helper = ['evolvebook', 'evolvebooks', 'run-state', 'dashboard'].includes(input[0]);
 let verbose = false;
 for (let i = 0; i < input.length; i++) {
   if (helper) args.push(input[i]);
@@ -25,6 +25,7 @@ const help = `moskills — structured agent work, short answers.
   moskills status   Show five advisory saved-note lines; --verbose adds install details.
   moskills run-state <command>  Verifiable run progress and proof (init, check, resume, ...).
   moskills evolvebook <command> Create, use, link, or export a recurring-job guide.
+  moskills dashboard [--panels <dir>]  Local dashboard of plug-in panels (127.0.0.1 only).
   moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
 
 Options: --target <path>, --with-hooks, --force, --verbose.
