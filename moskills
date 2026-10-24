@@ -815,19 +815,28 @@ cmd_status() {
 }
 
 # Re-inject the saved plan into the agent's context (Claude Code hooks).
-# Silent outside projects, when every line is unknown, or with MOSKILLS_NO_CONTEXT=1.
+# Adds the active run's progress and the exact proof command when a run exists.
+# Silent outside projects, when nothing is recorded, or with MOSKILLS_NO_CONTEXT=1.
 cmd_context() {
   [ "${MOSKILLS_NO_CONTEXT:-0}" = 1 ] && return 0
   [ -d "$TARGET" ] && is_project || return 0
   lines=$(status_summary) || return 0
-  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || return 0
+  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || lines=''
+  run=''
+  if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
+    if [ "${MOSKILLS_DISTRIBUTION:-}" = npm ]; then cli=moskills; else cli="sh '$SCRIPT_DIR/moskills'"; fi
+    run=$(node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" "$cli" 2>/dev/null) || run=''
+  fi
+  [ -n "$lines$run" ] || return 0
+  if [ -n "$lines" ] && [ -n "$run" ]; then lines="$lines
+$run"; else lines="$lines$run"; fi
   [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
   case "$EVENT" in
     UserPromptSubmit|SessionStart) ;;
     *) die "context: unsupported --event: $EVENT" ;;
   esac
   # JSON-escape backslashes and quotes, then join lines with \n.
-  body=$(printf 'moskills saved plan (advisory, from .claude/STATE.md and tasks/todo.md):\n%s\n' "$lines" |
+  body=$(printf 'moskills saved plan (advisory notes; the run lines come from .moskills/runs and are authoritative):\n%s\n' "$lines" |
     sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR > 1 { printf "\\n" } { printf "%s", $0 }')
   printf '{"hookSpecificOutput": {"hookEventName": "%s", "additionalContext": "%s"}}\n' "$EVENT" "$body"
 }

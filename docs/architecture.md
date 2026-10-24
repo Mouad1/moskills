@@ -345,7 +345,7 @@ existing guard checks staged hazards; it does not enforce all four quality gates
 - [ ] Observe broader community/platform trials.
 - [x] Implement run state, dependency barriers and evidence invalidation (`moskills run-state`, 0.8.2 and #27–#35).
 - [x] Enforce gate transitions and bounded review loops inside the run-state engine.
-- [ ] Make skills and the standard use the run-state record when it exists, so there is one source of truth (see [roadmap.md](roadmap.md)).
+- [x] Make skills and the standard use the run-state record when it exists, so there is one source of truth (see [roadmap.md](roadmap.md)).
 - [ ] Generate Finished / Still not done views from that shared state.
 - [ ] Fix preview decision persistence and launcher/shell-interpreter compatibility.
 - [ ] Build brief forms, progress and revision-bound review controls, including evolvebook forms.

@@ -431,6 +431,9 @@ the conversation is compacted. The plugin re-reads them for you:
   (Goal, Finished, Still not done, Blocker, Next) to the agent's context, about
   50 tokens. Silent until something is recorded.
 - **After compaction** (`SessionStart` with `compact`): adds the same five lines.
+- **When a run exists** (`moskills run-state`): also adds the run's goal, finished
+  tasks, stale proof, next ready task, and the exact command to record proof.
+  Skills then prove each check through the run instead of writing "passed" by hand.
 - Turn it off with `MOSKILLS_NO_CONTEXT=1`. Codex and Antigravity have no such
   hook; they read the notes at session start through `AGENTS.md`.
 

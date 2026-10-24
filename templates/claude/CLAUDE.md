@@ -10,7 +10,7 @@ Describe requests in ordinary language; route them automatically to relevant ins
 - Use checkpoint for progress, learn after corrections/root causes and for preferences to keep, Project DNA for significant decisions, and handoff when pausing. Update `.claude/STATE.md` with observed evidence and next actions.
 - Before claiming completion, use gatekeeper to check behavior, visual presentation when affected, code/config/document quality, and human validation when requested. Record every gate as passed, failed, unknown, or not applicable with evidence/reason. Required failed or unknown gates leave work **Still not done**.
 - For non-trivial work, run at most two challenger/fixer review passes. Use native reviewers or separate serial passes; disclose serial self-review. Record unresolved findings and escalate only decisions requiring the user.
-- Report **Finished** and **Still not done** for agreed scope. These instructions provide an audit trail, not a runtime workflow engine.
+- Report **Finished** and **Still not done** for agreed scope. When a `moskills run-state` run exists, its recorded proof decides task and gate status.
 
 ```mermaid
 flowchart LR

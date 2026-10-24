@@ -88,7 +88,7 @@ Checked on 2026-10-24 for features that do the same job twice.
 | `/handoff`, `/checkpoint`, and the session protocol used three handoff formats and two files | `/handoff` writes one `Handoff` entry under `Checkpoints` in `.claude/STATE.md`, with the session protocol's fields | Fixed |
 | `/align-intent` wrote to a `Current Intent Model` heading that the STATE template does not have | Writes to `Current run` | Fixed |
 | `/checkpoint` and `/gatekeeper` both wrote gate results | `/gatekeeper` owns `Validation History`; `/checkpoint` references it | Fixed |
-| Markdown gates (`/gatekeeper`, `STATE.md`) and the run-state engine track the same progress separately; no skill mentions `moskills run-state` | See todo 1 | **Open** |
+| Markdown gates (`/gatekeeper`, `STATE.md`) and the run-state engine tracked the same progress separately | When a run exists, the run decides task and gate status; `/gatekeeper`, `/checkpoint`, `/handoff` and `/align-intent` drive it. Generating `STATE.md` from the run is todo 2 | Mostly fixed |
 | `templates/claude/STATE.md` and `CLAUDE.md` duplicate `templates/project/` for the deprecated `setupskill.sh` | See todo 7 | **Open** |
 | `lib/claude-settings.py` and `.js` do the same thing | Intentional: Python first, Node fallback; tested to behave the same | Keep |
 
@@ -118,20 +118,24 @@ The arrows show order: an item starts once the items pointing to it are done.
 
 ### P0: one source of truth (needed for autonomy)
 
-1. **Connect the skills to the engine.** When `.moskills/runs/` exists,
-   `/gatekeeper`, `/checkpoint`, and `/handoff` record checks with
-   `run-state wrap` or `check`, complete tasks with `complete`, and get human
-   sign-off with `accept`. Update `templates/managed/base.md` and
-   `session-protocol.md`, which still say there is no runtime engine.
+1. **Connect the skills to the engine.** Done: `base.md` has a Run state
+   section; `/align-intent` starts a run, `/gatekeeper` records checks with
+   `run-state wrap --auto-complete` and the human gate with `accept` (only after
+   explicit approval), `/checkpoint` and `/handoff` read `run-state resume`.
+   `run-state init` no longer overwrites an existing run without `--force`.
 2. **Generate STATE.md from the run.** Add an export (for example
    `run-state status --md`) that writes Finished, Still not done, and Validation
    History into `.claude/STATE.md`, so the two records cannot disagree.
-3. **One way to call the CLI.** Skills need a command that works for the plugin
-   (`${CLAUDE_PLUGIN_ROOT}/moskills`), npm (`moskills`), and standalone
-   (`~/.local/bin/moskills`) installs. Document it in the standard; have
-   `moskills doctor` check it.
-4. **Resume at session start.** When a run exists, the SessionStart hook prints
-   the `run-state resume` summary: stale proof, next ready task, held leases.
+3. **One way to call the CLI.** Mostly done: the plan reminder prints the
+   exact `Record proof` command for the install it runs from, and `base.md`
+   gives the fallback order (`moskills` on PATH, then `~/.moskills/moskills`).
+   Still open: a `moskills doctor` check, and Codex/Antigravity, which have no
+   per-prompt hook.
+4. **Resume at session start.** Partly done: every prompt now shows the
+   active run, finished count, stale tasks and next ready task, and the session
+   protocol runs `run-state resume` first. Still open: a read-only staleness
+   check in the hook itself (today it shows what the last `resume` recorded) and
+   held leases.
 
 ### P1: release
 
