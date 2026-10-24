@@ -1,9 +1,24 @@
 # Changelog
 
-## Unreleased
+## Unreleased (planned 0.9.0)
 
+Merged since 0.8.2, not yet released or published to npm:
+
+- **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
+- **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
+- **Command evidence wrapper:** `moskills run-state wrap -- <command>` streams output and records it as evidence (#29).
+- **Dependency graph:** `lib/dep-graph.cjs` scans CommonJS and ESM imports without dependencies (#30).
+- **Impact analysis:** `moskills run-state impact --files <f>` reports tasks and checks affected by a change, including through imports (#31).
+- **Dashboard diff tab:** `GET /api/diff` shows the Git diff and its impact tree (#32).
+- **Task leases:** `lease`, `heartbeat`, and `release` give one agent a time-bounded hold on a task (#33).
+- **Parallel claiming:** `next-tasks` lists every ready task; `claim-task` claims one under the run lock (#34).
+- **External evidence:** `ingest-evidence` records CI or test results produced elsewhere; `GET /api/agents` shows leases on the dashboard (#35).
+- **Skill overlap cleanup:** `/learn` owns project lessons (`/memorize` keeps cross-project memory); `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
 - Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
 - **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
+- **Docs:** add `docs/roadmap.md`; refresh README, command reference, architecture roadmap, and the run-state milestone note.
+
+Hashes detect changes to checked files; they are not signatures. Leases coordinate agents sharing one filesystem.
 
 ## 0.8.2
 

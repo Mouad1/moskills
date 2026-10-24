@@ -35,6 +35,7 @@
     "docs/testing-from-a-to-z.md",
     "docs/quick-start.md",
     "docs/run-state-next.md",
+    "docs/roadmap.md",
     "docs/panel-host.md"
   ],
   "scripts": {

@@ -16,7 +16,7 @@ This skill does not install the real Claude-Mem plugin. If the project needs the
 - The user asks what happened before.
 - The user asks whether a problem was fixed in a past session.
 - The agent needs project history before making a decision.
-- A lesson should survive this session.
+- A cross-project lesson or user preference should survive this session. Project lessons from corrections and root causes belong to `/learn` (`tasks/lessons.md`).
 - A project rule keeps coming up.
 - A decision should be available to future agents.
 - The chat is getting long and important context should move to durable memory.
@@ -35,7 +35,7 @@ This skill does not install the real Claude-Mem plugin. If the project needs the
 
 Use `.claude/STATE.md` for current project working state.
 
-Use memory for durable facts that should outlive a single project state file: recurring user preferences, stable project rules, decisions, and lessons from bugs or reviews.
+Use memory for durable facts that should outlive a single project state file: recurring user preferences, stable project rules, and decisions. Project lessons from bugs, corrections, or reviews are owned by `/learn` and live in `tasks/lessons.md`; do not copy them into memory.
 
 Do not duplicate long entries between both places. If a durable memory affects current work, add a short reference or summary in `.claude/STATE.md`.
 
@@ -58,7 +58,7 @@ Do not call `get_observations` first. It is expensive and should be used only af
 - Stable project rules.
 - Repeated user preferences.
 - Decisions that affect future work.
-- Lessons from bugs, failed approaches, and reviews.
+- Lessons that apply beyond this project (project lessons go to `/learn`).
 - Short summaries of important completed work.
 
 ## What Not To Store

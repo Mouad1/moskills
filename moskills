@@ -50,8 +50,9 @@ Commands:
                                             improve every run (setup, new, list, link,
                                             export, ...). Run: moskills evolvebook help
   run-state  <command> [args]               Verifiable run progress and proof (init,
-                                            check, complete, resume, status, accept).
-                                            Run: moskills run-state help
+                                            check, wrap, complete, resume, status,
+                                            impact, accept, review, lease, claim-task,
+                                            dashboard, ...). Run: moskills run-state help
   dashboard [--panels <dir>]... [--port <n>] Local dashboard of plug-in panels
                                             (127.0.0.1 only). Run: moskills dashboard --help
 
