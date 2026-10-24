@@ -12,6 +12,25 @@
             "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" 2>/dev/null; sh \"${CLAUDE_PLUGIN_ROOT}/templates/claude/skills/evolvebook/scripts/evolvebook.sh\" hook 2>/dev/null || true"
           }
         ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" context --event SessionStart --target \"${CLAUDE_PROJECT_DIR:-.}\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" context --event UserPromptSubmit --target \"${CLAUDE_PROJECT_DIR:-.}\" 2>/dev/null || true"
+          }
+        ]
       }
     ]
   }

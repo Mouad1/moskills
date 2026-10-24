@@ -362,6 +362,7 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
 | `moskills status [--verbose]` | Five advisory saved-note lines; `--verbose` also shows installation details |
+| `moskills context [--event <name>]` | The same five lines for the agent's context; with `--event UserPromptSubmit` or `SessionStart`, Claude Code hook JSON. Silent when nothing is recorded or `MOSKILLS_NO_CONTEXT=1` |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
 | `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
 

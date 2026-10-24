@@ -424,9 +424,29 @@ New Feature -> /preview -> /align-intent -> /evolvebook use (if a book matches) 
 
 After a correction or confirmed root cause, use `/learn`. If work must pause, use `/handoff`.
 
+## Plan Reminder (Claude Code plugin)
+
+Notes on disk are easy for an agent to forget late in a long session or after
+the conversation is compacted. The plugin re-reads them for you:
+
+- **Every prompt** (`UserPromptSubmit`): adds the five `moskills status` lines
+  (Goal, Finished, Still not done, Blocker, Next) to the agent's context, about
+  50 tokens. Silent until something is recorded.
+- **After compaction** (`SessionStart` with `compact`): adds the same five lines.
+- Turn it off with `MOSKILLS_NO_CONTEXT=1`. Codex and Antigravity have no such
+  hook; they read the notes at session start through `AGENTS.md`.
+
+```mermaid
+flowchart LR
+  Prompt[Each prompt or compaction] --> Hook[moskills context]
+  Hook --> Notes[Saved project notes]
+  Notes --> Lines[Five status lines]
+  Lines --> Agent[Agent context]
+```
+
 ## Hook Flow
 
-Hooks are optional. They run only if init was given `--with-hooks` (works in
+Git hooks are optional. They run only if init was given `--with-hooks` (works in
 both the plugin CLI and the legacy script).
 
 ## Git Workflow Rule

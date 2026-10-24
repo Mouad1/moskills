@@ -15,6 +15,7 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 - Checkpoint meaningful changes and evidence: commands/checks, observed results, changed files, decisions, blockers, and next actions.
 - Keep gate statuses explicit: passed, failed, unknown, or not applicable. Record review pass count and unresolved findings.
 - After a user correction, rejected review, or confirmed root cause, capture the preventive rule in `tasks/lessons.md`.
+- When research or exploration turns up something the next session would otherwise rediscover (how a part works, a constraint, a rejected option and why), add one line under `Findings` in `.claude/STATE.md`.
 - Ask before installing dependencies; show the migration plan before changing database schemas. Obtain user validation before any commit, push, or merge.
 
 ## End or pause

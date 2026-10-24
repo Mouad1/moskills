@@ -145,10 +145,11 @@ The arrows show order: an item starts once the items pointing to it are done.
 
 7. **Retire `setupskill.sh`** and the duplicate `templates/claude/STATE.md` and
    `CLAUDE.md`, with a migration note and updated tests.
-8. **Findings and memory scope.** Add a `## Findings` section to the STATE
-   template for research notes instead of new `task_plan.md` / `findings.md` /
-   `progress.md` files. Those would duplicate `tasks/todo.md` and `STATE.md`.
-   Decide whether `/memorize` stays an adapter for the external Claude-Mem
+8. **Findings and memory scope.** Done: the STATE template has a `## Findings`
+   section, and the plugin re-injects the five status lines on every prompt and
+   after compaction (`moskills context`). This replaces the 3-file pattern
+   (`task_plan.md` / `findings.md` / `progress.md`), which would duplicate
+   `tasks/todo.md` and `STATE.md`. Still open: decide whether `/memorize` stays an adapter for the external Claude-Mem
    plugin or folds into `/learn`.
 
 ### P3: new features, built on what exists
