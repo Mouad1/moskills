@@ -142,7 +142,7 @@ test('Track C: Interactive dashboard server serves HTML and JSON APIs', async ()
 
   try {
     // 1. GET / -> serves HTML with dashboard components
-    const htmlRes = await fetch(`http://localhost:${port}/`);
+    const htmlRes = await fetch(`http://127.0.0.1:${port}/`);
     assert.equal(htmlRes.status, 200);
     const htmlText = await htmlRes.text();
     assert.ok(htmlText.includes('moskills Run-State Dashboard'));
@@ -151,21 +151,21 @@ test('Track C: Interactive dashboard server serves HTML and JSON APIs', async ()
     assert.ok(htmlText.includes('id="tab-review"'));
 
     // 2. GET /api/run -> returns run JSON
-    const runRes = await fetch(`http://localhost:${port}/api/run`);
+    const runRes = await fetch(`http://127.0.0.1:${port}/api/run`);
     assert.equal(runRes.status, 200);
     const runData = await runRes.json();
     assert.equal(runData.id, 'run-dash-1');
     assert.equal(runData.goal, 'Test web dashboard');
 
     // 3. GET /api/events -> returns event history
-    const eventsRes = await fetch(`http://localhost:${port}/api/events`);
+    const eventsRes = await fetch(`http://127.0.0.1:${port}/api/events`);
     assert.equal(eventsRes.status, 200);
     const events = await eventsRes.json();
     assert.ok(Array.isArray(events));
     assert.ok(events.length >= 1);
 
     // 4. POST /api/accept -> records human acceptance
-    const acceptRes = await fetch(`http://localhost:${port}/api/accept`, {
+    const acceptRes = await fetch(`http://127.0.0.1:${port}/api/accept`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ acceptedBy: 'Tester', notes: 'UI verified' })
