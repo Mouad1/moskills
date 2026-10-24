@@ -16,8 +16,7 @@ Users describe work in ordinary language. Select relevant capabilities automatic
 | Meaningful progress or context change | Checkpoint |
 | Work ready for verification | Gatekeeper |
 | Significant decision or implementation | Project DNA |
-| Correction, rejected review, or confirmed root cause | Learn |
-| Relevant past work or durable decision | Memorize |
+| Correction, rejected review, confirmed root cause, or a preference to keep | Learn |
 | Pause or continuation in another session | Handoff |
 | Create, use, list, link, or export a recurring-job guide | Evolvebook |
 

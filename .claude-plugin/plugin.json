@@ -33,7 +33,6 @@
     "./templates/claude/skills/checkpoint",
     "./templates/claude/skills/gatekeeper",
     "./templates/claude/skills/compress-input",
-    "./templates/claude/skills/memorize",
     "./templates/claude/skills/handoff",
     "./templates/claude/skills/project-dna",
     "./templates/claude/skills/preview",

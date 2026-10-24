@@ -45,6 +45,11 @@ Commands:
                                             otherwise. Never fails.
   plugin-autoupdate [--check]               Turn on Claude Code auto-update for the
                                             moskills marketplace (--check: report only).
+  context [--target <path>] [--event <name>]
+                                            The five saved-note lines for the agent's
+                                            context; --event prints Claude Code hook JSON
+                                            (UserPromptSubmit, SessionStart). Silent when
+                                            nothing is recorded or MOSKILLS_NO_CONTEXT=1.
   version                                   Print the standard version.
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
@@ -210,6 +215,28 @@ ensure_block() { # $1 = file, $2 = block function, $3 = 1 to create the file whe
     { printf '\n'; "$2"; } >> "$cm"
     log "Added managed block to $(basename "$cm")"
   fi
+}
+
+# Remove managed files an older version installed that this version no longer
+# ships. Only unedited files go (their checksum still matches the manifest);
+# edited ones stay with a warning.
+retire_managed() { # $1 = target
+  t=$1
+  [ -f "$t/$SUM_FILE" ] || return 0
+  current=$(managed_pairs | awk -F'|' '{print $2}')
+  while IFS= read -r line; do
+    sum=${line%%  *}; dest=${line#*  }
+    [ -n "$dest" ] && [ -f "$t/$dest" ] || continue
+    printf '%s\n' "$current" | grep -Fxq -- "$dest" && continue
+    if [ "$(sha "$t/$dest")" = "$sum" ]; then
+      rm "$t/$dest"
+      d=$(dirname "$t/$dest")
+      while [ "$d" != "$t" ] && rmdir "$d" 2>/dev/null; do d=$(dirname "$d"); done
+      log "Removed retired file: $dest"
+    else
+      warn "kept retired managed file you edited (remove it yourself): $dest"
+    fi
+  done < "$t/$SUM_FILE"
 }
 
 # ---------- install / seed ----------
@@ -415,6 +442,7 @@ cmd_sync() {
     sh "$SCRIPT_DIR/migrations/v$from_major-to-v$to_major.sh" "$t"
   fi
 
+  retire_managed "$t"
   if [ "$FORCE" -eq 1 ] || [ "$skipped" -eq 0 ]; then
     install_managed "$t"
   else
@@ -586,6 +614,12 @@ cmd_link() {
   if [ -n "$agents" ]; then
     printf '%s\n' "$agents" | while IFS='|' read -r agent dir; do
       mkdir -p "$dir"
+      for entry in "$dir"/*; do # drop our links to skills that no longer exist
+        [ -L "$entry" ] && [ ! -e "$entry" ] || continue
+        case "$(readlink "$entry")" in
+          "$SCRIPT_DIR"/*) rm "$entry"; log "Removed link to retired skill: $entry" ;;
+        esac
+      done
       for sk in "$LEGACY_DIR"/skills/*/; do
         sk=${sk%/}
         link_path "$sk" "$dir/$(basename "$sk")" "$agent"
@@ -756,20 +790,46 @@ cmd_setup() {
   log 'Check anytime: moskills status'
 }
 
+is_project() {
+  [ -f "$TARGET/.moskills.json" ] || [ -f "$TARGET/.claude/STATE.md" ] ||
+    [ -f "$TARGET/STATE.md" ] || [ -f "$TARGET/tasks/todo.md" ]
+}
+
+status_summary() { # five advisory lines from saved project notes
+  state="$TARGET/.claude/STATE.md"
+  [ -f "$state" ] || state="$TARGET/STATE.md"
+  # stdin is empty when neither note exists; awk still prints five unknowns.
+  set --
+  [ ! -f "$state" ] || set -- "$@" "$state"
+  [ ! -f "$TARGET/tasks/todo.md" ] || set -- "$@" "$TARGET/tasks/todo.md"
+  LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
+}
+
 cmd_status() {
   [ -d "$TARGET" ] || die "target does not exist: $TARGET"
-  if [ -f "$TARGET/.moskills.json" ] || [ -f "$TARGET/.claude/STATE.md" ] ||
-     [ -f "$TARGET/STATE.md" ] || [ -f "$TARGET/tasks/todo.md" ]; then
-    state="$TARGET/.claude/STATE.md"
-    [ -f "$state" ] || state="$TARGET/STATE.md"
-    # stdin is empty when neither note exists; awk still prints five unknowns.
-    set --
-    [ ! -f "$state" ] || set -- "$@" "$state"
-    [ ! -f "$TARGET/tasks/todo.md" ] || set -- "$@" "$TARGET/tasks/todo.md"
-    LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
+  if is_project; then
+    status_summary
     [ "$VERBOSE" -eq 1 ] || return 0
   fi
   cmd_install_status
+}
+
+# Re-inject the saved plan into the agent's context (Claude Code hooks).
+# Silent outside projects, when every line is unknown, or with MOSKILLS_NO_CONTEXT=1.
+cmd_context() {
+  [ "${MOSKILLS_NO_CONTEXT:-0}" = 1 ] && return 0
+  [ -d "$TARGET" ] && is_project || return 0
+  lines=$(status_summary) || return 0
+  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || return 0
+  [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
+  case "$EVENT" in
+    UserPromptSubmit|SessionStart) ;;
+    *) die "context: unsupported --event: $EVENT" ;;
+  esac
+  # JSON-escape backslashes and quotes, then join lines with \n.
+  body=$(printf 'moskills saved plan (advisory, from .claude/STATE.md and tasks/todo.md):\n%s\n' "$lines" |
+    sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR > 1 { printf "\\n" } { printf "%s", $0 }')
+  printf '{"hookSpecificOutput": {"hookEventName": "%s", "additionalContext": "%s"}}\n' "$EVENT" "$body"
 }
 
 cmd_install_status() {
@@ -836,6 +896,7 @@ TARGET=$(pwd)
 FORCE=0
 WITH_HOOKS=0
 HOOK=0
+EVENT=''
 AGENTS=0
 AGENTS_ON=0
 REPLACE=0
@@ -852,6 +913,7 @@ while [ "$#" -gt 0 ]; do
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
     --hook)   HOOK=1; shift ;;
+    --event)  [ "$#" -ge 2 ] || die '--event requires a hook event name'; EVENT=$2; shift 2 ;;
     --agents) AGENTS=1; shift ;;
     --replace) REPLACE=1; shift ;;
     --yes)    YES=1; shift ;;
@@ -889,6 +951,7 @@ case "$CMD" in
   link)    cmd_link ;;
   setup)   cmd_setup ;;
   status)  cmd_status ;;
+  context) cmd_context ;;
   uninstall) cmd_uninstall ;;
   unlink)  cmd_unlink ;;
   self-update)     cmd_self_update ;;

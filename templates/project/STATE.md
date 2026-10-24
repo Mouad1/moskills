@@ -22,6 +22,12 @@
 
 - None recorded yet; assess against acceptance criteria before claiming completion.
 
+## Findings
+
+> Research notes and discoveries worth keeping: how something works, a constraint found, an option ruled out and why. Corrections and root causes go to `tasks/lessons.md` through `/learn`.
+
+- None yet.
+
 ## Validation History
 
 | Gate | Required for this scope? | Status | Observed evidence or reason / next check |

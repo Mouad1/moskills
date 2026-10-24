@@ -174,6 +174,5 @@ $command_banner
   /checkpoint
   /gatekeeper
   /compress-input
-  /memorize
   /handoff
 DONE
