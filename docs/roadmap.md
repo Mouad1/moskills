@@ -74,8 +74,9 @@ mindmap
 | #33 | Task leases with TTL heartbeat |
 | #34 | Parallel ready-task listing and safe claiming |
 | #35 | External evidence ingestion and agents tab (`/api/agents`) |
+| #38 | Panel host (`moskills dashboard`, plug-in panels) and run dashboard security fix (127.0.0.1 only, no wildcard CORS) |
 
-All 13 merged. `npm test` passes locally (shell suite plus 82 Node tests).
+All 14 merged. `npm test` passes locally (shell suite plus 100 Node tests).
 
 ## 3. Overlap review
 

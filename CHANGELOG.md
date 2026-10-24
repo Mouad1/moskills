@@ -14,6 +14,8 @@ Merged since 0.8.2, not yet released or published to npm:
 - **Parallel claiming:** `next-tasks` lists every ready task; `claim-task` claims one under the run lock (#34).
 - **External evidence:** `ingest-evidence` records CI or test results produced elsewhere; `GET /api/agents` shows leases on the dashboard (#35).
 - **Skill overlap cleanup:** `/learn` owns project lessons (`/memorize` keeps cross-project memory); `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
+- Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
+- **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
 - **Docs:** add `docs/roadmap.md`; refresh README, command reference, architecture roadmap, and the run-state milestone note.
 
 Hashes detect changes to checked files; they are not signatures. Leases coordinate agents sharing one filesystem.
