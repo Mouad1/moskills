@@ -271,21 +271,22 @@ POSIX shell on macOS, Linux, or WSL. It supplies a CLI and project assets, not a
 AI agent or account. The full proposed workflow does not ship as an integrated
 runtime.
 
-Public npm publication is pending. For a trial today, clone the merged source,
-run its checks, pack it locally, and install that tarball into an isolated prefix
-or use npx with the local tarball. Read the [npm installation guide](npm-installation.md)
+Version 0.8.1 is published on npm. Newer source (0.8.2 and the run-state
+engine) is not on the registry yet; to try it, clone the source, run its checks,
+pack it locally, and install that tarball into an isolated prefix or use npx with
+the local tarball. Read the [npm installation guide](npm-installation.md)
 for the available package commands and ownership rules. The
 [A–Z testing guide](testing-from-a-to-z.md) provides a complete disposable-project
 recipe, uses the actual source version and commit, and keeps existing global
 installations untouched.
 
-After an authorized public release, these registry commands become available:
+Registry commands (they install the latest published version):
 
 ```sh
-# After publication: initialize without a permanent global installation.
+# Initialize without a permanent global installation.
 npx moskills@latest init
 
-# After publication: keep the CLI available across projects.
+# Keep the CLI available across projects.
 npm install -g moskills
 moskills init
 ```
@@ -338,16 +339,18 @@ existing guard checks staged hazards; it does not enforce all four quality gates
 
 ## Still not done: implementation roadmap
 
-- [ ] Publish an authorized npm release and verify installation from the public registry.
+- [x] Publish 0.8.1 to npm and verify installation from the public registry.
+- [ ] Publish 0.9.0 (run-state engine) to npm.
 - [ ] Observe WSL, live Claude Code, and default automatic instruction loading in fresh projects.
 - [ ] Observe broader community/platform trials.
-- [ ] Implement authoritative run state, dependency barriers and evidence invalidation.
-- [ ] Enforce gate transitions and bounded independent review loops.
+- [x] Implement run state, dependency barriers and evidence invalidation (`moskills run-state`, 0.8.2 and #27–#35).
+- [x] Enforce gate transitions and bounded review loops inside the run-state engine.
+- [ ] Make skills and the standard use the run-state record when it exists, so there is one source of truth (see [roadmap.md](roadmap.md)).
 - [ ] Generate Finished / Still not done views from that shared state.
 - [ ] Fix preview decision persistence and launcher/shell-interpreter compatibility.
 - [ ] Build brief forms, progress and revision-bound review controls, including evolvebook forms.
 
-Deliver these as reviewable changes, with evidence attached to each milestone.
+The live, prioritized list is in [roadmap.md](roadmap.md). Deliver these as reviewable changes, with evidence attached to each milestone.
 Instruction-only operation remains advisory until a trusted validator actually
 rejects invalid transitions. Never label the proposed system enforced prematurely.
 

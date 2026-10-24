@@ -422,7 +422,7 @@ Evolvebooks (the same helper the `/evolvebook` skill uses):
 | `moskills evolvebook link` / `unlink` | Symlink books into installed agents / remove those links |
 | `moskills evolvebook export <job>` | One file for web chats |
 
-Run-State & Evidence Engine (verifiable progress with cryptographic proof):
+Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes to checked files):
 
 | Command | Purpose |
 |---|---|
@@ -432,4 +432,18 @@ Run-State & Evidence Engine (verifiable progress with cryptographic proof):
 | `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
 | `moskills run-state status --id <id>` | Inspect run tasks, evidence status, and acceptance state |
 | `moskills run-state accept --id <id> --by <user> [--notes <text>]` | Record human acceptance bound to current scope hashes |
+| `moskills run-state wrap --id <id> [--task <tid>] [--check <cid>] [--files <files>] [--auto-complete] -- <command>` | Run a command, stream its output, and record it as evidence |
+| `moskills run-state impact --id <id> --files <files>` | List tasks and checks affected by changed files, including through imports |
+| `moskills run-state review --id <id> --task <tid> --passed <true\|false> [--findings <f1,f2>] [--by <name>]` | Record a review verdict against the task's review budget |
+| `moskills run-state auto-review --id <id> --task <tid> --cmd <cmd>` | Run a challenger check and record its verdict (exit 2 when the budget is exhausted) |
+| `moskills run-state grant-budget --id <id> --task <tid> [--count <n>]` | Give an exhausted task more review passes |
+| `moskills run-state lease --id <id> --task <tid> --agent <aid> [--ttl <ms>]` | Hold a task for one agent for a limited time |
+| `moskills run-state heartbeat --id <id> --task <tid> --agent <aid> --lease <lid>` | Renew a held lease |
+| `moskills run-state release --id <id> --task <tid> --agent <aid> --lease <lid>` | Release a held lease |
+| `moskills run-state next-tasks --id <id>` | List every task whose prerequisites are finished |
+| `moskills run-state claim-task --id <id> --agent <aid> [--task <tid>] [--ttl <ms>]` | Claim the next ready task under the run lock |
+| `moskills run-state ingest-evidence --id <id> --check <cid> --source <name> --status <passed\|failed> [--code <n>] [--output <text>] [--files <files>]` | Record evidence produced elsewhere, such as CI |
+| `moskills run-state dashboard --id <id> [--port <n>]` | Open the local dashboard (default port 4040) |
+
+Leases and claiming coordinate agents that share one filesystem. They are not a network service.
 

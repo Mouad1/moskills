@@ -16,7 +16,7 @@ Primary goal: Ensure agreement before coding.
    If the user answers "you decide", write the answers yourself, label the
    logic model `Self-authored under delegation`, and do not ask again.
 5. Write the logic model.
-6. Update `.claude/STATE.md` under `Current Intent Model`.
+6. Record it in `.claude/STATE.md` under `Current run` (Request / agreed outcome, Acceptance criteria / exclusions, Constraints). Do not add a separate intent heading.
 
 ## Logic Model
 

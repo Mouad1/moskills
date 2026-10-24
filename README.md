@@ -8,7 +8,7 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
 
-**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
+**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. The source here is ahead of npm: 0.8.2 and the run-state engine are not on the registry yet (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
 
 ```sh
 npm install -g moskills
@@ -22,7 +22,7 @@ Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
 
 Start with a short, practical trial: [Build something useful with moskills](docs/quick-start.md).
 
-Next implementation milestone: [saved progress with verifiable proof](docs/run-state-next.md).
+Where the project stands and what comes next: [Roadmap](docs/roadmap.md).
 
 Try the setup from installation to a verified result: [A–Z testing walkthrough](docs/testing-from-a-to-z.md).
 
@@ -33,8 +33,8 @@ Try the setup from installation to a verified result: [A–Z testing walkthrough
 ```mermaid
 mindmap
   root((moskills Shipped))
-    v0.8.1 Distribution
-      npm package & npx support
+    Distribution
+      npm package & npx support (v0.8.1 on npm)
       Zero runtime dependencies
       Safe copies & drift detection
       Clean uninstalls & cache resilience
@@ -51,10 +51,18 @@ mindmap
       /memorize (Durable lessons & rules)
       /handoff (Clean agent compaction)
       /project-dna (Reproducible build recipes)
+      /learn (Corrections become rules)
     Evolvebooks Subsystem
       /evolvebook new, use, setup, link, export
       Never-list and Toolbox progression
       Vault integration (Obsidian)
+    Run-State Engine (in source, not on npm yet)
+      Evidence with exit codes and SHA-256 file hashes
+      Stale proof reopens tasks
+      Review budget and challenger auto-review
+      Dependency-aware invalidation
+      Task leases and parallel claiming
+      Local dashboard with live updates
     Multi-Agent & Platform Support
       Claude Code Plugin & marketplace
       Codex ~/.agents/skills
@@ -69,7 +77,8 @@ mindmap
 | **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 13 core agent workflow skills with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Skills Engine** | 13 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **In source (0.8.2+), not on npm yet** |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
 
@@ -87,6 +96,7 @@ mindmap
 - `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
 - `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
+- `/learn`: turn a correction or confirmed root cause into a rule in `tasks/lessons.md`, and promote repeated rules.
 - `/evolvebook`: turn one kind of job (an article, a landing page, a NestJS module) into a guide that improves every run. See [Evolvebooks](#evolvebooks).
 
 ## Evolvebooks
@@ -334,11 +344,12 @@ default, so start it with `agy --add-dir .`.
 
 | Command | Does |
 |---|---|
-| `moskills status` | Version, linked agents, command on PATH, daily update and last run |
+| `moskills status` | In a project: five lines (Goal, Finished, Still not done, Blocker, Next). Elsewhere, or with `--verbose`: version, linked agents, command on PATH, daily update |
 | `moskills setup` | Run the questions again (new agent installed, changed your mind) |
 | `moskills self-update` | Update now instead of waiting for the daily run |
 | `moskills uninstall` | Remove the links, the daily update and `~/.moskills` |
 | `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
+| `moskills run-state <command>` | Saved run progress with proof: `init`, `check`, `wrap`, `complete`, `resume`, `status`, `accept`, `dashboard`, ... Run `moskills run-state help` |
 
 Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
 Automatic updates need the git install.
@@ -393,13 +404,15 @@ Files inside their own project after `/moskills-init`:
 
 This repo keeps the source of the pack:
 
-- `moskills`: the CLI (`init` / `sync` / `doctor` / `version`) bundled into the plugin.
+- `moskills`: the CLI (`init` / `sync` / `doctor` / `status` / `run-state` / `evolvebook` / ...) bundled into the plugin.
+- `bin/moskills.cjs`: the npm entry point that launches the CLI.
+- `lib/`: the run-state engine, its CLI and dashboard, the dependency scanner, the status summary, and settings helpers.
 - `templates/managed/`: the managed standard files copied to `.claude/standard/`.
 - `templates/claude/`: commands, skills, hooks, and legacy project template.
 - `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
 - `.claude-plugin/`: plugin and marketplace manifests.
 - `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
-- `tests/run-tests.sh`: smoke tests for install, sync, hooks, and version consistency.
+- `tests/`: shell smoke tests (`run-tests.sh`) and Node tests (`*.test.cjs`); run all with `npm test`.
 - `setupskill.sh`: legacy installer, deprecated.
 - `docs/`: usage docs and examples.
 
@@ -409,7 +422,7 @@ Project Start -> /shared-language
 
 New Feature -> /preview -> /align-intent -> /evolvebook use (if a book matches) -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
 
-If work must pause, use `/handoff`.
+After a correction or confirmed root cause, use `/learn`. If work must pause, use `/handoff`.
 
 ## Hook Flow
 
@@ -519,7 +532,9 @@ project hook.
 
 ## More Docs
 
-- [Architecture and roadmap](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking. Distinguishes the existing setup from the proposed workflow.
+- [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
+- [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
+- [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
 - [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
 - [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
 - [docs/lifecycle.md](docs/lifecycle.md)
@@ -535,8 +550,8 @@ flowchart LR
     Checks --> Handoff["Complete or hand off"]
 ```
 
-This diagram summarizes the current skill workflow. The architecture guide
-describes the proposed integrated coordinator and its implementation roadmap.
+This diagram summarizes the current skill workflow. The roadmap tracks what
+is shipped and what is still planned.
 
 ## Who Made This
 

@@ -1,6 +1,8 @@
-# Next milestone: saved progress with verifiable proof
+# Milestone: saved progress with verifiable proof
 
-This is a proposed implementation milestone, not a shipped feature. Build the record and its rules first; let the dashboard display that record afterward.
+> **Status: implemented.** This slice shipped in 0.8.2 (#25, #26) and was extended in #27–#35 (review dispatch, live dashboard, impact analysis, leases, external evidence). It is not on npm yet. Current plans live in [roadmap.md](roadmap.md). The text below is the original design note, kept for its acceptance criteria.
+
+This was a proposed implementation milestone when written. Build the record and its rules first; let the dashboard display that record afterward.
 
 ## What a user should experience
 
