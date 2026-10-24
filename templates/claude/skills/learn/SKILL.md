@@ -18,6 +18,7 @@ prevent it. Together they make every session improve the next one.
 - A code review or `/gatekeeper` check rejects work for a repeatable reason.
 - The agent notices it re-derived something a past session already learned.
 - A lesson in `tasks/lessons.md` has fired three or more times.
+- The user states a preference or rule that should apply in every project.
 
 ## Capture Steps
 
@@ -55,6 +56,7 @@ evolvebook"), write the lesson to that book's `mistakes.md` instead of
 - `project`: only true here (domain quirks, this repo's conventions).
 - `stack`: true for the whole stack (Angular, NestJS, BullMQ, Docker...).
 - `universal`: true for any agent work anywhere.
+- `personal`: the user's own preference, for every project they work on.
 
 ## Promotion Path
 
@@ -66,7 +68,10 @@ Session insight -> project rule -> reusable skill. Check at every capture:
    either a rule in the relevant skill's `SKILL.md`, or a new skill if no
    skill owns the pattern. Tell the user the exact target file so they can
    commit it to moskills.
-3. Never promote silently. Show the user the rule and the target file first.
+3. `Scope: personal` -> propose adding it to the user's personal instruction
+   file (`~/.claude/CLAUDE.md` in Claude Code; the equivalent user-level file
+   in other agents), not to the project.
+4. Never promote silently. Show the user the rule and the target file first.
 
 ## Session Start
 

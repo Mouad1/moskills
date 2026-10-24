@@ -48,7 +48,6 @@ mindmap
       /checkpoint (Durable factual progress)
       /gatekeeper (Completion audit)
       /compress-input (Terse technical comms)
-      /memorize (Durable lessons & rules)
       /handoff (Clean agent compaction)
       /project-dna (Reproducible build recipes)
       /learn (Corrections become rules)
@@ -77,7 +76,7 @@ mindmap
 | **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 13 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Skills Engine** | 12 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
 | **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **In source (0.8.2+), not on npm yet** |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
@@ -93,7 +92,6 @@ mindmap
 - `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
 - `/gatekeeper`: validate completed work against the active intent model before reporting completion.
 - `/compress-input`: switch to short, direct technical communication.
-- `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
 - `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
 - `/learn`: turn a correction or confirmed root cause into a rule in `tasks/lessons.md`, and promote repeated rules.
@@ -485,7 +483,6 @@ tasks/                  # seeded todo + lessons files, project-owned
     checkpoint.md
     gatekeeper.md
     compress-input.md
-    memorize.md
     handoff.md
     project-dna.md
     learn.md
@@ -513,8 +510,6 @@ tasks/                  # seeded todo + lessons files, project-owned
     gatekeeper/
       SKILL.md
     compress-input/
-      SKILL.md
-    memorize/
       SKILL.md
     handoff/
       SKILL.md

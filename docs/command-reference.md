@@ -235,27 +235,24 @@ Rules:
 - Preserve code, commands, paths, URLs, identifiers, and error text exactly.
 - Switch back to normal detail for security warnings, irreversible actions, legal risk, user confusion, or complex tradeoffs.
 
-## /memorize
+## /learn
 
-Purpose: use durable memory without filling the current chat.
+Purpose: turn corrections into rules so the same mistake never happens twice.
 
-Use when past sessions, recurring rules, durable lessons, or project decisions should be checked or stored.
+Use when the user corrects the agent, a diagnosis ends with a root cause, a review rejects an approach, or the user states a preference that should apply everywhere.
 
-Inspired by `thedotmack/claude-mem`: automatic observation capture, progressive disclosure, and token-efficient memory search.
-
-Past-session lookup flow:
+Promotion path:
 
 ```text
-search -> timeline -> get_observations
+tasks/lessons.md (Seen: 1) -> Seen: 3+ -> project CLAUDE.md
+Scope: personal -> ~/.claude/CLAUDE.md
+Scope: stack or universal -> proposed change to moskills
 ```
 
 Rules:
 
-- Search memory before writing new memory.
-- Use `search` first to get compact IDs.
-- Use `timeline` to understand surrounding context.
-- Use `get_observations` only for filtered IDs.
-- Keep entries short.
+- One imperative, testable rule per entry; raise `Seen` instead of duplicating.
+- Promotion needs the user's approval; capture does not.
 - Do not store secrets.
 
 ## /handoff

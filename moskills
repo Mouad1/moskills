@@ -215,6 +215,28 @@ ensure_block() { # $1 = file, $2 = block function, $3 = 1 to create the file whe
   fi
 }
 
+# Remove managed files an older version installed that this version no longer
+# ships. Only unedited files go (their checksum still matches the manifest);
+# edited ones stay with a warning.
+retire_managed() { # $1 = target
+  t=$1
+  [ -f "$t/$SUM_FILE" ] || return 0
+  current=$(managed_pairs | awk -F'|' '{print $2}')
+  while IFS= read -r line; do
+    sum=${line%%  *}; dest=${line#*  }
+    [ -n "$dest" ] && [ -f "$t/$dest" ] || continue
+    printf '%s\n' "$current" | grep -Fxq -- "$dest" && continue
+    if [ "$(sha "$t/$dest")" = "$sum" ]; then
+      rm "$t/$dest"
+      d=$(dirname "$t/$dest")
+      while [ "$d" != "$t" ] && rmdir "$d" 2>/dev/null; do d=$(dirname "$d"); done
+      log "Removed retired file: $dest"
+    else
+      warn "kept retired managed file you edited (remove it yourself): $dest"
+    fi
+  done < "$t/$SUM_FILE"
+}
+
 # ---------- install / seed ----------
 install_managed() { # $1 = target
   t=$1
@@ -418,6 +440,7 @@ cmd_sync() {
     sh "$SCRIPT_DIR/migrations/v$from_major-to-v$to_major.sh" "$t"
   fi
 
+  retire_managed "$t"
   if [ "$FORCE" -eq 1 ] || [ "$skipped" -eq 0 ]; then
     install_managed "$t"
   else
@@ -589,6 +612,12 @@ cmd_link() {
   if [ -n "$agents" ]; then
     printf '%s\n' "$agents" | while IFS='|' read -r agent dir; do
       mkdir -p "$dir"
+      for entry in "$dir"/*; do # drop our links to skills that no longer exist
+        [ -L "$entry" ] && [ ! -e "$entry" ] || continue
+        case "$(readlink "$entry")" in
+          "$SCRIPT_DIR"/*) rm "$entry"; log "Removed link to retired skill: $entry" ;;
+        esac
+      done
       for sk in "$LEGACY_DIR"/skills/*/; do
         sk=${sk%/}
         link_path "$sk" "$dir/$(basename "$sk")" "$agent"

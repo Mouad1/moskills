@@ -13,7 +13,9 @@ Merged since 0.8.2, not yet released or published to npm:
 - **Task leases:** `lease`, `heartbeat`, and `release` give one agent a time-bounded hold on a task (#33).
 - **Parallel claiming:** `next-tasks` lists every ready task; `claim-task` claims one under the run lock (#34).
 - **External evidence:** `ingest-evidence` records CI or test results produced elsewhere; `GET /api/agents` shows leases on the dashboard (#35).
-- **Skill overlap cleanup:** `/learn` owns project lessons (`/memorize` keeps cross-project memory); `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
+- **Removed `/memorize`:** it overlapped with `/learn` and depended on the external Claude-Mem plugin. `/learn` now also captures personal preferences (`Scope: personal`, promoted to `~/.claude/CLAUDE.md`).
+- **Retired files are cleaned up:** `moskills sync` removes managed files a newer version no longer ships when they are unedited (edited ones are kept with a warning); `moskills link` removes its own links whose skill no longer exists.
+- **Skill overlap cleanup:** `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
 - **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
 - **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.
 - **Docs:** add `docs/roadmap.md`; refresh README, command reference, architecture roadmap, and the run-state milestone note.

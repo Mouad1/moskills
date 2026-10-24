@@ -34,7 +34,7 @@ mindmap
       install.sh links Codex and Antigravity
       Pre-commit guard
     Skills
-      13 workflow skills
+      12 workflow skills
       Evolvebooks
     Run-state engine
       run.json and events.ndjson
@@ -83,7 +83,7 @@ Checked on 2026-10-24 for features that do the same job twice.
 
 | Overlap | Resolution | State |
 | --- | --- | --- |
-| `/memorize` and `/learn` both stored lessons | `/learn` owns project lessons in `tasks/lessons.md`; `/memorize` keeps cross-project memory and user preferences | Fixed |
+| `/memorize` and `/learn` both stored lessons | `/memorize` removed; `/learn` covers project lessons and personal preferences | Fixed |
 | `/handoff`, `/checkpoint`, and the session protocol used three handoff formats and two files | `/handoff` writes one `Handoff` entry under `Checkpoints` in `.claude/STATE.md`, with the session protocol's fields | Fixed |
 | `/align-intent` wrote to a `Current Intent Model` heading that the STATE template does not have | Writes to `Current run` | Fixed |
 | `/checkpoint` and `/gatekeeper` both wrote gate results | `/gatekeeper` owns `Validation History`; `/checkpoint` references it | Fixed |
@@ -107,7 +107,7 @@ flowchart TD
   T4 --> T5
   T5 --> T6[6 Run-state user guide]
   T5 --> T7[7 Remove legacy installer and duplicate templates]
-  T5 --> T8[8 Findings section and memorize scope]
+  T5 --> T8[8 Findings section and plan reminder]
   T5 --> T9[9 modular-build on gatekeeper and run tasks]
   T5 --> T10[10 Design system skills extend preview]
   T5 --> T11[11 Native Windows and live host trials]
@@ -149,8 +149,8 @@ The arrows show order: an item starts once the items pointing to it are done.
    section, and the plugin re-injects the five status lines on every prompt and
    after compaction (`moskills context`). This replaces the 3-file pattern
    (`task_plan.md` / `findings.md` / `progress.md`), which would duplicate
-   `tasks/todo.md` and `STATE.md`. Still open: decide whether `/memorize` stays an adapter for the external Claude-Mem
-   plugin or folds into `/learn`.
+   `tasks/todo.md` and `STATE.md`. `/memorize` was removed;
+   `/learn` now also captures personal preferences.
 
 ### P3: new features, built on what exists
 
