@@ -422,6 +422,12 @@ Evolvebooks (the same helper the `/evolvebook` skill uses):
 | `moskills evolvebook link` / `unlink` | Symlink books into installed agents / remove those links |
 | `moskills evolvebook export <job>` | One file for web chats |
 
+Dashboard (local, plug-in panels — see `docs/panel-host.md`):
+
+| Command | Purpose |
+|---|---|
+| `moskills dashboard [--target <dir>] [--panels <dir>]... [--port <n>] [--title <t>] [--no-core]` | Start the panel host on 127.0.0.1 (default port 4050) |
+
 Run-State & Evidence Engine (verifiable progress with cryptographic proof):
 
 | Command | Purpose |

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
+- **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
+
 ## 0.8.2
 
 - Implement the **Verifiable Run-State & Evidence Engine** (`lib/run-state.cjs` & `moskills run-state`):

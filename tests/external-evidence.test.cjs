@@ -162,7 +162,7 @@ test('Phase 3 Step 3: External Evidence & CI Status Ingestion & Multi-Agent Dash
 
       // 1. Check GET / returns HTML with Agents & Leases tab
       const htmlRes = await new Promise((resolve, reject) => {
-        http.get(`http://localhost:${port}/`, (res) => {
+        http.get(`http://127.0.0.1:${port}/`, (res) => {
           let data = '';
           res.on('data', chunk => { data += chunk; });
           res.on('end', () => resolve({ statusCode: res.statusCode, data }));
@@ -175,7 +175,7 @@ test('Phase 3 Step 3: External Evidence & CI Status Ingestion & Multi-Agent Dash
 
       // 2. Check GET /api/agents returns active leases and agent count
       const apiRes = await new Promise((resolve, reject) => {
-        http.get(`http://localhost:${port}/api/agents`, (res) => {
+        http.get(`http://127.0.0.1:${port}/api/agents`, (res) => {
           let data = '';
           res.on('data', chunk => { data += chunk; });
           res.on('end', () => resolve({ statusCode: res.statusCode, data: JSON.parse(data) }));

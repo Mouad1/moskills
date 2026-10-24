@@ -52,6 +52,8 @@ Commands:
   run-state  <command> [args]               Verifiable run progress and proof (init,
                                             check, complete, resume, status, accept).
                                             Run: moskills run-state help
+  dashboard [--panels <dir>]... [--port <n>] Local dashboard of plug-in panels
+                                            (127.0.0.1 only). Run: moskills dashboard --help
 
 Other agents (Antigravity, Codex):
   setup   [--yes]        Guided first run: link agents, replace old copies,
@@ -827,6 +829,7 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
 TARGET=$(pwd)
 FORCE=0

@@ -43,7 +43,7 @@ test('Step 2: Live Server-Sent Events (SSE) for Dashboard', async (t) => {
 
   await t.test('GET /api/stream establishes SSE stream and delivers snapshot & update events', async () => {
     return new Promise((resolve, reject) => {
-      const req = http.get(`http://localhost:${port}/api/stream`, (res) => {
+      const req = http.get(`http://127.0.0.1:${port}/api/stream`, (res) => {
         assert.equal(res.statusCode, 200);
         assert.match(res.headers['content-type'], /text\/event-stream/);
         assert.match(res.headers['cache-control'], /no-cache/);
