@@ -114,11 +114,12 @@ test('commands that change the run rewrite one Run proof block in STATE.md', () 
   assert.ok(text.indexOf('moskills:run:begin') < text.indexOf('## Finished'), 'block sits before Finished');
 });
 
-test('the saved-notes status ignores the generated block', () => {
+test('status keeps the five note lines and adds the run lines', () => {
   const dir = seeded('notes-status');
   runState(dir, ['init', '--goal', 'g', '--tasks', 'one']);
   const r = spawnSync('sh', [path.join(root, 'moskills'), 'status', '--target', dir], { env, encoding: 'utf8' });
-  assert.equal(r.stdout, 'Goal: unknown\nFinished (recorded): unknown\nStill not done: unknown\nBlocker: unknown\nNext: unknown\n');
+  assert.equal(r.stdout, 'Goal: unknown\nFinished (recorded): unknown\nStill not done: unknown\nBlocker: unknown\nNext: unknown\n' +
+    'Active run: default - g\nRun tasks: 0/1 finished; next ready: task-1 (one)\nHuman acceptance: pending\n');
 });
 
 test('stale proof shows in the reminder before anyone runs resume', () => {

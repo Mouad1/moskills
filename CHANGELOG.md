@@ -24,6 +24,8 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 - **Live stale proof:** the plan reminder checks finished tasks' proof against current file hashes without writing the run, and names tasks held by another agent.
 - **Doctor:** reports whether run-state is ready (Node.js found) and how many runs the project has.
 - **Guides:** quick start and the A–Z walkthrough now test the run (proof per layer, stale proof after an edit, acceptance that resets when scope files change).
+- **Fixed:** in npm installs, `moskills dashboard` and `moskills context` were rejected as unknown commands.
+- **Status shows the run:** `moskills status` adds the active run's progress after the five note lines.
 - **Safer init:** `moskills run-state init` refuses to overwrite an existing run unless `--force` is passed.
 - **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
 - **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.

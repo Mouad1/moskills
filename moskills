@@ -816,6 +816,9 @@ cmd_status() {
   [ -d "$TARGET" ] || die "target does not exist: $TARGET"
   if is_project; then
     status_summary
+    if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
+      node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" 2>/dev/null || true
+    fi
     [ "$VERBOSE" -eq 1 ] || return 0
   fi
   cmd_install_status

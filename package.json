@@ -36,6 +36,7 @@
     "docs/quick-start.md",
     "docs/run-state-next.md",
     "docs/roadmap.md",
+    "docs/live-session.md",
     "docs/panel-host.md"
   ],
   "scripts": {

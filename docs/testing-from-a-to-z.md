@@ -228,7 +228,7 @@ moskills run-state status
 sed -n '/moskills:run:begin/,/moskills:run:end/p' .claude/STATE.md
 ```
 
-Both tasks show `finished`, and the **Run proof** block in `.claude/STATE.md` lists a `passed (exit 0)` check per layer. A task the agent called done without a passing check stays `still not done`.
+Both tasks end `finished`, and the **Run proof** block in `.claude/STATE.md` lists a `passed (exit 0)` check per layer. Building the basket edits `price.cjs`, so the contract's earlier proof goes stale; a good agent reruns that check rather than reporting it done. A task the agent called done without a passing check stays `still not done`. The block refreshes whenever a run command runs; `moskills status` and `moskills context` check proof live.
 
 **Record:** foundation and feature separately, with actual commands/results, and whether the run agrees with the agent's summary.
 

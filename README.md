@@ -551,6 +551,7 @@ project hook.
 ## More Docs
 
 - [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
+- [Live session script](docs/live-session.md): step-by-step first trial of 0.9.0 in Claude Code, with a scorecard.
 - [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
 - [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
 - [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
