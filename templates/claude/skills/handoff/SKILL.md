@@ -14,7 +14,7 @@ headings as `/checkpoint`, so the next agent reads one place, not two.
 
 1. Read `.claude/STATE.md` when present. If a legacy `.claude/HANDOFF.md`
    exists, fold its open items into `.claude/STATE.md` and say so.
-2. Inspect current Git status. When a run exists, run `run-state resume` and put its run id, finished and still-not-done tasks, and next ready task in the entry.
+2. Inspect current Git status. When a run exists, run `run-state resume` (it refreshes the Run proof block in `.claude/STATE.md`) and name the run id and next ready task in the entry.
 3. Update `Current run` in `.claude/STATE.md`: set **Status** (awaiting user,
    blocked, or parked) and **Next action / blocker**.
 4. Append one entry titled `Handoff` under the existing `Checkpoints` heading,

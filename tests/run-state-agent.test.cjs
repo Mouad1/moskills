@@ -87,3 +87,62 @@ test('standard and skills route checks through the run when one exists', () => {
   assert.match(read('templates/claude/skills/handoff/SKILL.md'), /run-state resume/);
   assert.match(read('templates/claude/skills/align-intent/SKILL.md'), /run-state init/);
 });
+
+function seeded(name) {
+  const dir = project(name);
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  fs.copyFileSync(path.join(root, 'templates/project/STATE.md'), path.join(dir, '.claude/STATE.md'));
+  fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 1;\n');
+  return dir;
+}
+const block = dir => {
+  const s = fs.readFileSync(path.join(dir, '.claude/STATE.md'), 'utf8');
+  return s.slice(s.indexOf('<!-- moskills:run:begin'), s.indexOf('<!-- moskills:run:end -->'));
+};
+
+test('commands that change the run rewrite one Run proof block in STATE.md', () => {
+  const dir = seeded('notes-block');
+  runState(dir, ['init', '--goal', 'g', '--scope', 'a.js', '--tasks', 'one,two']);
+  runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  assert.notEqual(runState(dir, ['wrap', '--task', 'task-2', '--auto-complete', '--silent', '--', 'false']).status, 0);
+  const b = block(dir);
+  assert.match(b, /1\/2 tasks finished with current proof/);
+  assert.match(b, /\| task-1 one \| finished \| check-task-1: passed \(exit 0\)/);
+  assert.match(b, /\| task-2 two \| still not done \| check-task-2: failed \(exit 1\)/);
+  const text = fs.readFileSync(path.join(dir, '.claude/STATE.md'), 'utf8');
+  assert.equal(text.split('moskills:run:begin').length, 2, 'exactly one block');
+  assert.ok(text.indexOf('moskills:run:begin') < text.indexOf('## Finished'), 'block sits before Finished');
+});
+
+test('the saved-notes status ignores the generated block', () => {
+  const dir = seeded('notes-status');
+  runState(dir, ['init', '--goal', 'g', '--tasks', 'one']);
+  const r = spawnSync('sh', [path.join(root, 'moskills'), 'status', '--target', dir], { env, encoding: 'utf8' });
+  assert.equal(r.stdout, 'Goal: unknown\nFinished (recorded): unknown\nStill not done: unknown\nBlocker: unknown\nNext: unknown\n');
+});
+
+test('stale proof shows in the reminder before anyone runs resume', () => {
+  const dir = seeded('live-stale');
+  runState(dir, ['init', '--goal', 'g', '--scope', 'a.js', '--tasks', 'one']);
+  runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  assert.match(context(dir), /Run tasks: 1\/1 finished/);
+  fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 2;\n');
+  assert.match(context(dir), /Run tasks: 0\/1 finished; stale proof: task-1 \(run resume\)/);
+  assert.match(runState(dir, ['notes', '--print']).stdout, /still not done \(proof stale\)/);
+  const run = JSON.parse(fs.readFileSync(path.join(dir, '.moskills/runs/default/run.json'), 'utf8'));
+  assert.equal(run.tasks[0].status, 'finished', 'views never write the run');
+});
+
+test('the reminder names tasks held by another agent', () => {
+  const dir = seeded('held');
+  runState(dir, ['init', '--goal', 'g', '--tasks', 'one,two']);
+  assert.equal(runState(dir, ['lease', '--task', 'task-1', '--agent', 'agent-b', '--ttl', '600000']).status, 0);
+  assert.match(context(dir), /held: task-1 by agent-b/);
+});
+
+test('doctor reports run-state readiness without failing', () => {
+  const dir = seeded('doctor');
+  runState(dir, ['init', '--goal', 'g', '--tasks', 'one']);
+  const r = spawnSync('sh', [path.join(root, 'moskills'), 'doctor', '--target', dir], { env, encoding: 'utf8' });
+  assert.match(r.stdout, /run-state: ready \(node v\d+[^)]*\), 1 run\(s\)/);
+});

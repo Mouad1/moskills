@@ -11,7 +11,7 @@ Primary goal: Record a factual audit trail.
 
 1. Inspect Git status and summarize changed files by purpose; preserve existing work.
 2. Record agreed scope, observed evidence, gate statuses, review pass count/findings, and the exact next action.
-3. When a run exists, run `run-state resume` and copy its finished, still-not-done and stale tasks; do not mark anything finished that the run does not.
+3. When a run exists, run `run-state resume`; it refreshes the generated **Run proof** block in `.claude/STATE.md`. Summarize from that block and never mark anything finished that the run does not; do not edit inside the block.
 4. Update current state and Finished / Still not done in `.claude/STATE.md` and `tasks/todo.md`. Pending required checks remain Still not done.
 5. Append history under the existing `Checkpoints` heading. Gate results under `Validation History` are owned by `/gatekeeper`; reference them instead of rewriting them. Reuse existing headings rather than creating duplicate histories.
 

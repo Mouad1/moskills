@@ -75,6 +75,8 @@ Let one potential customer try sample data. Observe difficulties; ask whether th
 
 **Finished:** observed checks. **Still not done:** unknown checks, defects, customer validation, your acceptance.
 
-Today, agents maintain progress through instructions and saved notes. The enforced run engine, dashboard, and forms remain planned.
+## Keep proof, not promises (0.9.0+)
+
+Add one sentence to your build prompt: "Start a moskills run for this and record every check through it." The run saves each test's command, exit code and file hashes. If a checked file changes, that task reopens. `moskills run-state status` and the **Run proof** block in `.claude/STATE.md` show what is really finished; `moskills dashboard` shows it in a browser. Until 0.9.0 is on npm, install from source as in the [A–Z guide](testing-from-a-to-z.md).
 
 Share one demo, one proof, one customer lesson. [Full verification](testing-from-a-to-z.md). [Customer-discovery principle](https://www.ycombinator.com/library/Gh-yc-guide-to-business-models).

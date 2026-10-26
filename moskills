@@ -511,6 +511,13 @@ cmd_doctor() {
   fi
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
   # informational only: never changes the drift result
+  if command -v node >/dev/null 2>&1; then
+    runs=0
+    for r in "$t"/.moskills/runs/*/run.json; do [ -f "$r" ] && runs=$((runs + 1)); done
+    printf '%-20s run-state: ready (node %s), %s run(s)\n' "$name" "$(node -v 2>/dev/null)" "$runs"
+  else
+    printf '%-20s run-state: unavailable (install Node.js 18+); skills fall back to Markdown notes\n' "$name"
+  fi
   (cd "$t" && sh "$EVOLVEBOOK" status 2>/dev/null) | while IFS= read -r line; do
     printf '%-20s %s\n' "$name" "$line"
   done

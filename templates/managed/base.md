@@ -45,7 +45,7 @@ If an evolvebooks home is configured, read its `EVOLVEBOOKS.md` and project `.ev
 
 ## Run state (proof the tools check)
 
-For non-trivial work with checkable acceptance criteria, keep a run: `moskills run-state` saves each check's exit code, output and file hashes, reopens tasks when checked files change, and refuses to mark a task finished without passing, current proof. When a run exists it is the source of truth for task and gate status; `.claude/STATE.md` and `tasks/todo.md` summarize it.
+For non-trivial work with checkable acceptance criteria, keep a run: `moskills run-state` saves each check's exit code, output and file hashes, reopens tasks when checked files change, and refuses to mark a task finished without passing, current proof. When a run exists it is the source of truth for task and gate status. Every run-state command that changes the run rewrites the **Run proof** block in `.claude/STATE.md`; never edit inside that block.
 
 - **CLI:** use the exact command shown in the `Record proof` line of the plan reminder. Without it, use `moskills` when it is on PATH, else `sh ~/.moskills/moskills`. If none works, work from the Markdown notes and record the limitation.
 - **Start once:** `run-state init --goal "<goal>" --scope <files> --tasks "<t1>,<t2>"`. Never re-initialize an existing run; continue it with `run-state resume`.

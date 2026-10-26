@@ -8,7 +8,7 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
 
-**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. The source here is ahead of npm: 0.8.2 and the run-state engine are not on the registry yet (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
+**moskills 0.9.0 is the current release** (Claude Code plugin and source). npm still has 0.8.1, without the run-state engine; publishing 0.9.0 there is pending (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
 
 ```sh
 npm install -g moskills
@@ -77,7 +77,7 @@ mindmap
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
 | **Skills Engine** | 12 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
-| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **In source (0.8.2+), not on npm yet** |
+| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
 
