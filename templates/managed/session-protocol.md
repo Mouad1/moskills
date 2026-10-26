@@ -4,7 +4,7 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 
 ## Start
 
-1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present.
+1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present. When `.moskills/runs/` exists, run `run-state resume` first: it reopens tasks whose proof went stale and names the next ready task.
 2. Inspect the current branch and working tree. Preserve existing changes; choose an appropriate branch for implementation according to project rules.
 3. Restate the requested outcome briefly. Route ordinary language to needed capabilities without asking the user to remember commands.
 4. For non-trivial work, record a plan, dependency order, and acceptance/gate criteria before implementation. Continue authorized work without adding approval stops for routine choices.
@@ -24,4 +24,4 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 2. Leave working changes intact. Ending a session does not require a commit or stash.
 3. If incomplete, record a short handoff: intended result, current branch/files, prerequisites satisfied, blockers, evidence, and exact next step. Do not label pending required validation as complete.
 
-This protocol is an instruction-based audit trail, not an executable scheduler or persistent agent service. Record only work and evidence actually observed.
+Task and gate status come from the run record when a run exists (see Run state in `base.md`); otherwise this protocol is an instruction-based audit trail. Record only work and evidence actually observed.

@@ -16,7 +16,8 @@ Primary goal: Ensure agreement before coding.
    If the user answers "you decide", write the answers yourself, label the
    logic model `Self-authored under delegation`, and do not ask again.
 5. Write the logic model.
-6. Record it in `.claude/STATE.md` under `Current run` (Request / agreed outcome, Acceptance criteria / exclusions, Constraints). Do not add a separate intent heading.
+6. For non-trivial work whose success criteria can be checked by a command, start a run once with `run-state init --goal "<goal>" --scope <files> --tasks "<t1>,<t2>"` (skip if a run already exists).
+7. Record it in `.claude/STATE.md` under `Current run` (Request / agreed outcome, Acceptance criteria / exclusions, Constraints). Do not add a separate intent heading.
 
 ## Logic Model
 

@@ -18,13 +18,12 @@ The direction described here is simple: install once, initialize each project
 once, then ask for the result in ordinary language. The agent chooses the relevant
 workflow instead of expecting people to remember a sequence of slash commands.
 
-This guide explains the proposed architecture and its shipped foundation. Version
-0.8.0 includes skills, project rules, safe installation tools, copied routing
-instructions, checkpoints, a validation workflow, a preview companion, evolvebook
-helpers, and npm packaging in source. Public npm publication remains pending.
-The integrated scheduler, durable run engine, four-gate enforcement, workflow
-dashboard and forms remain proposed work. Use the roadmap below to distinguish
-available instruction-based workflows from the planned enforced system.
+This guide explains the architecture and what has shipped. Skills, project rules,
+safe installation, checkpoints, the validation workflow, the preview companion,
+evolvebooks and npm packaging shipped by 0.8.1. Version 0.9.0 adds the run-state
+engine (proof per check, stale-proof reopening, review budgets, leases), skills
+that drive it, and a local dashboard. Evolvebook forms are still planned; see
+[roadmap.md](roadmap.md).
 
 ## The workflow at a glance
 
@@ -124,11 +123,12 @@ The proposed local layout separates installation metadata from execution records
   evidence/                   Check outputs and references to reviewed artifacts
 ```
 
-The shipped workflow currently uses agent-maintained `.claude/STATE.md` and
-`tasks/todo.md`. The `.moskills/runs/` layout above is a proposal; this release
-has no authoritative run-state service or evidence database.
+This layout ships with `moskills run-state` (0.9.0). When a run exists it is the
+authoritative record; `.claude/STATE.md` carries a generated **Run proof** block
+and `tasks/todo.md` keeps the plan. Without a run, agents fall back to the
+Markdown notes.
 
-In the proposed engine, one coordinator owns state updates. Checkpoints and the
+Updates go through the run lock, so concurrent writers cannot corrupt the record. Checkpoints and the
 dashboard derive their status from that source. Optional memory holds durable
 preferences and lessons, with short references to runs. If a host mandates a canonical work-state tool,
 its adapter uses that source and labels local exports as derived records.
@@ -271,8 +271,8 @@ POSIX shell on macOS, Linux, or WSL. It supplies a CLI and project assets, not a
 AI agent or account. The full proposed workflow does not ship as an integrated
 runtime.
 
-Version 0.8.1 is published on npm. Newer source (0.8.2 and the run-state
-engine) is not on the registry yet; to try it, clone the source, run its checks,
+Version 0.8.1 is published on npm. Version 0.9.0 (the run-state engine) is
+not on the registry yet; to try it, clone the source, run its checks,
 pack it locally, and install that tarball into an isolated prefix or use npx with
 the local tarball. Read the [npm installation guide](npm-installation.md)
 for the available package commands and ownership rules. The
@@ -345,7 +345,7 @@ existing guard checks staged hazards; it does not enforce all four quality gates
 - [ ] Observe broader community/platform trials.
 - [x] Implement run state, dependency barriers and evidence invalidation (`moskills run-state`, 0.8.2 and #27–#35).
 - [x] Enforce gate transitions and bounded review loops inside the run-state engine.
-- [ ] Make skills and the standard use the run-state record when it exists, so there is one source of truth (see [roadmap.md](roadmap.md)).
+- [x] Make skills and the standard use the run-state record when it exists, so there is one source of truth (see [roadmap.md](roadmap.md)).
 - [ ] Generate Finished / Still not done views from that shared state.
 - [ ] Fix preview decision persistence and launcher/shell-interpreter compatibility.
 - [ ] Build brief forms, progress and revision-bound review controls, including evolvebook forms.

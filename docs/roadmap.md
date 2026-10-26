@@ -29,7 +29,7 @@ mindmap
   root((moskills on main))
     Distribution
       npm package v0.8.1 published
-      Source at 0.8.2 not on npm yet
+      0.9.0 on main, npm publish pending
       Claude Code plugin and marketplace
       install.sh links Codex and Antigravity
       Pre-commit guard
@@ -76,7 +76,7 @@ mindmap
 | #35 | External evidence ingestion and agents tab (`/api/agents`) |
 | #38 | Panel host (`moskills dashboard`, plug-in panels) and run dashboard security fix (127.0.0.1 only, no wildcard CORS) |
 
-All 14 merged. `npm test` passes locally (shell suite plus 108 Node tests).
+All 14 merged. `npm test` passes locally (shell suite plus 119 Node tests).
 
 ## 3. Overlap review
 
@@ -88,7 +88,7 @@ Checked on 2026-10-24 for features that do the same job twice.
 | `/handoff`, `/checkpoint`, and the session protocol used three handoff formats and two files | `/handoff` writes one `Handoff` entry under `Checkpoints` in `.claude/STATE.md`, with the session protocol's fields | Fixed |
 | `/align-intent` wrote to a `Current Intent Model` heading that the STATE template does not have | Writes to `Current run` | Fixed |
 | `/checkpoint` and `/gatekeeper` both wrote gate results | `/gatekeeper` owns `Validation History`; `/checkpoint` references it | Fixed |
-| Markdown gates (`/gatekeeper`, `STATE.md`) and the run-state engine track the same progress separately; no skill mentions `moskills run-state` | See todo 1 | **Open** |
+| Markdown gates (`/gatekeeper`, `STATE.md`) and the run-state engine tracked the same progress separately | When a run exists, the run decides task and gate status; `/gatekeeper`, `/checkpoint`, `/handoff` and `/align-intent` drive it, and a generated Run proof block in `STATE.md` mirrors it | Fixed |
 | `templates/claude/STATE.md` and `CLAUDE.md` duplicate `templates/project/` for the deprecated `setupskill.sh` | See todo 7 | **Open** |
 | `lib/claude-settings.py` and `.js` do the same thing | Intentional: Python first, Node fallback; tested to behave the same | Keep |
 
@@ -118,26 +118,30 @@ The arrows show order: an item starts once the items pointing to it are done.
 
 ### P0: one source of truth (needed for autonomy)
 
-1. **Connect the skills to the engine.** When `.moskills/runs/` exists,
-   `/gatekeeper`, `/checkpoint`, and `/handoff` record checks with
-   `run-state wrap` or `check`, complete tasks with `complete`, and get human
-   sign-off with `accept`. Update `templates/managed/base.md` and
-   `session-protocol.md`, which still say there is no runtime engine.
-2. **Generate STATE.md from the run.** Add an export (for example
-   `run-state status --md`) that writes Finished, Still not done, and Validation
-   History into `.claude/STATE.md`, so the two records cannot disagree.
-3. **One way to call the CLI.** Skills need a command that works for the plugin
-   (`${CLAUDE_PLUGIN_ROOT}/moskills`), npm (`moskills`), and standalone
-   (`~/.local/bin/moskills`) installs. Document it in the standard; have
-   `moskills doctor` check it.
-4. **Resume at session start.** When a run exists, the SessionStart hook prints
-   the `run-state resume` summary: stale proof, next ready task, held leases.
+1. **Connect the skills to the engine.** Done: `base.md` has a Run state
+   section; `/align-intent` starts a run, `/gatekeeper` records checks with
+   `run-state wrap --auto-complete` and the human gate with `accept` (only after
+   explicit approval), `/checkpoint` and `/handoff` read `run-state resume`.
+   `run-state init` no longer overwrites an existing run without `--force`.
+2. **Generate STATE.md from the run.** Done: every run-state command that
+   changes the run rewrites a marked **Run proof** block in `.claude/STATE.md`
+   (`run-state notes` does it on demand). Agents summarize from it and never
+   edit inside it.
+3. **One way to call the CLI.** Mostly done: the plan reminder prints the
+   exact `Record proof` command for the install it runs from, and `base.md`
+   gives the fallback order (`moskills` on PATH, then `~/.moskills/moskills`).
+   `moskills doctor` reports whether run-state is ready. Still open:
+   Codex/Antigravity have no per-prompt hook, so they rely on the fallback.
+4. **Resume at session start.** Done: every prompt shows the active run,
+   finished count, stale proof (checked live against file hashes, read-only),
+   the next ready task and tasks held by other agents; the session protocol
+   runs `run-state resume` first.
 
 ### P1: release
 
-5. **Release 0.9.0.** Bump `VERSION`, `package.json`, `plugin.json`, and
-   `marketplace.json`; rename the `Unreleased` changelog section; publish to
-   npm; verify a fresh registry install. Ship the run-state work now; design
+5. **Release 0.9.0.** Version bumped on `main` (plugin auto-update picks it
+   up). Still open: `npm publish` by the owner, then verify a fresh registry
+   install. Ship the run-state work now; design
    and modular-build come in a later release.
 6. **Run-state user guide.** A short walkthrough in `docs/quick-start.md`:
    init, wrap a test, edit a file, see it go stale, accept.
