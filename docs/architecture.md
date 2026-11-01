@@ -313,7 +313,10 @@ Distribution must continue excluding private working records and avoid
 configuration writes during npm lifecycle scripts.
 
 The supported shell target includes Windows through WSL; observed WSL trials
-remain unfinished. Native Windows support is not claimed. Live Claude Code and
+remain unfinished. Native Windows works through the npm install with Git for
+Windows' `sh`; the Node commands (`run-state`, `design`, `dashboard`) need no
+shell, and CI runs them on Windows. A live native-Windows agent session is not
+yet observed. Live Claude Code and
 default automatic instruction loading also need separate host trials. Local
 package checks do not prove those host or platform behaviors. New dependencies
 and external publication require applicable user authorization.

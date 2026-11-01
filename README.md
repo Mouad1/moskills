@@ -334,7 +334,7 @@ default, so start it with `agy --add-dir .`.
 | `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
 | `moskills run-state <command>` | Saved run progress with proof: `init`, `check`, `wrap`, `complete`, `resume`, `status`, `accept`, `dashboard`, ... Run `moskills run-state help` |
 
-Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
+Requirements: `sh` plus git, curl or wget. macOS, Linux and WSL. For native Windows use the npm install (see [npm installation](docs/npm-installation.md#native-windows)).
 Automatic updates need the git install.
 
 For development, keep a separate clone and do not point `MOSKILLS_HOME` at

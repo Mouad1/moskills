@@ -173,6 +173,9 @@ The arrows show order: an item starts once the items pointing to it are done.
     writes picks back. `moskills design check` verifies color values, WCAG
     contrast pairs in light and dark, and that screens only use declared
     components; `moskills design css` exports tokens as CSS variables.
-11. **Platforms.** Native Windows (PowerShell/CMD) beyond WSL. Live trials in
-    Claude Code Desktop, Codex, and Antigravity; until they are done, support for
-    those hosts is installed but not observed.
+11. **Platforms.** Native Windows: done for the npm install. The launcher
+    finds Git for Windows' `sh` (never WSL's `System32\bash.exe`); `run-state`,
+    `design` and `dashboard` run on Node alone, and checks fall back to
+    `cmd.exe` without `sh`. CI has a Windows job. Still open: live trials in
+    Claude Code (native Windows included), Codex, and Antigravity; until they are
+    done, support for those hosts is installed but not observed.
