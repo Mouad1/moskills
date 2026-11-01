@@ -358,7 +358,7 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
-| `moskills status [--verbose]` | Five advisory saved-note lines; `--verbose` also shows installation details |
+| `moskills status [--verbose]` | Five advisory saved-note lines, plus the active run's progress when a run exists; `--verbose` also shows installation details |
 | `moskills context [--event <name>]` | The same five lines for the agent's context; with `--event UserPromptSubmit` or `SessionStart`, Claude Code hook JSON. Silent when nothing is recorded or `MOSKILLS_NO_CONTEXT=1` |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
 | `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
@@ -447,6 +447,7 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 | `moskills run-state next-tasks --id <id>` | List every task whose prerequisites are finished |
 | `moskills run-state claim-task --id <id> --agent <aid> [--task <tid>] [--ttl <ms>]` | Claim the next ready task under the run lock |
 | `moskills run-state ingest-evidence --id <id> --check <cid> --source <name> --status <passed\|failed> [--code <n>] [--output <text>] [--files <files>]` | Record evidence produced elsewhere, such as CI |
+| `moskills run-state notes [--id <id>] [--print]` | Rewrite the generated Run proof block in `.claude/STATE.md` (other run commands do this automatically) |
 | `moskills run-state dashboard --id <id> [--port <n>]` | Open the local dashboard (default port 4040) |
 
 Leases and claiming coordinate agents that share one filesystem. They are not a network service.

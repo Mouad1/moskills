@@ -8,7 +8,7 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
 
-**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. The source here is ahead of npm: 0.8.2 and the run-state engine are not on the registry yet (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
+**moskills 0.9.0 is the current release** (Claude Code plugin and source). npm still has 0.8.1, without the run-state engine; publishing 0.9.0 there is pending (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
 
 ```sh
 npm install -g moskills
@@ -77,7 +77,7 @@ mindmap
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
 | **Skills Engine** | 12 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
-| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **In source (0.8.2+), not on npm yet** |
+| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
 
@@ -431,6 +431,9 @@ the conversation is compacted. The plugin re-reads them for you:
   (Goal, Finished, Still not done, Blocker, Next) to the agent's context, about
   50 tokens. Silent until something is recorded.
 - **After compaction** (`SessionStart` with `compact`): adds the same five lines.
+- **When a run exists** (`moskills run-state`): also adds the run's goal, finished
+  tasks, stale proof, next ready task, and the exact command to record proof.
+  Skills then prove each check through the run instead of writing "passed" by hand.
 - Turn it off with `MOSKILLS_NO_CONTEXT=1`. Codex and Antigravity have no such
   hook; they read the notes at session start through `AGENTS.md`.
 
@@ -548,6 +551,7 @@ project hook.
 ## More Docs
 
 - [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
+- [Live session script](docs/live-session.md): step-by-step first trial of 0.9.0 in Claude Code, with a scorecard.
 - [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
 - [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
 - [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)

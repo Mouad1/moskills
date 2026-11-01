@@ -48,7 +48,7 @@ if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);
   process.exit(1);
 }
-if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state'].includes(command)) {
+if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state', 'dashboard', 'context'].includes(command)) {
   process.stderr.write(`moskills: unknown command '${command}'. Run moskills --help.\n`);
   process.exit(1);
 }

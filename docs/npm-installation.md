@@ -92,7 +92,7 @@ Example: “Add a login form.” Build foundation, then form. Tests pass, screen
 
 Passing tests do not prove appearance. Unavailable required checks stay `unknown`; task stays open. Changes invalidate affected earlier evidence. Required approval applies to reviewed result.
 
-`.claude/STATE.md` and `tasks/todo.md` hold progress and evidence. Agents maintain these files; this release has no enforced run-state service or evidence database.
+`.claude/STATE.md` and `tasks/todo.md` hold progress notes. From 0.9.0, `moskills run-state` keeps the proof: when a run exists, task and gate status come from it, and a generated **Run proof** block in `.claude/STATE.md` mirrors it.
 
 ## Finished and still not done
 
@@ -104,6 +104,7 @@ Still not done:
 
 - Native Windows support; use WSL.
 - Live Claude Code, WSL, automatic instruction loading, and broader community/platform trials.
-- Enforced run-state engine, interactive progress UI, and evolvebook UI forms from architecture roadmap. Plain Markdown evolvebook creation and export already work.
+- Publish 0.9.0 (run-state engine, skills that use it, `moskills dashboard`) to npm; 0.8.1 does not include them.
+- Evolvebook UI forms. Plain Markdown evolvebook creation and export already work.
 
 Documentation must include useful diagrams for workflows, dependencies, or architecture. Keep diagrams close to explained text.

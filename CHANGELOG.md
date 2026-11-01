@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased (planned 0.9.0)
+## 0.9.0
 
-Merged since 0.8.2, not yet released or published to npm:
+Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code plugin picks it up from `main`.
+
+**Breaking:** `/memorize` is removed; use `/learn`. `moskills sync` deletes the old copy unless you edited it.
 
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
@@ -16,6 +18,15 @@ Merged since 0.8.2, not yet released or published to npm:
 - **Removed `/memorize`:** it overlapped with `/learn` and depended on the external Claude-Mem plugin. `/learn` now also captures personal preferences (`Scope: personal`, promoted to `~/.claude/CLAUDE.md`).
 - **Retired files are cleaned up:** `moskills sync` removes managed files a newer version no longer ships when they are unedited (edited ones are kept with a warning); `moskills link` removes its own links whose skill no longer exists.
 - **Skill overlap cleanup:** `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
+- **Skills drive the run-state engine:** a Run state section in the standard makes the run the source of truth for task and gate status when one exists. `/align-intent` starts a run, `/gatekeeper` records checks through `run-state wrap --auto-complete` and the human gate through `accept` (only after the user explicitly approves), `/checkpoint` and `/handoff` read `run-state resume`, and the session protocol resumes the run first.
+- **Run lines in the plan reminder:** `moskills context` adds the active run, its progress, and the exact `Record proof` command for the current install (`lib/run-summary.cjs`, read-only).
+- **Run proof block in STATE.md:** every run-state command that changes the run (including a failed check) rewrites a marked block in `.claude/STATE.md` with each task's status and proof; `run-state notes` does it on demand (`--print` to view). The five-line status ignores it.
+- **Live stale proof:** the plan reminder checks finished tasks' proof against current file hashes without writing the run, and names tasks held by another agent.
+- **Doctor:** reports whether run-state is ready (Node.js found) and how many runs the project has.
+- **Guides:** quick start and the A–Z walkthrough now test the run (proof per layer, stale proof after an edit, acceptance that resets when scope files change).
+- **Fixed:** in npm installs, `moskills dashboard` and `moskills context` were rejected as unknown commands.
+- **Status shows the run:** `moskills status` adds the active run's progress after the five note lines.
+- **Safer init:** `moskills run-state init` refuses to overwrite an existing run unless `--force` is passed.
 - **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
 - **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.
 - Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
