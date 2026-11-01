@@ -258,25 +258,6 @@ claude --plugin-dir ~/path/to/moskills
 Do not register a working clone as a directory marketplace: Claude Code would
 install whatever branch happens to be checked out.
 
-### Legacy: copy script (deprecated)
-
-Deprecated — kept for existing installs only; use the plugin above. Run from a
-clone of this repository to copy the `.claude/` folder into one project:
-
-```sh
-./setupskill.sh --target /path/to/project
-./setupskill.sh --target /path/to/project --with-hooks
-./setupskill.sh --target /path/to/project --dry-run
-./setupskill.sh --target /path/to/project --force
-```
-
-Flags:
-
-- `--target /path/to/project`: install into a specific project directory.
-- `--with-hooks`: install a Git pre-commit wrapper when the target is a Git repository.
-- `--dry-run`: print planned writes without changing files.
-- `--force`: overwrite existing managed files.
-
 ## Other agents (Antigravity, Codex, …)
 
 moskills skills are plain `SKILL.md` folders, so any agent that reads that
@@ -406,12 +387,11 @@ This repo keeps the source of the pack:
 - `bin/moskills.cjs`: the npm entry point that launches the CLI.
 - `lib/`: the run-state engine, its CLI and dashboard, the dependency scanner, the status summary, and settings helpers.
 - `templates/managed/`: the managed standard files copied to `.claude/standard/`.
-- `templates/claude/`: commands, skills, hooks, and legacy project template.
+- `templates/claude/`: commands, skills, and hooks copied into projects.
 - `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
 - `.claude-plugin/`: plugin and marketplace manifests.
 - `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
 - `tests/`: shell smoke tests (`run-tests.sh`) and Node tests (`*.test.cjs`); run all with `npm test`.
-- `setupskill.sh`: legacy installer, deprecated.
 - `docs/`: usage docs and examples.
 
 ## Lifecycle

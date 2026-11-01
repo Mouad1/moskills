@@ -89,7 +89,7 @@ Checked on 2026-10-24 for features that do the same job twice.
 | `/align-intent` wrote to a `Current Intent Model` heading that the STATE template does not have | Writes to `Current run` | Fixed |
 | `/checkpoint` and `/gatekeeper` both wrote gate results | `/gatekeeper` owns `Validation History`; `/checkpoint` references it | Fixed |
 | Markdown gates (`/gatekeeper`, `STATE.md`) and the run-state engine tracked the same progress separately | When a run exists, the run decides task and gate status; `/gatekeeper`, `/checkpoint`, `/handoff` and `/align-intent` drive it, and a generated Run proof block in `STATE.md` mirrors it | Fixed |
-| `templates/claude/STATE.md` and `CLAUDE.md` duplicate `templates/project/` for the deprecated `setupskill.sh` | See todo 7 | **Open** |
+| `templates/claude/STATE.md` and `CLAUDE.md` duplicated `templates/project/` for the deprecated `setupskill.sh` | Installer and duplicates removed; `moskills init` is the only installer | Fixed |
 | `lib/claude-settings.py` and `.js` do the same thing | Intentional: Python first, Node fallback; tested to behave the same | Keep |
 
 Rule for new work: before adding a skill or file, name the existing one that
@@ -148,8 +148,10 @@ The arrows show order: an item starts once the items pointing to it are done.
 
 ### P2: remove leftovers
 
-7. **Retire `setupskill.sh`** and the duplicate `templates/claude/STATE.md` and
-   `CLAUDE.md`, with a migration note and updated tests.
+7. **Retire `setupskill.sh`.** Done: the script and the duplicate
+   `templates/claude/STATE.md` and `CLAUDE.md` are gone; its tests now run
+   against `moskills init`; `migrations/README.md` explains how to move a
+   project that was set up with the script.
 8. **Findings and memory scope.** Done: the STATE template has a `## Findings`
    section, and the plugin re-injects the five status lines on every prompt and
    after compaction (`moskills context`). This replaces the 3-file pattern

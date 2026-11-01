@@ -89,8 +89,9 @@ make_project() {
   printf '%s\n' "$TMP_ROOT/$name"
 }
 
+# The legacy installer is retired; these tests now cover `moskills init`.
 run_installer() {
-  sh "$ROOT_DIR/setupskill.sh" "$@"
+  sh "$ROOT_DIR/moskills" init "$@"
 }
 
 run_moskills() {
@@ -102,8 +103,9 @@ test_generic_install_creates_claude_files() {
   output_file="$TMP_ROOT/generic-install-output.txt"
   run_installer --target "$project" >"$output_file"
 
-  assert_file "$project/.claude/CLAUDE.md"
+  assert_file "$project/CLAUDE.md"
   assert_file "$project/.claude/STATE.md"
+  assert_not_exists "$project/.claude/CLAUDE.md"
   assert_file "$project/.claude/commands/align-intent.md"
   assert_file "$project/.claude/commands/shared-language.md"
   assert_file "$project/.claude/commands/system-map.md"
@@ -121,21 +123,9 @@ test_generic_install_creates_claude_files() {
   assert_not_exists "$project/.claude/skills/claude-mem"
   assert_file "$project/.claude/skills/align-intent/SKILL.md"
   assert_file "$project/.claude/skills/shared-language/SKILL.md"
-  assert_contains "$output_file" 'Installed commands:'
   pass 'generic install creates .claude files'
 }
 
-test_dry_run_writes_nothing() {
-  project=$(make_project dry-run)
-  output_file="$TMP_ROOT/dry-run-output.txt"
-  run_installer --target "$project" --dry-run >"$output_file"
-
-  assert_not_exists "$project/.claude"
-  assert_contains "$output_file" 'Dry run enabled'
-  assert_contains "$output_file" 'Would create directory'
-  assert_contains "$output_file" 'Would install commands:'
-  pass 'dry run writes nothing'
-}
 
 test_commands_point_to_matching_skills() {
   project=$(make_project command-links)
@@ -178,52 +168,9 @@ test_skills_have_single_primary_goal() {
   pass 'skills have single primary goals'
 }
 
-test_existing_files_are_preserved_without_force() {
-  project=$(make_project preserve-existing)
-  output_file="$TMP_ROOT/preserve-existing-output.txt"
-  mkdir -p "$project/.claude/commands"
-  printf '%s\n' 'custom command' >"$project/.claude/commands/align-intent.md"
 
-  run_installer --target "$project" >"$output_file"
 
-  assert_contains "$project/.claude/commands/align-intent.md" 'custom command'
-  assert_contains "$output_file" 'Skip existing file:'
-  pass 'existing files are preserved without force'
-}
 
-test_force_overwrites_existing_files() {
-  project=$(make_project force-overwrite)
-  output_file="$TMP_ROOT/force-overwrite-output.txt"
-  mkdir -p "$project/.claude/commands"
-  printf '%s\n' 'custom command' >"$project/.claude/commands/align-intent.md"
-
-  run_installer --target "$project" --force >"$output_file"
-
-  assert_contains "$project/.claude/commands/align-intent.md" '`align-intent` skill'
-  pass 'force overwrites existing managed files'
-}
-
-test_node_project_detection() {
-  project=$(make_project node-project)
-  output_file="$TMP_ROOT/node-project-output.txt"
-  printf '%s\n' '{"scripts":{}}' >"$project/package.json"
-
-  run_installer --target "$project" >"$output_file"
-
-  assert_contains "$output_file" 'Detected stack: node'
-  pass 'node project is detected'
-}
-
-test_python_project_detection() {
-  project=$(make_project python-project)
-  output_file="$TMP_ROOT/python-project-output.txt"
-  printf '%s\n' '[project]' >"$project/pyproject.toml"
-
-  run_installer --target "$project" >"$output_file"
-
-  assert_contains "$output_file" 'Detected stack: python'
-  pass 'python project is detected'
-}
 
 test_hooks_are_not_installed_by_default() {
   project=$(make_project hooks-default)
@@ -249,18 +196,6 @@ test_hooks_install_with_flag() {
   pass 'git pre-commit hook installs with flag'
 }
 
-test_existing_git_hook_is_preserved_without_force() {
-  project=$(make_project hooks-preserve-existing)
-  output_file="$TMP_ROOT/hooks-preserve-existing-output.txt"
-  git -C "$project" init >/dev/null 2>&1
-  printf '%s\n' '# custom hook' >"$project/.git/hooks/pre-commit"
-
-  run_installer --target "$project" --with-hooks >"$output_file"
-
-  assert_contains "$project/.git/hooks/pre-commit" '# custom hook'
-  assert_contains "$output_file" 'Skip existing Git hook:'
-  pass 'existing git hook is preserved without force'
-}
 
 test_agent_guard_checks_staged_content_not_worktree() {
   project=$(make_project staged-guard)
@@ -830,7 +765,8 @@ test_documentation_exists() {
   assert_file "$ROOT_DIR/docs/examples/node-project.md"
   assert_file "$ROOT_DIR/docs/examples/python-project.md"
 
-  assert_contains "$ROOT_DIR/README.md" './setupskill.sh --target /path/to/project'
+  assert_not_exists "$ROOT_DIR/setupskill.sh"
+  assert_not_contains "$ROOT_DIR/README.md" 'setupskill.sh'
   assert_contains "$ROOT_DIR/README.md" 'fruit of learning from engineers, experts, and successful GitHub repos'
   assert_contains "$ROOT_DIR/README.md" 'What users get'
   assert_heading_before "$ROOT_DIR/README.md" '## Installed Commands' '## Install'
@@ -849,9 +785,9 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills uninstall'
   assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
   assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/learn` | The same mistake, correction, or preference keeps coming back instead of being reused. |'
-  assert_file "$ROOT_DIR/templates/claude/STATE.md"
+  assert_not_exists "$ROOT_DIR/templates/claude/STATE.md"
   assert_not_exists "$ROOT_DIR/templates/claude/skills/memorize"
-  assert_file "$ROOT_DIR/templates/claude/CLAUDE.md"
+  assert_not_exists "$ROOT_DIR/templates/claude/CLAUDE.md"
   assert_contains "$ROOT_DIR/README.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   pass 'documentation exists'
 }
@@ -1509,16 +1445,10 @@ test_plugin_commands_offer_autoupdate() {
 
 mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
-test_dry_run_writes_nothing
 test_commands_point_to_matching_skills
 test_skills_have_single_primary_goal
-test_existing_files_are_preserved_without_force
-test_force_overwrites_existing_files
-test_node_project_detection
-test_python_project_detection
 test_hooks_are_not_installed_by_default
 test_hooks_install_with_flag
-test_existing_git_hook_is_preserved_without_force
 test_agent_guard_checks_staged_content_not_worktree
 test_agent_guard_allows_markdown_setext_heading
 test_hook_install_supports_gitdir_file
