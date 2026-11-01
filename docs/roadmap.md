@@ -34,7 +34,7 @@ mindmap
       install.sh links Codex and Antigravity
       Pre-commit guard
     Skills
-      13 workflow skills
+      14 workflow skills
       Evolvebooks
     Run-state engine
       run.json and events.ndjson
@@ -167,10 +167,12 @@ The arrows show order: an item starts once the items pointing to it are done.
    proof, acceptance still holding); `run-state list` shows all modules. Proof
    and acceptance stay with `/gatekeeper` and `run-state accept`, so there is no
    second gate.
-10. **Design system skills** (`design.md`, `/design-tokens`, `/design-shell`,
-    `/components`, `/design-screen`). Not started. `/preview` already writes UI
-    specs and runs a visual companion; the design file should be something
-    `/preview` reads and writes, not a parallel flow.
+10. **Design system.** Done, as one `/design-system` skill with four parts
+    (tokens, shell, components, screen) instead of five skills, following the
+    overlap rule. It owns `design.md`; `/preview` reads it before mockups and
+    writes picks back. `moskills design check` verifies color values, WCAG
+    contrast pairs in light and dark, and that screens only use declared
+    components; `moskills design css` exports tokens as CSS variables.
 11. **Platforms.** Native Windows (PowerShell/CMD) beyond WSL. Live trials in
     Claude Code Desktop, Codex, and Antigravity; until they are done, support for
     those hosts is installed but not observed.

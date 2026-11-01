@@ -40,6 +40,7 @@ mindmap
       Clean uninstalls & cache resilience
     Core Skills Suite
       /preview (UI & Spec + Live Companion)
+      /design-system (One checked design.md: tokens, shell, components, screens)
       /align-intent (Goals, Risks, Constraints)
       /shared-language (Domain Glossary)
       /system-map (Dependencies & Blast Radius)
@@ -77,7 +78,7 @@ mindmap
 | **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 13 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Skills Engine** | 14 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
 | **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
@@ -85,6 +86,7 @@ mindmap
 ## Installed Commands
 
 - `/preview`: turn a vague idea into a written spec before any code is written. Auto-starts a Visual Companion browser server for frontend projects.
+- `/design-system`: keep one `design.md` (tokens, app shell, components, screens) that `/preview` reads; `moskills design check` verifies contrast and component use, `moskills design css` turns tokens into CSS variables.
 - `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
 - `/shared-language`: turn project jargon into a glossary agents and humans can share.
 - `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
@@ -460,6 +462,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     .manifest.sum       # checksums of managed files, used by doctor
   commands/
     preview.md
+    design-system.md
     align-intent.md
     shared-language.md
     system-map.md
@@ -481,6 +484,8 @@ tasks/                  # seeded todo + lessons files, project-owned
         server.cjs
         helper.js
         frame-template.html
+    design-system/
+      SKILL.md
     align-intent/
       SKILL.md
     shared-language/

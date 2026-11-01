@@ -19,7 +19,8 @@
     "spec",
     "preview",
     "evolvebook",
-    "modular-build"
+    "modular-build",
+    "design-system"
   ],
   "commands": [
     "./templates/claude/commands",
@@ -38,6 +39,7 @@
     "./templates/claude/skills/handoff",
     "./templates/claude/skills/project-dna",
     "./templates/claude/skills/preview",
+    "./templates/claude/skills/design-system",
     "./templates/claude/skills/learn",
     "./templates/claude/skills/evolvebook"
   ]

@@ -40,6 +40,20 @@ Rules:
 - Decompose multi-subsystem scope before speccing.
 - Next step after approval is always `/align-intent`.
 
+## /design-system
+
+Purpose: keep one design file (`design.md`) that every screen and component follows, checked by a tool and turned into code values.
+
+Use when choosing colors, type, spacing, the app shell, a component list, or a screen's layout and states.
+
+Parts, built in order: `tokens`, `shell`, `components`, `screen <name>`. `/preview` reads `design.md` before any mockup and writes the user's picks back into it.
+
+| Command | Purpose |
+|---|---|
+| `moskills design init` | Write a `design.md` skeleton with starter tokens (never overwrites) |
+| `moskills design check [--complete] [--json]` | Check color values, WCAG contrast pairs (light and dark), and that screens only use declared components; exit 1 on errors |
+| `moskills design css [--out <file>]` | CSS variables from the tokens: `:root`, a `prefers-color-scheme: dark` block, and a `[data-theme="dark"]` override |
+
 ## /align-intent
 
 Purpose: prevent coding before agreement.
@@ -470,6 +484,7 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 | `moskills run-state ingest-evidence --id <id> --check <cid> --source <name> --status <passed\|failed> [--code <n>] [--output <text>] [--files <files>]` | Record evidence produced elsewhere, such as CI |
 | `moskills run-state done --id <id> [--json]` | Exit 0 only when every task has current proof and acceptance still holds; otherwise list what is missing |
 | `moskills run-state list [--json]` | List every run (module) with progress and done state |
+| `moskills design <init\|check\|css>` | One checked design file; see [/design-system](#design-system) |
 | `moskills run-state notes [--id <id>] [--print]` | Rewrite the generated Run proof block in `.claude/STATE.md` (other run commands do this automatically) |
 | `moskills run-state dashboard --id <id> [--port <n>]` | Open the local dashboard (default port 4040) |
 
