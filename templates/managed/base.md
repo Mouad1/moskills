@@ -51,6 +51,7 @@ For non-trivial work with checkable acceptance criteria, keep a run: `moskills r
 - **Start once:** `run-state init --goal "<goal>" --scope <files> --tasks "<t1>,<t2>"`. Never re-initialize an existing run; continue it with `run-state resume`.
 - **Prove, don't claim:** run each agreed check through `run-state wrap --task <id> --auto-complete -- <command>`. A gate is `passed` only when that proof is current; `resume` reopens tasks whose proof went stale.
 - **Human gate:** run `run-state accept --by <name>` only after the user explicitly approves the result in this conversation. Never accept on the user's behalf.
+- **Several modules:** when an app or large feature is built in parts, follow `/modular-build`: one run per module (`--id module-<name>`), started with `--after <previous module>` so the engine refuses to switch before the previous module is done (`run-state done`).
 
 ## Completion gates
 

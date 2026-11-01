@@ -34,7 +34,7 @@ mindmap
       install.sh links Codex and Antigravity
       Pre-commit guard
     Skills
-      12 workflow skills
+      13 workflow skills
       Evolvebooks
     Run-state engine
       run.json and events.ndjson
@@ -161,9 +161,12 @@ The arrows show order: an item starts once the items pointing to it are done.
 
 ### P3: new features, built on what exists
 
-9. **`/modular-build`.** One module equals one group of run-state tasks. Its
-   "no switching until tests, visual checks, and human acceptance pass" rule
-   is `/gatekeeper` plus `run-state accept`; reuse them, do not add a second gate.
+9. **`/modular-build`.** Done: one module is one run (`--id module-<name>`).
+   `run-state init --after <previous>` refuses to start a module until the
+   previous one is done; `run-state done` checks that (every task with current
+   proof, acceptance still holding); `run-state list` shows all modules. Proof
+   and acceptance stay with `/gatekeeper` and `run-state accept`, so there is no
+   second gate.
 10. **Design system skills** (`design.md`, `/design-tokens`, `/design-shell`,
     `/components`, `/design-screen`). Not started. `/preview` already writes UI
     specs and runs a visual companion; the design file should be something

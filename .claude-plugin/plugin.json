@@ -18,7 +18,8 @@
     "reproducibility",
     "spec",
     "preview",
-    "evolvebook"
+    "evolvebook",
+    "modular-build"
   ],
   "commands": [
     "./templates/claude/commands",
@@ -32,6 +33,7 @@
     "./templates/claude/skills/diagnose",
     "./templates/claude/skills/checkpoint",
     "./templates/claude/skills/gatekeeper",
+    "./templates/claude/skills/modular-build",
     "./templates/claude/skills/compress-input",
     "./templates/claude/skills/handoff",
     "./templates/claude/skills/project-dna",
