@@ -75,6 +75,11 @@ test('panel host: shell, manifest, isolated renders, guarded actions, loopback o
     assert.match(r.headers['content-security-policy'] || '', /default-src 'self'/);
   });
 
+  await t.test('shell CSS offers secondary/small buttons and sr-only text for panels', async () => {
+    const css = (await request(host.port, { pathname: '/assets/shell.css' })).body;
+    for (const sel of ['button.secondary', 'button.small', '.sr-only']) assert.ok(css.includes(sel), sel);
+  });
+
   await t.test('GET /api/panels lists panels (ordered) and skipped ones', async () => {
     const m = (await request(host.port, { pathname: '/api/panels' })).json();
     assert.deepEqual(m.panels.map((p) => p.id), ['alpha', 'beta', 'boom']);

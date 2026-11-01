@@ -8,6 +8,7 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 
 **Breaking:** the legacy `setupskill.sh` installer and its duplicate `templates/claude/STATE.md` and `CLAUDE.md` are removed; use `moskills init`. Moving an old project over: `migrations/README.md`.
 
+- Panel host shell: `button.secondary` (quiet outline), `button.small` (compact row action) and `.sr-only` classes for panels, so panels stop repeating inline styles.
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
 - **Command evidence wrapper:** `moskills run-state wrap -- <command>` streams output and records it as evidence (#29).
