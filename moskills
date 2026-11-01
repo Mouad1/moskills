@@ -58,6 +58,9 @@ Commands:
                                             check, wrap, complete, resume, status,
                                             impact, accept, review, lease, claim-task,
                                             dashboard, ...). Run: moskills run-state help
+  design     <init|check|css> [args]       One design file (design.md): check tokens,
+                                            contrast and screens; export CSS variables.
+                                            Run: moskills design help
   dashboard [--panels <dir>]... [--port <n>] Local dashboard of plug-in panels
                                             (127.0.0.1 only). Run: moskills dashboard --help
 
@@ -909,6 +912,7 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
 TARGET=$(pwd)

@@ -40,6 +40,7 @@ mindmap
       Clean uninstalls & cache resilience
     Core Skills Suite
       /preview (UI & Spec + Live Companion)
+      /design-system (One checked design.md: tokens, shell, components, screens)
       /align-intent (Goals, Risks, Constraints)
       /shared-language (Domain Glossary)
       /system-map (Dependencies & Blast Radius)
@@ -47,6 +48,7 @@ mindmap
       /diagnose (Root-cause debugging)
       /checkpoint (Durable factual progress)
       /gatekeeper (Completion audit)
+      /modular-build (One module at a time, each proven and accepted)
       /compress-input (Terse technical comms)
       /handoff (Clean agent compaction)
       /project-dna (Reproducible build recipes)
@@ -76,7 +78,7 @@ mindmap
 | **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 12 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Skills Engine** | 14 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
 | **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
@@ -84,6 +86,7 @@ mindmap
 ## Installed Commands
 
 - `/preview`: turn a vague idea into a written spec before any code is written. Auto-starts a Visual Companion browser server for frontend projects.
+- `/design-system`: keep one `design.md` (tokens, app shell, components, screens) that `/preview` reads; `moskills design check` verifies contrast and component use, `moskills design css` turns tokens into CSS variables.
 - `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
 - `/shared-language`: turn project jargon into a glossary agents and humans can share.
 - `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
@@ -91,6 +94,7 @@ mindmap
 - `/diagnose`: debug by reproducing the issue and finding root cause before fixing.
 - `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
 - `/gatekeeper`: validate completed work against the active intent model before reporting completion.
+- `/modular-build`: build an app one module at a time; each module is a run that must pass `/gatekeeper` and your acceptance before the next starts.
 - `/compress-input`: switch to short, direct technical communication.
 - `/handoff`: compact current work so another agent can continue.
 - `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
@@ -258,25 +262,6 @@ claude --plugin-dir ~/path/to/moskills
 Do not register a working clone as a directory marketplace: Claude Code would
 install whatever branch happens to be checked out.
 
-### Legacy: copy script (deprecated)
-
-Deprecated — kept for existing installs only; use the plugin above. Run from a
-clone of this repository to copy the `.claude/` folder into one project:
-
-```sh
-./setupskill.sh --target /path/to/project
-./setupskill.sh --target /path/to/project --with-hooks
-./setupskill.sh --target /path/to/project --dry-run
-./setupskill.sh --target /path/to/project --force
-```
-
-Flags:
-
-- `--target /path/to/project`: install into a specific project directory.
-- `--with-hooks`: install a Git pre-commit wrapper when the target is a Git repository.
-- `--dry-run`: print planned writes without changing files.
-- `--force`: overwrite existing managed files.
-
 ## Other agents (Antigravity, Codex, …)
 
 moskills skills are plain `SKILL.md` folders, so any agent that reads that
@@ -349,7 +334,7 @@ default, so start it with `agy --add-dir .`.
 | `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
 | `moskills run-state <command>` | Saved run progress with proof: `init`, `check`, `wrap`, `complete`, `resume`, `status`, `accept`, `dashboard`, ... Run `moskills run-state help` |
 
-Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
+Requirements: `sh` plus git, curl or wget. macOS, Linux and WSL. For native Windows use the npm install (see [npm installation](docs/npm-installation.md#native-windows)).
 Automatic updates need the git install.
 
 For development, keep a separate clone and do not point `MOSKILLS_HOME` at
@@ -406,12 +391,11 @@ This repo keeps the source of the pack:
 - `bin/moskills.cjs`: the npm entry point that launches the CLI.
 - `lib/`: the run-state engine, its CLI and dashboard, the dependency scanner, the status summary, and settings helpers.
 - `templates/managed/`: the managed standard files copied to `.claude/standard/`.
-- `templates/claude/`: commands, skills, hooks, and legacy project template.
+- `templates/claude/`: commands, skills, and hooks copied into projects.
 - `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
 - `.claude-plugin/`: plugin and marketplace manifests.
 - `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
 - `tests/`: shell smoke tests (`run-tests.sh`) and Node tests (`*.test.cjs`); run all with `npm test`.
-- `setupskill.sh`: legacy installer, deprecated.
 - `docs/`: usage docs and examples.
 
 ## Lifecycle
@@ -478,6 +462,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     .manifest.sum       # checksums of managed files, used by doctor
   commands/
     preview.md
+    design-system.md
     align-intent.md
     shared-language.md
     system-map.md
@@ -485,6 +470,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     diagnose.md
     checkpoint.md
     gatekeeper.md
+    modular-build.md
     compress-input.md
     handoff.md
     project-dna.md
@@ -498,6 +484,8 @@ tasks/                  # seeded todo + lessons files, project-owned
         server.cjs
         helper.js
         frame-template.html
+    design-system/
+      SKILL.md
     align-intent/
       SKILL.md
     shared-language/
@@ -511,6 +499,8 @@ tasks/                  # seeded todo + lessons files, project-owned
     checkpoint/
       SKILL.md
     gatekeeper/
+      SKILL.md
+    modular-build/
       SKILL.md
     compress-input/
       SKILL.md

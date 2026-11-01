@@ -86,7 +86,6 @@ test('plugin registers the prompt and compaction hooks', () => {
   assert.ok(compact && cmds([compact]).some(c => c.includes('context --event SessionStart')));
 });
 
-test('seeded STATE templates carry a Findings section', () => {
-  for (const file of ['templates/project/STATE.md', 'templates/claude/STATE.md'])
-    assert.match(fs.readFileSync(path.join(root, file), 'utf8'), /^## Findings$/m, file);
+test('seeded STATE template carries a Findings section', () => {
+  assert.match(fs.readFileSync(path.join(root, 'templates/project/STATE.md'), 'utf8'), /^## Findings$/m);
 });

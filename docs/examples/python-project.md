@@ -12,18 +12,16 @@ my-python-app/
 ## Install
 
 ```sh
-./setupskill.sh --target /path/to/my-python-app --with-hooks
+moskills init --target /path/to/my-python-app --with-hooks
 ```
 
-Expected installer output includes:
+Expected output includes:
 
 ```text
-Detected stack: python
-Installed commands:
-  /align-intent
-  /system-map
-  /checkpoint
-  /gatekeeper
+Installing moskills standard v0.9.0 into /path/to/my-python-app
+Seeded: CLAUDE.md
+Seeded: .claude/STATE.md
+Installed Git pre-commit hook: ...
 ```
 
 ## Guard Suggestion

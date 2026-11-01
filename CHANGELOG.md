@@ -6,6 +6,8 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 
 **Breaking:** `/memorize` is removed; use `/learn`. `moskills sync` deletes the old copy unless you edited it.
 
+**Breaking:** the legacy `setupskill.sh` installer and its duplicate `templates/claude/STATE.md` and `CLAUDE.md` are removed; use `moskills init`. Moving an old project over: `migrations/README.md`.
+
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
 - **Command evidence wrapper:** `moskills run-state wrap -- <command>` streams output and records it as evidence (#29).
@@ -28,6 +30,9 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 - **Status shows the run:** `moskills status` adds the active run's progress after the five note lines.
 - **Safer init:** `moskills run-state init` refuses to overwrite an existing run unless `--force` is passed.
 - **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
+- **Native Windows (npm install):** the launcher finds Git for Windows' `sh` (or `MOSKILLS_SH`) instead of refusing; `run-state`, `design` and `dashboard` run on Node with no shell, and check commands fall back to `cmd.exe` when there is no `sh`. CI gains a Windows job (Node 18 and 24).
+- **`/design-system`:** one `design.md` (tokens, app shell, components, screens) that `/preview` reads and writes. New `moskills design init|check|css`: check verifies color values, WCAG contrast pairs in light and dark, and that screens only use declared components; css exports tokens as CSS variables (light, dark media query, `data-theme` override).
+- **`/modular-build`:** build an app one module at a time. Each module is one run; `run-state init --after <previous>` refuses to start a module until the previous one is done; new `run-state done` (exit 0 only with current proof for every task and acceptance still holding) and `run-state list`.
 - **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.
 - Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
 - **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
