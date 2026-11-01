@@ -70,7 +70,7 @@ export const actions = {
 - **Always escape data** with `ctx.escape(...)`: the HTML you return is inserted as is.
 - Forms with `data-action="<name>"` and buttons with `data-action` (+ optional `data-payload='{"k":"v"}'`) call your actions; the panel refreshes afterwards.
 - Inline `<script>` and `on…=` attributes do not run (Content Security Policy). Panels are HTML + CSS; behaviour goes in actions.
-- Shell CSS classes you can use: `pill`, `dot ok|warn|err`, `muted`, `mono`, tables, `button`.
+- Shell CSS classes you can use: `pill`, `dot ok|warn|err`, `muted`, `mono`, tables, `button` (primary by default; add `secondary` for a quiet outline button and `small` for compact row actions), `sr-only` (text for screen readers only).
 
 ## Security model
 
