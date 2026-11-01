@@ -6,7 +6,7 @@ const { spawnSync } = require('node:child_process');
 
 const input = process.argv.slice(2);
 const args = [];
-const helper = ['evolvebook', 'evolvebooks', 'run-state', 'dashboard'].includes(input[0]);
+const helper = ['evolvebook', 'evolvebooks', 'run-state', 'dashboard', 'design'].includes(input[0]);
 let verbose = false;
 for (let i = 0; i < input.length; i++) {
   if (helper) args.push(input[i]);
@@ -24,6 +24,7 @@ const help = `moskills — structured agent work, short answers.
   moskills version  Show installed version.
   moskills status   Show five advisory saved-note lines; --verbose adds install details.
   moskills run-state <command>  Verifiable run progress and proof (init, check, resume, ...).
+  moskills design <init|check|css>  Check design.md and export its tokens as CSS variables.
   moskills evolvebook <command> Create, use, link, or export a recurring-job guide.
   moskills dashboard [--panels <dir>]  Local dashboard of plug-in panels (127.0.0.1 only).
   moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
@@ -37,28 +38,37 @@ if (!args.length || (!helper && (['help', '--help', '-h'].includes(args[0]) || a
   process.exit(0);
 }
 if (['--version', '-v'].includes(args[0])) args[0] = 'version';
-if (process.platform === 'win32') {
-  process.stderr.write('moskills needs a POSIX shell. Run Node/npm inside WSL, then run moskills init.\n');
-  process.exit(1);
-}
 const command = args[0];
+const { findShell, NODE_COMMANDS, NO_SHELL } = require('../lib/find-shell.cjs');
+// Commands written in Node run directly: no shell needed, also on native Windows.
+if (NODE_COMMANDS[command]) {
+  const direct = spawnSync(process.execPath, [path.join(__dirname, '..', 'lib', NODE_COMMANDS[command]), ...args.slice(1)], {
+    stdio: 'inherit', env: { ...process.env, MOSKILLS_DISTRIBUTION: 'npm' }
+  });
+  process.exit(direct.status === null ? 1 : direct.status);
+}
 if (command === 'status' && verbose) args.push('--verbose');
 const blocked = ['setup', 'link', 'unlink', 'uninstall', 'self-update', 'schedule-update'];
 if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);
   process.exit(1);
 }
-if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state'].includes(command)) {
+if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state', 'dashboard', 'context', 'design'].includes(command)) {
   process.stderr.write(`moskills: unknown command '${command}'. Run moskills --help.\n`);
   process.exit(1);
 }
 if (['init', 'sync'].includes(command) && !args.includes('--agents')) args.push('--agents');
-const result = spawnSync('sh', [path.join(__dirname, '..', 'moskills'), ...args], {
+const shell = findShell();
+if (!shell) {
+  process.stderr.write(NO_SHELL);
+  process.exit(1);
+}
+const result = spawnSync(shell, [path.join(__dirname, '..', 'moskills'), ...args], {
   encoding: 'utf8', maxBuffer: 16 * 1024 * 1024,
   env: { ...process.env, MOSKILLS_DISTRIBUTION: 'npm' }
 });
 if (result.error) {
-  process.stderr.write(`moskills could not start its shell: ${result.error.message}\n`);
+  process.stderr.write(`moskills could not start its shell (${shell}): ${result.error.message}\n${NO_SHELL}`);
   process.exit(1);
 }
 if (result.stderr) process.stderr.write(result.stderr);

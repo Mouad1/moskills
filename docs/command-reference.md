@@ -40,6 +40,20 @@ Rules:
 - Decompose multi-subsystem scope before speccing.
 - Next step after approval is always `/align-intent`.
 
+## /design-system
+
+Purpose: keep one design file (`design.md`) that every screen and component follows, checked by a tool and turned into code values.
+
+Use when choosing colors, type, spacing, the app shell, a component list, or a screen's layout and states.
+
+Parts, built in order: `tokens`, `shell`, `components`, `screen <name>`. `/preview` reads `design.md` before any mockup and writes the user's picks back into it.
+
+| Command | Purpose |
+|---|---|
+| `moskills design init` | Write a `design.md` skeleton with starter tokens (never overwrites) |
+| `moskills design check [--complete] [--json]` | Check color values, WCAG contrast pairs (light and dark), and that screens only use declared components; exit 1 on errors |
+| `moskills design css [--out <file>]` | CSS variables from the tokens: `:root`, a `prefers-color-scheme: dark` block, and a `[data-theme="dark"]` override |
+
 ## /align-intent
 
 Purpose: prevent coding before agreement.
@@ -202,6 +216,27 @@ Rules:
 - Report failing and unknown checks clearly.
 - Do not treat unknown checks as passing.
 
+## /modular-build
+
+Purpose: build one module at a time, and start the next only when the current one is proven and accepted.
+
+Use when an app or large feature is built in parts (screens, services, layers).
+
+How it works:
+
+- Each module is one run: `run-state init --id module-<name> ... --after module-<previous>`.
+  The engine refuses to start a module until the previous one is done.
+- Checks go through `run-state wrap`; `/gatekeeper` validates; you accept with `run-state accept`.
+- `run-state done --id module-<name>` exits 0 only when every task has current proof and your acceptance still holds.
+- `run-state list` shows every module and whether it is done. The module plan lives under `## Modules` in `tasks/todo.md`.
+
+Expected output per module:
+
+```text
+module-<name>: done
+module-<name>: still not done - <reasons from run-state done>
+```
+
 ## /compress-input
 
 Purpose: make agent communication short and direct.
@@ -235,27 +270,24 @@ Rules:
 - Preserve code, commands, paths, URLs, identifiers, and error text exactly.
 - Switch back to normal detail for security warnings, irreversible actions, legal risk, user confusion, or complex tradeoffs.
 
-## /memorize
+## /learn
 
-Purpose: use durable memory without filling the current chat.
+Purpose: turn corrections into rules so the same mistake never happens twice.
 
-Use when past sessions, recurring rules, durable lessons, or project decisions should be checked or stored.
+Use when the user corrects the agent, a diagnosis ends with a root cause, a review rejects an approach, or the user states a preference that should apply everywhere.
 
-Inspired by `thedotmack/claude-mem`: automatic observation capture, progressive disclosure, and token-efficient memory search.
-
-Past-session lookup flow:
+Promotion path:
 
 ```text
-search -> timeline -> get_observations
+tasks/lessons.md (Seen: 1) -> Seen: 3+ -> project CLAUDE.md
+Scope: personal -> ~/.claude/CLAUDE.md
+Scope: stack or universal -> proposed change to moskills
 ```
 
 Rules:
 
-- Search memory before writing new memory.
-- Use `search` first to get compact IDs.
-- Use `timeline` to understand surrounding context.
-- Use `get_observations` only for filtered IDs.
-- Keep entries short.
+- One imperative, testable rule per entry; raise `Seen` instead of duplicating.
+- Promotion needs the user's approval; capture does not.
 - Do not store secrets.
 
 ## /handoff
@@ -361,7 +393,8 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
-| `moskills status [--verbose]` | Five advisory saved-note lines; `--verbose` also shows installation details |
+| `moskills status [--verbose]` | Five advisory saved-note lines, plus the active run's progress when a run exists; `--verbose` also shows installation details |
+| `moskills context [--event <name>]` | The same five lines for the agent's context; with `--event UserPromptSubmit` or `SessionStart`, Claude Code hook JSON. Silent when nothing is recorded or `MOSKILLS_NO_CONTEXT=1` |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
 | `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
 
@@ -428,14 +461,32 @@ Dashboard (local, plug-in panels — see `docs/panel-host.md`):
 |---|---|
 | `moskills dashboard [--target <dir>] [--panels <dir>]... [--port <n>] [--title <t>] [--no-core]` | Start the panel host on 127.0.0.1 (default port 4050) |
 
-Run-State & Evidence Engine (verifiable progress with cryptographic proof):
+Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes to checked files):
 
 | Command | Purpose |
 |---|---|
-| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>]` | Initialize run record, brief, and event history |
+| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>] [--after <id>]` | Initialize run record, brief, and event history; `--after` refuses unless that run is done |
 | `moskills run-state check --id <id> --check <cid> --cmd <cmd> [--files <files>]` | Execute check, compute file hashes, and save evidence |
 | `moskills run-state complete --id <id> --task <tid> --checks <cid1,cid2>` | Verify evidence and mark task finished |
 | `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
 | `moskills run-state status --id <id>` | Inspect run tasks, evidence status, and acceptance state |
 | `moskills run-state accept --id <id> --by <user> [--notes <text>]` | Record human acceptance bound to current scope hashes |
+| `moskills run-state wrap --id <id> [--task <tid>] [--check <cid>] [--files <files>] [--auto-complete] -- <command>` | Run a command, stream its output, and record it as evidence |
+| `moskills run-state impact --id <id> --files <files>` | List tasks and checks affected by changed files, including through imports |
+| `moskills run-state review --id <id> --task <tid> --passed <true\|false> [--findings <f1,f2>] [--by <name>]` | Record a review verdict against the task's review budget |
+| `moskills run-state auto-review --id <id> --task <tid> --cmd <cmd>` | Run a challenger check and record its verdict (exit 2 when the budget is exhausted) |
+| `moskills run-state grant-budget --id <id> --task <tid> [--count <n>]` | Give an exhausted task more review passes |
+| `moskills run-state lease --id <id> --task <tid> --agent <aid> [--ttl <ms>]` | Hold a task for one agent for a limited time |
+| `moskills run-state heartbeat --id <id> --task <tid> --agent <aid> --lease <lid>` | Renew a held lease |
+| `moskills run-state release --id <id> --task <tid> --agent <aid> --lease <lid>` | Release a held lease |
+| `moskills run-state next-tasks --id <id>` | List every task whose prerequisites are finished |
+| `moskills run-state claim-task --id <id> --agent <aid> [--task <tid>] [--ttl <ms>]` | Claim the next ready task under the run lock |
+| `moskills run-state ingest-evidence --id <id> --check <cid> --source <name> --status <passed\|failed> [--code <n>] [--output <text>] [--files <files>]` | Record evidence produced elsewhere, such as CI |
+| `moskills run-state done --id <id> [--json]` | Exit 0 only when every task has current proof and acceptance still holds; otherwise list what is missing |
+| `moskills run-state list [--json]` | List every run (module) with progress and done state |
+| `moskills design <init\|check\|css>` | One checked design file; see [/design-system](#design-system) |
+| `moskills run-state notes [--id <id>] [--print]` | Rewrite the generated Run proof block in `.claude/STATE.md` (other run commands do this automatically) |
+| `moskills run-state dashboard --id <id> [--port <n>]` | Open the local dashboard (default port 4040) |
+
+Leases and claiming coordinate agents that share one filesystem. They are not a network service.
 

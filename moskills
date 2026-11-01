@@ -45,13 +45,22 @@ Commands:
                                             otherwise. Never fails.
   plugin-autoupdate [--check]               Turn on Claude Code auto-update for the
                                             moskills marketplace (--check: report only).
+  context [--target <path>] [--event <name>]
+                                            The five saved-note lines for the agent's
+                                            context; --event prints Claude Code hook JSON
+                                            (UserPromptSubmit, SessionStart). Silent when
+                                            nothing is recorded or MOSKILLS_NO_CONTEXT=1.
   version                                   Print the standard version.
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
                                             export, ...). Run: moskills evolvebook help
   run-state  <command> [args]               Verifiable run progress and proof (init,
-                                            check, complete, resume, status, accept).
-                                            Run: moskills run-state help
+                                            check, wrap, complete, resume, status,
+                                            impact, accept, review, lease, claim-task,
+                                            dashboard, ...). Run: moskills run-state help
+  design     <init|check|css> [args]       One design file (design.md): check tokens,
+                                            contrast and screens; export CSS variables.
+                                            Run: moskills design help
   dashboard [--panels <dir>]... [--port <n>] Local dashboard of plug-in panels
                                             (127.0.0.1 only). Run: moskills dashboard --help
 
@@ -209,6 +218,28 @@ ensure_block() { # $1 = file, $2 = block function, $3 = 1 to create the file whe
     { printf '\n'; "$2"; } >> "$cm"
     log "Added managed block to $(basename "$cm")"
   fi
+}
+
+# Remove managed files an older version installed that this version no longer
+# ships. Only unedited files go (their checksum still matches the manifest);
+# edited ones stay with a warning.
+retire_managed() { # $1 = target
+  t=$1
+  [ -f "$t/$SUM_FILE" ] || return 0
+  current=$(managed_pairs | awk -F'|' '{print $2}')
+  while IFS= read -r line; do
+    sum=${line%%  *}; dest=${line#*  }
+    [ -n "$dest" ] && [ -f "$t/$dest" ] || continue
+    printf '%s\n' "$current" | grep -Fxq -- "$dest" && continue
+    if [ "$(sha "$t/$dest")" = "$sum" ]; then
+      rm "$t/$dest"
+      d=$(dirname "$t/$dest")
+      while [ "$d" != "$t" ] && rmdir "$d" 2>/dev/null; do d=$(dirname "$d"); done
+      log "Removed retired file: $dest"
+    else
+      warn "kept retired managed file you edited (remove it yourself): $dest"
+    fi
+  done < "$t/$SUM_FILE"
 }
 
 # ---------- install / seed ----------
@@ -414,6 +445,7 @@ cmd_sync() {
     sh "$SCRIPT_DIR/migrations/v$from_major-to-v$to_major.sh" "$t"
   fi
 
+  retire_managed "$t"
   if [ "$FORCE" -eq 1 ] || [ "$skipped" -eq 0 ]; then
     install_managed "$t"
   else
@@ -482,6 +514,13 @@ cmd_doctor() {
   fi
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
   # informational only: never changes the drift result
+  if command -v node >/dev/null 2>&1; then
+    runs=0
+    for r in "$t"/.moskills/runs/*/run.json; do [ -f "$r" ] && runs=$((runs + 1)); done
+    printf '%-20s run-state: ready (node %s), %s run(s)\n' "$name" "$(node -v 2>/dev/null)" "$runs"
+  else
+    printf '%-20s run-state: unavailable (install Node.js 18+); skills fall back to Markdown notes\n' "$name"
+  fi
   (cd "$t" && sh "$EVOLVEBOOK" status 2>/dev/null) | while IFS= read -r line; do
     printf '%-20s %s\n' "$name" "$line"
   done
@@ -585,6 +624,12 @@ cmd_link() {
   if [ -n "$agents" ]; then
     printf '%s\n' "$agents" | while IFS='|' read -r agent dir; do
       mkdir -p "$dir"
+      for entry in "$dir"/*; do # drop our links to skills that no longer exist
+        [ -L "$entry" ] && [ ! -e "$entry" ] || continue
+        case "$(readlink "$entry")" in
+          "$SCRIPT_DIR"/*) rm "$entry"; log "Removed link to retired skill: $entry" ;;
+        esac
+      done
       for sk in "$LEGACY_DIR"/skills/*/; do
         sk=${sk%/}
         link_path "$sk" "$dir/$(basename "$sk")" "$agent"
@@ -755,20 +800,58 @@ cmd_setup() {
   log 'Check anytime: moskills status'
 }
 
+is_project() {
+  [ -f "$TARGET/.moskills.json" ] || [ -f "$TARGET/.claude/STATE.md" ] ||
+    [ -f "$TARGET/STATE.md" ] || [ -f "$TARGET/tasks/todo.md" ]
+}
+
+status_summary() { # five advisory lines from saved project notes
+  state="$TARGET/.claude/STATE.md"
+  [ -f "$state" ] || state="$TARGET/STATE.md"
+  # stdin is empty when neither note exists; awk still prints five unknowns.
+  set --
+  [ ! -f "$state" ] || set -- "$@" "$state"
+  [ ! -f "$TARGET/tasks/todo.md" ] || set -- "$@" "$TARGET/tasks/todo.md"
+  LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
+}
+
 cmd_status() {
   [ -d "$TARGET" ] || die "target does not exist: $TARGET"
-  if [ -f "$TARGET/.moskills.json" ] || [ -f "$TARGET/.claude/STATE.md" ] ||
-     [ -f "$TARGET/STATE.md" ] || [ -f "$TARGET/tasks/todo.md" ]; then
-    state="$TARGET/.claude/STATE.md"
-    [ -f "$state" ] || state="$TARGET/STATE.md"
-    # stdin is empty when neither note exists; awk still prints five unknowns.
-    set --
-    [ ! -f "$state" ] || set -- "$@" "$state"
-    [ ! -f "$TARGET/tasks/todo.md" ] || set -- "$@" "$TARGET/tasks/todo.md"
-    LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
+  if is_project; then
+    status_summary
+    if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
+      node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" 2>/dev/null || true
+    fi
     [ "$VERBOSE" -eq 1 ] || return 0
   fi
   cmd_install_status
+}
+
+# Re-inject the saved plan into the agent's context (Claude Code hooks).
+# Adds the active run's progress and the exact proof command when a run exists.
+# Silent outside projects, when nothing is recorded, or with MOSKILLS_NO_CONTEXT=1.
+cmd_context() {
+  [ "${MOSKILLS_NO_CONTEXT:-0}" = 1 ] && return 0
+  [ -d "$TARGET" ] && is_project || return 0
+  lines=$(status_summary) || return 0
+  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || lines=''
+  run=''
+  if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
+    if [ "${MOSKILLS_DISTRIBUTION:-}" = npm ]; then cli=moskills; else cli="sh '$SCRIPT_DIR/moskills'"; fi
+    run=$(node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" "$cli" 2>/dev/null) || run=''
+  fi
+  [ -n "$lines$run" ] || return 0
+  if [ -n "$lines" ] && [ -n "$run" ]; then lines="$lines
+$run"; else lines="$lines$run"; fi
+  [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
+  case "$EVENT" in
+    UserPromptSubmit|SessionStart) ;;
+    *) die "context: unsupported --event: $EVENT" ;;
+  esac
+  # JSON-escape backslashes and quotes, then join lines with \n.
+  body=$(printf 'moskills saved plan (advisory notes; the run lines come from .moskills/runs and are authoritative):\n%s\n' "$lines" |
+    sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR > 1 { printf "\\n" } { printf "%s", $0 }')
+  printf '{"hookSpecificOutput": {"hookEventName": "%s", "additionalContext": "%s"}}\n' "$EVENT" "$body"
 }
 
 cmd_install_status() {
@@ -829,12 +912,14 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
 TARGET=$(pwd)
 FORCE=0
 WITH_HOOKS=0
 HOOK=0
+EVENT=''
 AGENTS=0
 AGENTS_ON=0
 REPLACE=0
@@ -851,6 +936,7 @@ while [ "$#" -gt 0 ]; do
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
     --hook)   HOOK=1; shift ;;
+    --event)  [ "$#" -ge 2 ] || die '--event requires a hook event name'; EVENT=$2; shift 2 ;;
     --agents) AGENTS=1; shift ;;
     --replace) REPLACE=1; shift ;;
     --yes)    YES=1; shift ;;
@@ -888,6 +974,7 @@ case "$CMD" in
   link)    cmd_link ;;
   setup)   cmd_setup ;;
   status)  cmd_status ;;
+  context) cmd_context ;;
   uninstall) cmd_uninstall ;;
   unlink)  cmd_unlink ;;
   self-update)     cmd_self_update ;;

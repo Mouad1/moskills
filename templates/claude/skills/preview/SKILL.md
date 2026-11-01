@@ -9,7 +9,7 @@ Primary goal: Turn an unclear idea into a concrete spec before implementation. R
 
 ## Steps
 
-1. **Explore context** — read project files, docs, recent commits.
+1. **Explore context** — read project files, docs, recent commits. If `design.md` exists, read it: mockups use its tokens, shell, and components, and choices the user makes in the Visual Companion are written back into it (see the `design-system` skill). Do not keep a second set of design values in the spec.
 2. **Detect frontend** — check rules below; start Visual Companion if triggered.
 3. **Resolve missing decisions** — when the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Ask only questions necessary to settle consequential ambiguity. Infer routine choices from context; prefer concise multiple choice when useful.
 4. **Compare approaches if needed** — explain meaningful tradeoffs and recommend one; skip alternatives when the chosen approach is already clear.

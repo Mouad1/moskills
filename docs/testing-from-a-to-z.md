@@ -6,7 +6,7 @@ This is a hands-on trial you can run alone, then share with the community. You w
 
 Run one step at a time in a fresh terminal. Read each expected result before continuing. Stop at unexpected failures; the deliberately failing bug, repeat, drift, and guard checks are labeled below.
 
-moskills supplies instructions, project files, helpers, and optional guards. Your coding agent follows the workflow. This release does **not** supply an enforced run engine, evidence database, progress dashboard, or evolvebook forms. Keep the evidence yourself; a confident answer is not a passing test.
+moskills supplies instructions, project files, helpers, and optional guards. Your coding agent follows the workflow. From 0.9.0 it also keeps a **run**: `moskills run-state` saves each check's command, exit code and file hashes, reopens work when a checked file changes, and records your acceptance. Steps 6, 7 and 9 test that. Evolvebook forms are not included. A confident answer is still not a passing test: check the run and rerun tests yourself.
 
 Start with steps 1–9, then test evolvebooks in steps 11–12. Steps 10 and 13–15 are optional. Finish with the report and cleanup in step 16. The prompts are written for your agent; the commands are written for your terminal.
 
@@ -219,11 +219,18 @@ cat bug-before.txt
 
 **Prompt**
 
-> Extend pricing safely. First agree on and test the discountedPrice contract: cents must be a nonnegative safe integer; percent must be finite and between 0 and 100; invalid inputs throw RangeError. Include zero, 100%, fractional percentages, and rounding. Once that foundation passes, add quote(items, percent), where each item has cents and quantity. Quantity must be a nonnegative safe integer. Sum line amounts, reject unsafe totals, apply the discount once, and return integer cents. A basket with two 500-cent items at 20% returns 800. An empty basket returns 0. Use no dependencies. Write a short plan and acceptance checks before implementation. Keep each layer's evidence. Do not commit.
+> Extend pricing safely. First agree on and test the discountedPrice contract: cents must be a nonnegative safe integer; percent must be finite and between 0 and 100; invalid inputs throw RangeError. Include zero, 100%, fractional percentages, and rounding. Once that foundation passes, add quote(items, percent), where each item has cents and quantity. Quantity must be a nonnegative safe integer. Sum line amounts, reject unsafe totals, apply the discount once, and return integer cents. A basket with two 500-cent items at 20% returns 800. An empty basket returns 0. Use no dependencies. Write a short plan and acceptance checks before implementation. Start a moskills run for this work with one task per layer, and record each layer's check through the run. Do not commit.
 
-**Expected:** the agent verifies the pricing contract before building the basket feature. Tests cover the stated examples and rejection cases. Routine implementation choices should not turn into repeated questions.
+**Expected:** the agent verifies the pricing contract before building the basket feature. Tests cover the stated examples and rejection cases. Routine implementation choices should not turn into repeated questions. The run holds both layers:
 
-**Record:** foundation and feature separately, with actual commands/results. If behavior changes after a passing check, rerun affected checks and replace stale evidence.
+```sh
+moskills run-state status
+sed -n '/moskills:run:begin/,/moskills:run:end/p' .claude/STATE.md
+```
+
+Both tasks end `finished`, and the **Run proof** block in `.claude/STATE.md` lists a `passed (exit 0)` check per layer. Building the basket edits `price.cjs`, so the contract's earlier proof goes stale; a good agent reruns that check rather than reporting it done. A task the agent called done without a passing check stays `still not done`. The block refreshes whenever a run command runs; `moskills status` and `moskills context` check proof live.
+
+**Record:** foundation and feature separately, with actual commands/results, and whether the run agrees with the agent's summary.
 
 ## 7. Stop and resume in a new chat
 
@@ -237,6 +244,15 @@ Close that chat. Open a fresh chat in the same lab project:
 
 **Expected:** the new chat recovers the contract and remaining review without asking you to retell the task. It rechecks any stale evidence instead of assuming it still applies.
 
+Now make proof go stale on purpose. In the terminal:
+
+```sh
+printf '\n// stale-proof check\n' >> price.cjs
+moskills context
+```
+
+**Expected:** the run line reports `stale proof:` for the task that checked `price.cjs`. In Claude Code the same line reaches the agent on your next prompt. Ask: "Continue." The agent reruns that check through the run instead of trusting the old result.
+
 **Record:** files used to resume, correct next action, and any lost decisions. A new chat is not a background scheduler or automatic wakeup.
 
 ## 8. Review one bounded scope
@@ -247,7 +263,7 @@ Close that chat. Open a fresh chat in the same lab project:
 
 **Expected:** review reports concrete findings with locations and reproductions, or reports no findings within that scope. A host without independent review can perform a disclosed serial self-review. If independence is required for your trial, leave that requirement unknown until a human or supported reviewer completes it.
 
-**Record:** reviewer type, scope, findings, number of passes, and final test result. A two-pass prompt is an instruction to the agent, not a runtime-enforced limit.
+**Record:** reviewer type, scope, findings, number of passes, and final test result. A two-pass prompt is an instruction to the agent; the run enforces the limit only when reviews are recorded with `run-state review`.
 
 ## 9. Make acceptance explicit
 
@@ -259,7 +275,15 @@ Inspect the code and run `npm test`. If satisfied, reply:
 
 > I accept this pricing result as tested. Record my acceptance. This does not authorize a commit, push, merge, or deployment.
 
-**Expected:** only the accepted scope moves to Finished. A task with an unresolved required failure or unknown check stays open. Acceptance does not silently authorize Git actions.
+**Expected:** only the accepted scope moves to Finished. A task with an unresolved required failure or unknown check stays open. Acceptance does not silently authorize Git actions. The agent records it with `run-state accept`; it must not do so before your reply. Check, then edit a file in the run's scope and check again:
+
+```sh
+moskills run-state status | grep 'Human Acceptance'
+printf '\n// after acceptance\n' >> price.cjs
+moskills context | grep 'Human acceptance'
+```
+
+The first shows `accepted`; after the edit it shows `pending (scope changed since acceptance)`.
 
 **Record:** your acceptance and the file version it covered, or why you withheld it.
 

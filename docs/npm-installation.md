@@ -4,7 +4,7 @@ Status: [moskills 0.8.1 is published on npm](https://www.npmjs.com/package/moski
 
 ## Install and use
 
-Requires Node.js 18+ and a POSIX shell on macOS, Linux, or WSL. Use your existing AI agent and account.
+Requires Node.js 18+ and a POSIX shell on macOS, Linux, or WSL; for native Windows see [below](#native-windows). Use your existing AI agent and account.
 
 ```sh
 npm install -g moskills
@@ -92,7 +92,7 @@ Example: “Add a login form.” Build foundation, then form. Tests pass, screen
 
 Passing tests do not prove appearance. Unavailable required checks stay `unknown`; task stays open. Changes invalidate affected earlier evidence. Required approval applies to reviewed result.
 
-`.claude/STATE.md` and `tasks/todo.md` hold progress and evidence. Agents maintain these files; this release has no enforced run-state service or evidence database.
+`.claude/STATE.md` and `tasks/todo.md` hold progress notes. From 0.9.0, `moskills run-state` keeps the proof: when a run exists, task and gate status come from it, and a generated **Run proof** block in `.claude/STATE.md` mirrors it.
 
 ## Finished and still not done
 
@@ -100,10 +100,17 @@ Local package tests exercise packed global installs, npx cache cleanup, repeated
 
 CI configuration runs the same suite on Ubuntu and macOS with Node 18, 22, and 24. All six jobs passed for the 0.8.1 release in [PR #22 CI](https://github.com/Mouad1/moskills/actions/runs/38379523977). These results cover package behavior; live agent and WSL trials remain separate checks. Configuration follows official [checkout](https://github.com/actions/checkout) and [setup-node](https://github.com/actions/setup-node) guidance.
 
+## Native Windows
+
+Native Windows (no WSL): install with npm and Git for Windows (Claude Code on Windows needs it too); the launcher finds its `sh`. `moskills run-state`, `moskills design` and `moskills dashboard` need only Node, and run checks with `cmd.exe` when no `sh` exists. CI runs these on Windows; the standalone `install.sh` route, `link` and `setup` stay macOS, Linux and WSL.
+
+If `sh` lives somewhere unusual, set `MOSKILLS_SH` to its full path.
+
 Still not done:
 
-- Native Windows support; use WSL.
+- A live Claude Code session on native Windows (installed and CI-tested, not yet observed with a real agent).
 - Live Claude Code, WSL, automatic instruction loading, and broader community/platform trials.
-- Enforced run-state engine, interactive progress UI, and evolvebook UI forms from architecture roadmap. Plain Markdown evolvebook creation and export already work.
+- Publish 0.9.0 (run-state engine, skills that use it, `moskills dashboard`) to npm; 0.8.1 does not include them.
+- Evolvebook UI forms. Plain Markdown evolvebook creation and export already work.
 
 Documentation must include useful diagrams for workflows, dependencies, or architecture. Keep diagrams close to explained text.

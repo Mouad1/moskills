@@ -1,10 +1,45 @@
 # Changelog
 
-## Unreleased
+## 0.9.0
+
+Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code plugin picks it up from `main`.
+
+**Breaking:** `/memorize` is removed; use `/learn`. `moskills sync` deletes the old copy unless you edited it.
+
+**Breaking:** the legacy `setupskill.sh` installer and its duplicate `templates/claude/STATE.md` and `CLAUDE.md` are removed; use `moskills init`. Moving an old project over: `migrations/README.md`.
 
 - Panel host shell: `button.secondary` (quiet outline), `button.small` (compact row action) and `.sr-only` classes for panels, so panels stop repeating inline styles.
+- **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
+- **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
+- **Command evidence wrapper:** `moskills run-state wrap -- <command>` streams output and records it as evidence (#29).
+- **Dependency graph:** `lib/dep-graph.cjs` scans CommonJS and ESM imports without dependencies (#30).
+- **Impact analysis:** `moskills run-state impact --files <f>` reports tasks and checks affected by a change, including through imports (#31).
+- **Dashboard diff tab:** `GET /api/diff` shows the Git diff and its impact tree (#32).
+- **Task leases:** `lease`, `heartbeat`, and `release` give one agent a time-bounded hold on a task (#33).
+- **Parallel claiming:** `next-tasks` lists every ready task; `claim-task` claims one under the run lock (#34).
+- **External evidence:** `ingest-evidence` records CI or test results produced elsewhere; `GET /api/agents` shows leases on the dashboard (#35).
+- **Removed `/memorize`:** it overlapped with `/learn` and depended on the external Claude-Mem plugin. `/learn` now also captures personal preferences (`Scope: personal`, promoted to `~/.claude/CLAUDE.md`).
+- **Retired files are cleaned up:** `moskills sync` removes managed files a newer version no longer ships when they are unedited (edited ones are kept with a warning); `moskills link` removes its own links whose skill no longer exists.
+- **Skill overlap cleanup:** `/handoff` writes a checkpoint entry in `.claude/STATE.md` instead of a separate file; `/align-intent` writes to `Current run`; `/checkpoint` defers gate results to `/gatekeeper`.
+- **Skills drive the run-state engine:** a Run state section in the standard makes the run the source of truth for task and gate status when one exists. `/align-intent` starts a run, `/gatekeeper` records checks through `run-state wrap --auto-complete` and the human gate through `accept` (only after the user explicitly approves), `/checkpoint` and `/handoff` read `run-state resume`, and the session protocol resumes the run first.
+- **Run lines in the plan reminder:** `moskills context` adds the active run, its progress, and the exact `Record proof` command for the current install (`lib/run-summary.cjs`, read-only).
+- **Run proof block in STATE.md:** every run-state command that changes the run (including a failed check) rewrites a marked block in `.claude/STATE.md` with each task's status and proof; `run-state notes` does it on demand (`--print` to view). The five-line status ignores it.
+- **Live stale proof:** the plan reminder checks finished tasks' proof against current file hashes without writing the run, and names tasks held by another agent.
+- **Doctor:** reports whether run-state is ready (Node.js found) and how many runs the project has.
+- **Guides:** quick start and the A–Z walkthrough now test the run (proof per layer, stale proof after an edit, acceptance that resets when scope files change).
+- **Fixed:** in npm installs, `moskills dashboard` and `moskills context` were rejected as unknown commands.
+- **Status shows the run:** `moskills status` adds the active run's progress after the five note lines.
+- **Safer init:** `moskills run-state init` refuses to overwrite an existing run unless `--force` is passed.
+- **Plan reminder:** new `moskills context` command; the plugin's `UserPromptSubmit` hook and a `SessionStart` hook on compaction add the five saved-note lines to Claude's context. Silent when nothing is recorded; `MOSKILLS_NO_CONTEXT=1` turns it off.
+- **Native Windows (npm install):** the launcher finds Git for Windows' `sh` (or `MOSKILLS_SH`) instead of refusing; `run-state`, `design` and `dashboard` run on Node with no shell, and check commands fall back to `cmd.exe` when there is no `sh`. CI gains a Windows job (Node 18 and 24).
+- **`/design-system`:** one `design.md` (tokens, app shell, components, screens) that `/preview` reads and writes. New `moskills design init|check|css`: check verifies color values, WCAG contrast pairs in light and dark, and that screens only use declared components; css exports tokens as CSS variables (light, dark media query, `data-theme` override).
+- **`/modular-build`:** build an app one module at a time. Each module is one run; `run-state init --after <previous>` refuses to start a module until the previous one is done; new `run-state done` (exit 0 only with current proof for every task and acceptance still holding) and `run-state list`.
+- **Findings:** `.claude/STATE.md` template gains a `## Findings` section for research notes, with a session-protocol rule for when to write there.
 - Add the **panel host**: `moskills dashboard` serves a local dashboard made of plug-in panels (`panel.json` + `render(ctx)` module, optional JSON actions). Zero dependencies, four zones, light/dark, per-panel refresh, broken panels isolated. Core panel: Runs. Guide: `docs/panel-host.md`.
 - **Security fix** for `moskills run-state dashboard`: listens on `127.0.0.1` only (was all interfaces), refuses foreign `Host` headers (DNS rebinding), no wildcard CORS, and `POST /api/accept` requires a local origin and a JSON body. Shared guard: `lib/local-http-guard.cjs`.
+- **Docs:** add `docs/roadmap.md`; refresh README, command reference, architecture roadmap, and the run-state milestone note.
+
+Hashes detect changes to checked files; they are not signatures. Leases coordinate agents sharing one filesystem.
 
 ## 0.8.2
 

@@ -8,7 +8,7 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
 
-**moskills 0.8.1 is published on npm.** Fresh registry npm/npx installs were verified. See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
+**moskills 0.9.0 is the current release** (Claude Code plugin and source). npm still has 0.8.1, without the run-state engine; publishing 0.9.0 there is pending (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
 
 ```sh
 npm install -g moskills
@@ -22,7 +22,7 @@ Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
 
 Start with a short, practical trial: [Build something useful with moskills](docs/quick-start.md).
 
-Next implementation milestone: [saved progress with verifiable proof](docs/run-state-next.md).
+Where the project stands and what comes next: [Roadmap](docs/roadmap.md).
 
 Try the setup from installation to a verified result: [A–Z testing walkthrough](docs/testing-from-a-to-z.md).
 
@@ -33,13 +33,14 @@ Try the setup from installation to a verified result: [A–Z testing walkthrough
 ```mermaid
 mindmap
   root((moskills Shipped))
-    v0.8.1 Distribution
-      npm package & npx support
+    Distribution
+      npm package & npx support (v0.8.1 on npm)
       Zero runtime dependencies
       Safe copies & drift detection
       Clean uninstalls & cache resilience
     Core Skills Suite
       /preview (UI & Spec + Live Companion)
+      /design-system (One checked design.md: tokens, shell, components, screens)
       /align-intent (Goals, Risks, Constraints)
       /shared-language (Domain Glossary)
       /system-map (Dependencies & Blast Radius)
@@ -47,14 +48,22 @@ mindmap
       /diagnose (Root-cause debugging)
       /checkpoint (Durable factual progress)
       /gatekeeper (Completion audit)
+      /modular-build (One module at a time, each proven and accepted)
       /compress-input (Terse technical comms)
-      /memorize (Durable lessons & rules)
       /handoff (Clean agent compaction)
       /project-dna (Reproducible build recipes)
+      /learn (Corrections become rules)
     Evolvebooks Subsystem
       /evolvebook new, use, setup, link, export
       Never-list and Toolbox progression
       Vault integration (Obsidian)
+    Run-State Engine (in source, not on npm yet)
+      Evidence with exit codes and SHA-256 file hashes
+      Stale proof reopens tasks
+      Review budget and challenger auto-review
+      Dependency-aware invalidation
+      Task leases and parallel claiming
+      Local dashboard with live updates
     Multi-Agent & Platform Support
       Claude Code Plugin & marketplace
       Codex ~/.agents/skills
@@ -69,13 +78,15 @@ mindmap
 | **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
 | **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
 | **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 13 core agent workflow skills with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Skills Engine** | 14 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
+| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
 | **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
 | **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
 
 ## Installed Commands
 
 - `/preview`: turn a vague idea into a written spec before any code is written. Auto-starts a Visual Companion browser server for frontend projects.
+- `/design-system`: keep one `design.md` (tokens, app shell, components, screens) that `/preview` reads; `moskills design check` verifies contrast and component use, `moskills design css` turns tokens into CSS variables.
 - `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
 - `/shared-language`: turn project jargon into a glossary agents and humans can share.
 - `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
@@ -83,10 +94,11 @@ mindmap
 - `/diagnose`: debug by reproducing the issue and finding root cause before fixing.
 - `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
 - `/gatekeeper`: validate completed work against the active intent model before reporting completion.
+- `/modular-build`: build an app one module at a time; each module is a run that must pass `/gatekeeper` and your acceptance before the next starts.
 - `/compress-input`: switch to short, direct technical communication.
-- `/memorize`: use durable memory for lessons, rules, and past-session context.
 - `/handoff`: compact current work so another agent can continue.
 - `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
+- `/learn`: turn a correction or confirmed root cause into a rule in `tasks/lessons.md`, and promote repeated rules.
 - `/evolvebook`: turn one kind of job (an article, a landing page, a NestJS module) into a guide that improves every run. See [Evolvebooks](#evolvebooks).
 
 ## Evolvebooks
@@ -250,25 +262,6 @@ claude --plugin-dir ~/path/to/moskills
 Do not register a working clone as a directory marketplace: Claude Code would
 install whatever branch happens to be checked out.
 
-### Legacy: copy script (deprecated)
-
-Deprecated — kept for existing installs only; use the plugin above. Run from a
-clone of this repository to copy the `.claude/` folder into one project:
-
-```sh
-./setupskill.sh --target /path/to/project
-./setupskill.sh --target /path/to/project --with-hooks
-./setupskill.sh --target /path/to/project --dry-run
-./setupskill.sh --target /path/to/project --force
-```
-
-Flags:
-
-- `--target /path/to/project`: install into a specific project directory.
-- `--with-hooks`: install a Git pre-commit wrapper when the target is a Git repository.
-- `--dry-run`: print planned writes without changing files.
-- `--force`: overwrite existing managed files.
-
 ## Other agents (Antigravity, Codex, …)
 
 moskills skills are plain `SKILL.md` folders, so any agent that reads that
@@ -334,13 +327,14 @@ default, so start it with `agy --add-dir .`.
 
 | Command | Does |
 |---|---|
-| `moskills status` | Version, linked agents, command on PATH, daily update and last run |
+| `moskills status` | In a project: five lines (Goal, Finished, Still not done, Blocker, Next). Elsewhere, or with `--verbose`: version, linked agents, command on PATH, daily update |
 | `moskills setup` | Run the questions again (new agent installed, changed your mind) |
 | `moskills self-update` | Update now instead of waiting for the daily run |
 | `moskills uninstall` | Remove the links, the daily update and `~/.moskills` |
 | `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
+| `moskills run-state <command>` | Saved run progress with proof: `init`, `check`, `wrap`, `complete`, `resume`, `status`, `accept`, `dashboard`, ... Run `moskills run-state help` |
 
-Requirements: `sh` plus git, curl or wget. macOS and Linux; on Windows use WSL.
+Requirements: `sh` plus git, curl or wget. macOS, Linux and WSL. For native Windows use the npm install (see [npm installation](docs/npm-installation.md#native-windows)).
 Automatic updates need the git install.
 
 For development, keep a separate clone and do not point `MOSKILLS_HOME` at
@@ -393,14 +387,15 @@ Files inside their own project after `/moskills-init`:
 
 This repo keeps the source of the pack:
 
-- `moskills`: the CLI (`init` / `sync` / `doctor` / `version`) bundled into the plugin.
+- `moskills`: the CLI (`init` / `sync` / `doctor` / `status` / `run-state` / `evolvebook` / ...) bundled into the plugin.
+- `bin/moskills.cjs`: the npm entry point that launches the CLI.
+- `lib/`: the run-state engine, its CLI and dashboard, the dependency scanner, the status summary, and settings helpers.
 - `templates/managed/`: the managed standard files copied to `.claude/standard/`.
-- `templates/claude/`: commands, skills, hooks, and legacy project template.
+- `templates/claude/`: commands, skills, and hooks copied into projects.
 - `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
 - `.claude-plugin/`: plugin and marketplace manifests.
 - `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
-- `tests/run-tests.sh`: smoke tests for install, sync, hooks, and version consistency.
-- `setupskill.sh`: legacy installer, deprecated.
+- `tests/`: shell smoke tests (`run-tests.sh`) and Node tests (`*.test.cjs`); run all with `npm test`.
 - `docs/`: usage docs and examples.
 
 ## Lifecycle
@@ -409,11 +404,34 @@ Project Start -> /shared-language
 
 New Feature -> /preview -> /align-intent -> /evolvebook use (if a book matches) -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
 
-If work must pause, use `/handoff`.
+After a correction or confirmed root cause, use `/learn`. If work must pause, use `/handoff`.
+
+## Plan Reminder (Claude Code plugin)
+
+Notes on disk are easy for an agent to forget late in a long session or after
+the conversation is compacted. The plugin re-reads them for you:
+
+- **Every prompt** (`UserPromptSubmit`): adds the five `moskills status` lines
+  (Goal, Finished, Still not done, Blocker, Next) to the agent's context, about
+  50 tokens. Silent until something is recorded.
+- **After compaction** (`SessionStart` with `compact`): adds the same five lines.
+- **When a run exists** (`moskills run-state`): also adds the run's goal, finished
+  tasks, stale proof, next ready task, and the exact command to record proof.
+  Skills then prove each check through the run instead of writing "passed" by hand.
+- Turn it off with `MOSKILLS_NO_CONTEXT=1`. Codex and Antigravity have no such
+  hook; they read the notes at session start through `AGENTS.md`.
+
+```mermaid
+flowchart LR
+  Prompt[Each prompt or compaction] --> Hook[moskills context]
+  Hook --> Notes[Saved project notes]
+  Notes --> Lines[Five status lines]
+  Lines --> Agent[Agent context]
+```
 
 ## Hook Flow
 
-Hooks are optional. They run only if init was given `--with-hooks` (works in
+Git hooks are optional. They run only if init was given `--with-hooks` (works in
 both the plugin CLI and the legacy script).
 
 ## Git Workflow Rule
@@ -444,6 +462,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     .manifest.sum       # checksums of managed files, used by doctor
   commands/
     preview.md
+    design-system.md
     align-intent.md
     shared-language.md
     system-map.md
@@ -451,8 +470,8 @@ tasks/                  # seeded todo + lessons files, project-owned
     diagnose.md
     checkpoint.md
     gatekeeper.md
+    modular-build.md
     compress-input.md
-    memorize.md
     handoff.md
     project-dna.md
     learn.md
@@ -465,6 +484,8 @@ tasks/                  # seeded todo + lessons files, project-owned
         server.cjs
         helper.js
         frame-template.html
+    design-system/
+      SKILL.md
     align-intent/
       SKILL.md
     shared-language/
@@ -479,9 +500,9 @@ tasks/                  # seeded todo + lessons files, project-owned
       SKILL.md
     gatekeeper/
       SKILL.md
-    compress-input/
+    modular-build/
       SKILL.md
-    memorize/
+    compress-input/
       SKILL.md
     handoff/
       SKILL.md
@@ -519,7 +540,10 @@ project hook.
 
 ## More Docs
 
-- [Architecture and roadmap](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking. Distinguishes the existing setup from the proposed workflow.
+- [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
+- [Live session script](docs/live-session.md): step-by-step first trial of 0.9.0 in Claude Code, with a scorecard.
+- [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
+- [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
 - [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
 - [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
 - [docs/lifecycle.md](docs/lifecycle.md)
@@ -535,8 +559,8 @@ flowchart LR
     Checks --> Handoff["Complete or hand off"]
 ```
 
-This diagram summarizes the current skill workflow. The architecture guide
-describes the proposed integrated coordinator and its implementation roadmap.
+This diagram summarizes the current skill workflow. The roadmap tracks what
+is shipped and what is still planned.
 
 ## Who Made This
 

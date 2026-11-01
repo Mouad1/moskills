@@ -89,8 +89,9 @@ make_project() {
   printf '%s\n' "$TMP_ROOT/$name"
 }
 
+# The legacy installer is retired; these tests now cover `moskills init`.
 run_installer() {
-  sh "$ROOT_DIR/setupskill.sh" "$@"
+  sh "$ROOT_DIR/moskills" init "$@"
 }
 
 run_moskills() {
@@ -102,8 +103,9 @@ test_generic_install_creates_claude_files() {
   output_file="$TMP_ROOT/generic-install-output.txt"
   run_installer --target "$project" >"$output_file"
 
-  assert_file "$project/.claude/CLAUDE.md"
+  assert_file "$project/CLAUDE.md"
   assert_file "$project/.claude/STATE.md"
+  assert_not_exists "$project/.claude/CLAUDE.md"
   assert_file "$project/.claude/commands/align-intent.md"
   assert_file "$project/.claude/commands/shared-language.md"
   assert_file "$project/.claude/commands/system-map.md"
@@ -112,7 +114,8 @@ test_generic_install_creates_claude_files() {
   assert_file "$project/.claude/commands/checkpoint.md"
   assert_file "$project/.claude/commands/gatekeeper.md"
   assert_file "$project/.claude/commands/compress-input.md"
-  assert_file "$project/.claude/commands/memorize.md"
+  assert_not_exists "$project/.claude/commands/memorize.md"
+  assert_not_exists "$project/.claude/skills/memorize"
   assert_file "$project/.claude/commands/handoff.md"
   assert_not_exists "$project/.claude/commands/caveman.md"
   assert_not_exists "$project/.claude/commands/claude-mem.md"
@@ -120,21 +123,9 @@ test_generic_install_creates_claude_files() {
   assert_not_exists "$project/.claude/skills/claude-mem"
   assert_file "$project/.claude/skills/align-intent/SKILL.md"
   assert_file "$project/.claude/skills/shared-language/SKILL.md"
-  assert_contains "$output_file" 'Installed commands:'
   pass 'generic install creates .claude files'
 }
 
-test_dry_run_writes_nothing() {
-  project=$(make_project dry-run)
-  output_file="$TMP_ROOT/dry-run-output.txt"
-  run_installer --target "$project" --dry-run >"$output_file"
-
-  assert_not_exists "$project/.claude"
-  assert_contains "$output_file" 'Dry run enabled'
-  assert_contains "$output_file" 'Would create directory'
-  assert_contains "$output_file" 'Would install commands:'
-  pass 'dry run writes nothing'
-}
 
 test_commands_point_to_matching_skills() {
   project=$(make_project command-links)
@@ -149,7 +140,7 @@ test_commands_point_to_matching_skills() {
   assert_contains "$project/.claude/commands/checkpoint.md" '`checkpoint` skill'
   assert_contains "$project/.claude/commands/gatekeeper.md" '`gatekeeper` skill'
   assert_contains "$project/.claude/commands/compress-input.md" '`compress-input` skill'
-  assert_contains "$project/.claude/commands/memorize.md" '`memorize` skill'
+  assert_contains "$project/.claude/commands/learn.md" '`learn` skill'
   assert_contains "$project/.claude/commands/handoff.md" '`handoff` skill'
   pass 'commands point to matching skills'
 }
@@ -171,60 +162,15 @@ test_skills_have_single_primary_goal() {
   assert_contains "$project/.claude/skills/compress-input/SKILL.md" 'lite, full, ultra, wenyan'
   assert_contains "$project/.claude/skills/compress-input/SKILL.md" 'Output tokens only. Reasoning stays intact.'
   assert_contains "$project/.claude/skills/compress-input/SKILL.md" 'compress-file <file>'
-  assert_contains "$project/.claude/skills/memorize/SKILL.md" 'Primary goal: Use durable memory without polluting the chat.'
-  assert_contains "$project/.claude/skills/memorize/SKILL.md" 'Inspired by `thedotmack/claude-mem`.'
-  assert_contains "$project/.claude/skills/memorize/SKILL.md" '3-Layer Workflow'
-  assert_contains "$project/.claude/skills/memorize/SKILL.md" 'search -> timeline -> get_observations'
+  assert_contains "$project/.claude/skills/learn/SKILL.md" 'Primary goal: Turn corrections into rules so the same mistake never happens twice.'
+  assert_contains "$project/.claude/skills/learn/SKILL.md" 'Scope: personal'
   assert_contains "$project/.claude/skills/handoff/SKILL.md" 'Primary goal: Compact current work into a handoff document.'
   pass 'skills have single primary goals'
 }
 
-test_existing_files_are_preserved_without_force() {
-  project=$(make_project preserve-existing)
-  output_file="$TMP_ROOT/preserve-existing-output.txt"
-  mkdir -p "$project/.claude/commands"
-  printf '%s\n' 'custom command' >"$project/.claude/commands/align-intent.md"
 
-  run_installer --target "$project" >"$output_file"
 
-  assert_contains "$project/.claude/commands/align-intent.md" 'custom command'
-  assert_contains "$output_file" 'Skip existing file:'
-  pass 'existing files are preserved without force'
-}
 
-test_force_overwrites_existing_files() {
-  project=$(make_project force-overwrite)
-  output_file="$TMP_ROOT/force-overwrite-output.txt"
-  mkdir -p "$project/.claude/commands"
-  printf '%s\n' 'custom command' >"$project/.claude/commands/align-intent.md"
-
-  run_installer --target "$project" --force >"$output_file"
-
-  assert_contains "$project/.claude/commands/align-intent.md" '`align-intent` skill'
-  pass 'force overwrites existing managed files'
-}
-
-test_node_project_detection() {
-  project=$(make_project node-project)
-  output_file="$TMP_ROOT/node-project-output.txt"
-  printf '%s\n' '{"scripts":{}}' >"$project/package.json"
-
-  run_installer --target "$project" >"$output_file"
-
-  assert_contains "$output_file" 'Detected stack: node'
-  pass 'node project is detected'
-}
-
-test_python_project_detection() {
-  project=$(make_project python-project)
-  output_file="$TMP_ROOT/python-project-output.txt"
-  printf '%s\n' '[project]' >"$project/pyproject.toml"
-
-  run_installer --target "$project" >"$output_file"
-
-  assert_contains "$output_file" 'Detected stack: python'
-  pass 'python project is detected'
-}
 
 test_hooks_are_not_installed_by_default() {
   project=$(make_project hooks-default)
@@ -250,18 +196,6 @@ test_hooks_install_with_flag() {
   pass 'git pre-commit hook installs with flag'
 }
 
-test_existing_git_hook_is_preserved_without_force() {
-  project=$(make_project hooks-preserve-existing)
-  output_file="$TMP_ROOT/hooks-preserve-existing-output.txt"
-  git -C "$project" init >/dev/null 2>&1
-  printf '%s\n' '# custom hook' >"$project/.git/hooks/pre-commit"
-
-  run_installer --target "$project" --with-hooks >"$output_file"
-
-  assert_contains "$project/.git/hooks/pre-commit" '# custom hook'
-  assert_contains "$output_file" 'Skip existing Git hook:'
-  pass 'existing git hook is preserved without force'
-}
 
 test_agent_guard_checks_staged_content_not_worktree() {
   project=$(make_project staged-guard)
@@ -451,6 +385,37 @@ test_sync_restores_deleted_managed_file() {
   pass 'sync restores a deleted managed file'
 }
 
+file_sha() { # portable SHA-256, same as the CLI
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}'
+  else shasum -a 256 "$1" | awk '{print $1}'; fi
+}
+
+test_sync_removes_retired_managed_files() {
+  project=$(make_project sync-retire)
+  run_moskills init --target "$project" --agents >/dev/null
+  # Simulate files an older version installed and this version no longer ships.
+  for d in .claude/skills/oldskill .agents/skills/oldskill; do
+    mkdir -p "$project/$d"; printf 'old\n' > "$project/$d/SKILL.md"
+  done
+  printf 'old\n' > "$project/.claude/commands/oldskill.md"
+  mkdir -p "$project/.claude/skills/editedskill"; printf 'old\n' > "$project/.claude/skills/editedskill/SKILL.md"
+  for f in .claude/skills/oldskill/SKILL.md .agents/skills/oldskill/SKILL.md .claude/commands/oldskill.md .claude/skills/editedskill/SKILL.md; do
+    printf '%s  %s\n' "$(file_sha "$project/$f")" "$f" >> "$project/.claude/standard/.manifest.sum"
+  done
+  printf 'my change\n' > "$project/.claude/skills/editedskill/SKILL.md"
+  out="$TMP_ROOT/sync-retire.txt"
+  run_moskills sync --target "$project" >"$out" 2>&1 || fail 'sync must succeed with retired files'
+  assert_not_exists "$project/.claude/skills/oldskill"
+  assert_not_exists "$project/.agents/skills/oldskill"
+  assert_not_exists "$project/.claude/commands/oldskill.md"
+  assert_file "$project/.claude/skills/editedskill/SKILL.md"
+  assert_contains "$out" 'kept retired managed file you edited'
+  assert_file "$project/.claude/skills/tdd/SKILL.md"
+  assert_file "$project/.claude/commands/learn.md"
+  run_moskills doctor --target "$project" >/dev/null || fail 'doctor must be clean after retiring files'
+  pass 'sync removes unedited retired files and keeps edited ones'
+}
+
 test_notice_reports_outdated_project() {
   project=$(make_project notice-outdated)
   run_moskills init --target "$project" >/dev/null
@@ -527,6 +492,16 @@ test_link_symlinks_skills_into_detected_agents() {
   [ -L "$h/.agents/skills/learn" ] || fail 'expected codex learn symlink'
   [ "$(readlink "$h/.gemini/config/skills/tdd")" = "$ROOT_DIR/templates/claude/skills/tdd" ] || fail 'wrong symlink target'
   pass 'link symlinks skills into detected agents'
+}
+
+test_link_removes_links_to_retired_skills() {
+  h=$(make_home retired)
+  ln -s "$ROOT_DIR/templates/claude/skills/memorize" "$h/.agents/skills/memorize"
+  ln -s /nonexistent/foreign "$h/.agents/skills/foreign"
+  HOME=$h run_moskills link >/dev/null
+  [ -L "$h/.agents/skills/memorize" ] && fail 'expected dangling moskills link removed'
+  [ -L "$h/.agents/skills/foreign" ] || fail 'foreign dangling link must be kept'
+  pass 'link removes its own links to retired skills'
 }
 
 test_link_skips_agents_that_are_not_installed() {
@@ -790,7 +765,8 @@ test_documentation_exists() {
   assert_file "$ROOT_DIR/docs/examples/node-project.md"
   assert_file "$ROOT_DIR/docs/examples/python-project.md"
 
-  assert_contains "$ROOT_DIR/README.md" './setupskill.sh --target /path/to/project'
+  assert_not_exists "$ROOT_DIR/setupskill.sh"
+  assert_not_contains "$ROOT_DIR/README.md" 'setupskill.sh'
   assert_contains "$ROOT_DIR/README.md" 'fruit of learning from engineers, experts, and successful GitHub repos'
   assert_contains "$ROOT_DIR/README.md" 'What users get'
   assert_heading_before "$ROOT_DIR/README.md" '## Installed Commands' '## Install'
@@ -801,17 +777,17 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/lifecycle.md" 'New Feature -> /preview -> /align-intent -> /system-map -> Coding Phase with /checkpoint -> /gatekeeper -> Done'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/shared-language'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'lite, full, ultra, wenyan'
-  assert_contains "$ROOT_DIR/docs/command-reference.md" 'search -> timeline -> get_observations'
+  assert_contains "$ROOT_DIR/docs/command-reference.md" '## /learn'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/compress-input'
-  assert_contains "$ROOT_DIR/docs/command-reference.md" '/memorize'
+  assert_not_contains "$ROOT_DIR/docs/command-reference.md" '/memorize'
   assert_contains "$ROOT_DIR/README.md" 'curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills setup'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills uninstall'
   assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
-  assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |'
-  assert_file "$ROOT_DIR/templates/claude/STATE.md"
-  assert_contains "$ROOT_DIR/templates/claude/skills/memorize/SKILL.md" 'Use `.claude/STATE.md` for current project working state.'
-  assert_file "$ROOT_DIR/templates/claude/CLAUDE.md"
+  assert_contains "$ROOT_DIR/docs/pain-points.md" '| `/learn` | The same mistake, correction, or preference keeps coming back instead of being reused. |'
+  assert_not_exists "$ROOT_DIR/templates/claude/STATE.md"
+  assert_not_exists "$ROOT_DIR/templates/claude/skills/memorize"
+  assert_not_exists "$ROOT_DIR/templates/claude/CLAUDE.md"
   assert_contains "$ROOT_DIR/README.md" 'Do not push directly to the default branch. Push a branch and open a pull request.'
   pass 'documentation exists'
 }
@@ -1469,16 +1445,10 @@ test_plugin_commands_offer_autoupdate() {
 
 mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
-test_dry_run_writes_nothing
 test_commands_point_to_matching_skills
 test_skills_have_single_primary_goal
-test_existing_files_are_preserved_without_force
-test_force_overwrites_existing_files
-test_node_project_detection
-test_python_project_detection
 test_hooks_are_not_installed_by_default
 test_hooks_install_with_flag
-test_existing_git_hook_is_preserved_without_force
 test_agent_guard_checks_staged_content_not_worktree
 test_agent_guard_allows_markdown_setext_heading
 test_hook_install_supports_gitdir_file
@@ -1492,6 +1462,7 @@ test_moskills_init_with_hooks_installs_git_hook
 test_moskills_init_without_hooks_flag_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
 test_sync_restores_deleted_managed_file
+test_sync_removes_retired_managed_files
 test_notice_reports_outdated_project
 test_notice_reports_plugin_older_than_project
 test_notice_is_silent_when_current
@@ -1506,6 +1477,7 @@ test_claude_settings_node_fallback_matches
 test_setup_turns_on_plugin_autoupdate
 test_plugin_commands_offer_autoupdate
 test_link_symlinks_skills_into_detected_agents
+test_link_removes_links_to_retired_skills
 test_link_skips_agents_that_are_not_installed
 test_link_is_idempotent_and_retargets_stale_links
 test_link_keeps_real_folders_without_replace

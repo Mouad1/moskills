@@ -61,6 +61,16 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
     assert.match(ok(call(['--help'])), /init/);
     assert.equal(ok(call(['--version'])).trim(), fs.readFileSync(path.join(root, 'VERSION'), 'utf8').trim());
   });
+  await t.test('every advertised command reaches the shell CLI', () => {
+    assert.match(ok(call(['dashboard', '--help'])), /dashboard/i);
+    const dir = project('context run');
+    ok(call(['init'], dir));
+    ok(call(['run-state', 'init', '--goal', 'g', '--tasks', 'one'], dir));
+    assert.match(ok(call(['context', '--target', dir], dir)), /Record proof: moskills run-state wrap/);
+    assert.match(ok(call(['run-state', 'list'], dir)), /default\s+not done\s+0\/1/);
+    ok(call(['design', 'init', '--target', dir], dir));
+    assert.match(ok(call(['design', 'check', '--target', dir], dir)), /design\.md: OK/);
+  });
   await t.test('evolvebook aliases keep helper help', () => {
     for (const args of [['evolvebook', 'help'], ['evolvebooks', '--help']])
       assert.match(ok(call(args)), /repeat <name> key=value/);

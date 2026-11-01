@@ -10,9 +10,11 @@ moskills maps specific agent failures to small commands with one job each.
 | `/tdd` | Agent writes code that looks plausible but has no fast proof that behavior changed correctly. | A red, green, refactor loop with a focused test before implementation. |
 | `/diagnose` | Bugs get patched by guesswork, so symptoms disappear briefly while root cause stays unknown. | Reproduction, evidence, suspected cause, fix plan, and verification kept separate. |
 | `/checkpoint` | Long sessions lose the thread: changed files, decisions, commands, blockers, and next steps are scattered across chat. | A factual progress record in `.claude/STATE.md` for the current project session. |
+| `/design-system` | Every screen picks its own colors and spacing; text fails contrast; the agent hard-codes values that drift from what was agreed. | One `design.md` checked by `moskills design check` (contrast, declared components) and exported to CSS variables. |
+| `/modular-build` | A big build turns into one tangled change: the agent jumps between parts, and nothing is finished, tested, and approved before the next part starts. | One module per run; the next module is refused until the previous one has current proof and the user's acceptance. |
 | `/gatekeeper` | Agent says work is done without checking the original intent or showing observed verification output. | A completion gate that separates passing checks, failing checks, unknowns, and remaining risk. |
 | `/compress-input` | Agent replies are too verbose, burying the next action and wasting attention during focused work. | Short, direct communication modes while preserving exact technical terms, commands, paths, and errors. |
-| `/memorize` | A lesson, user preference, or project decision keeps getting rediscovered instead of reused. | Store the short durable fact in memory, then point current work back to `.claude/STATE.md` when needed. |
+| `/learn` | The same mistake, correction, or preference keeps coming back instead of being reused. | One imperative rule in `tasks/lessons.md`, promoted to `CLAUDE.md` (project or personal) once it repeats. |
 | `/handoff` | Another agent or future session needs to continue, but the useful context is mixed into a long transcript. | A compact handoff with goal, decisions, changed files, blockers, verification, and next actions. |
 | Optional Git hook | Conflict markers or risky placeholder text reach staged files because final checks were skipped. | `agent-guard.sh` blocks selected staged-file hazards before commit. |
 
