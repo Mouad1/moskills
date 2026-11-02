@@ -390,7 +390,7 @@ Project (add `--target <path>`, default is the current folder):
 
 | Command | Purpose |
 |---|---|
-| `moskills init [--agents] [--with-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md` |
+| `moskills init [--agents] [--no-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md`; `--no-hooks` skips the Git pre-commit guard |
 | `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
 | `moskills doctor` | Report drift: version, edited or missing managed files |
 | `moskills status [--verbose]` | Five advisory saved-note lines, plus the active run's progress when a run exists; `--verbose` also shows installation details |

@@ -190,12 +190,12 @@ hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`),
 adds `.claude/settings.local.json` to `.gitignore`, and records the installed
 version in `.moskills.json`.
 
-To also install the Git pre-commit guard (blocks conflict markers and risky
-placeholder phrases in staged files), pass `--with-hooks` to init — the
-`/moskills-init` command offers it, or run the CLI directly:
+In a Git repository, init also installs the Git pre-commit guard (blocks
+conflict markers and risky placeholder phrases in staged files). To skip it,
+pass `--no-hooks`:
 
 ```text
-sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
+sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --no-hooks
 ```
 
 With the Claude Code plugin, a commit gate also runs before `git commit`: when
@@ -385,7 +385,7 @@ Files inside their own project after `/moskills-init`:
 - `tasks/`: seeded todo and lessons files, yours to edit.
 - `.moskills.json`: records the installed standard version for `doctor`/`sync`.
 - `.claude/hooks/agent-guard.sh`: staged-file guard script.
-- `.git/hooks/pre-commit`: installed only with `--with-hooks`.
+- `.git/hooks/pre-commit`: installed by default in Git repositories (skip with `--no-hooks`).
 - `.gitignore` entry keeping `.claude/settings.local.json` out of version control.
 
 ## What I use in this repo
@@ -436,8 +436,9 @@ flowchart LR
 
 ## Hook Flow
 
-Git hooks are optional. They run only if init was given `--with-hooks` (works in
-both the plugin CLI and the legacy script).
+The Git pre-commit hook is installed by default in Git repositories; pass
+`--no-hooks` to init to skip it (works in both the plugin CLI and the legacy
+script).
 
 ## Git Workflow Rule
 
@@ -526,7 +527,7 @@ tasks/                  # seeded todo + lessons files, project-owned
     agent-guard.sh
 .git/
   hooks/
-    pre-commit        # only with --with-hooks
+    pre-commit        # skipped with --no-hooks
 ```
 
 ## Uninstall
@@ -539,7 +540,7 @@ From one project: remove `.claude/` and `.moskills.json` from the target project
 moskills marker block (between `<!-- moskills:begin -->` and
 `<!-- moskills:end -->`) from the root `CLAUDE.md` — the rest of that file and
 `tasks/` are yours to keep. With `--agents`, also remove `.agents/skills/` and
-the marker block in `AGENTS.md`. If `--with-hooks` was used, remove
+the marker block in `AGENTS.md`. If the Git hook was installed, remove
 `.git/hooks/pre-commit` only if it is the moskills wrapper and not a custom
 project hook.
 
