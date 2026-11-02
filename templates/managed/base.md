@@ -8,7 +8,7 @@ Users describe work in ordinary language. Select relevant capabilities automatic
 
 | Request or finding | Capability to apply |
 | --- | --- |
-| Vague idea or unclear outcome | Preview, then align intent |
+| Vague idea or unclear outcome | Preview, then align intent (see Stages and gates) |
 | Unclear project terms | Shared language |
 | Unfamiliar modules, boundaries, or several files | System map |
 | New behavior or changed behavior | TDD where useful |
@@ -21,6 +21,37 @@ Users describe work in ordinary language. Select relevant capabilities automatic
 | Create, use, list, link, or export a recurring-job guide | Evolvebook |
 
 Use installed skills when available. If a capability or tool is unavailable, perform its documented steps directly and record the limitation; never invent a tool, check, or result.
+
+## Stages and gates
+
+This standard controls the flow of non-trivial work, even when another skill pack is installed. A helper skill may do the work of a stage; the gate at the end of the stage belongs to this standard. These instructions come from the project's CLAUDE.md, so they take precedence over a helper skill's own hand-off rules.
+
+| Stage | Helper when installed | moskills skill | Gate before the next stage |
+| --- | --- | --- | --- |
+| Idea to spec | `superpowers:brainstorming` | `/preview` | Human: the user approves the spec. Record its path under Agreed scope in `tasks/todo.md`; checkpoint. |
+| Spec to plan | `superpowers:writing-plans` | `/modular-build` or the plan in `tasks/todo.md` | Human: the user approves the plan. Record its path; start the run with `run-state init` using the plan's tasks. |
+| Build a task | `superpowers:test-driven-development` | `/tdd` | Behavior: the task's check passes through `run-state wrap`. Then propose a commit for that task. |
+| UI change | the same build helper | `/tdd`, `/preview` for states to look at | Visual: a screenshot or browser check through `run-state wrap`, or the user looks at the states and says yes. |
+| Module or feature done | none | `/gatekeeper` | Human: the user approves the result, then `run-state accept`; `run-state done` must exit 0. |
+| Pause | none | `/handoff` | `.claude/STATE.md` holds Finished, Still not done, and the exact next step. |
+
+- When a helper skill finishes or hands off to another skill, return to this table before invoking anything else. Run the gate, then pick the next stage's helper or moskills skill.
+- Use a helper only for its own stage. A helper's progress ledger (for example `.superpowers/sdd/`) may stay, but it never replaces `.claude/STATE.md` and `tasks/todo.md`: mirror each milestone there (spec approved, plan approved, task proven, before a long wait, session end).
+- Without a helper, use the moskills skill for the stage. The gates are the same either way.
+
+```mermaid
+flowchart LR
+  Idea --> |helper or /preview| Spec
+  Spec --> |Human gate| Plan
+  Plan --> |Human gate, run-state init| Build[Build a task]
+  Build --> |Behavior gate, propose commit| Next{More tasks?}
+  Build --> |UI changed: Visual gate| Next
+  Next --> |yes| Build
+  Next --> |no| Done[Module done]
+  Done --> |Human gate, run-state done| Finished
+```
+
+Each arrow is a stage boundary. The label names who does the stage's work or which gate must pass before moving on.
 
 ## Plan and execute
 
