@@ -10,6 +10,7 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 
 - **Commit gate:** with the Claude Code plugin, a PreToolUse hook checks every `git commit`. When a run-state run exists, it denies the commit while a task covering changed files has missing, failed or stale proof, and names the exact `run-state wrap` command to re-run. Read-only, never blocks on its own errors; `MOSKILLS_NO_COMMIT_GATE=1` turns it off.
 - **Pre-commit guard on by default:** `moskills init` installs the Git pre-commit guard in Git repositories without `--with-hooks`; pass `--no-hooks` to skip it.
+- Panel host shell: card titles at 1.25rem (they were smaller than body text); on phones the zones stack Today, then Actions, then Work; `<details data-keep="id">` sections keep their open/closed state across panel refreshes.
 - Panel host shell: `button.secondary` (quiet outline), `button.small` (compact row action) and `.sr-only` classes for panels, so panels stop repeating inline styles.
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
