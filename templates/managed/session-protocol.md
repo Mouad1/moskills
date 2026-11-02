@@ -16,6 +16,8 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 - Keep gate statuses explicit: passed, failed, unknown, or not applicable. Record review pass count and unresolved findings.
 - After a user correction, rejected review, or confirmed root cause, capture the preventive rule in `tasks/lessons.md`.
 - When research or exploration turns up something the next session would otherwise rediscover (how a part works, a constraint, a rejected option and why), add one line under `Findings` in `.claude/STATE.md`.
+- Run commands likely to take more than about two minutes (builds, emulators, installs, large test suites) in the background from the start, and keep working on tasks that do not depend on them.
+- Propose a commit as soon as a task's checks pass, instead of holding several finished tasks behind a slow step.
 - Ask before installing dependencies; show the migration plan before changing database schemas. Obtain user validation before any commit, push, or merge.
 
 ## End or pause
