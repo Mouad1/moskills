@@ -198,6 +198,11 @@ placeholder phrases in staged files), pass `--with-hooks` to init — the
 sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --with-hooks
 ```
 
+With the Claude Code plugin, a commit gate also runs before `git commit`: when
+a run-state run exists, it denies the commit while a task covering changed
+files has missing, failed or stale proof (`MOSKILLS_NO_COMMIT_GATE=1` turns it
+off).
+
 ### Updating
 
 Updates are automatic once auto-update is on for the marketplace. Third-party
