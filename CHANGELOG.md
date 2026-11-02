@@ -8,6 +8,7 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 
 **Breaking:** the legacy `setupskill.sh` installer and its duplicate `templates/claude/STATE.md` and `CLAUDE.md` are removed; use `moskills init`. Moving an old project over: `migrations/README.md`.
 
+- **Session start reminders:** the plan reminder now runs at every session start (startup, resume, clear, compact), not only after compaction. When `.claude/STATE.md` and `tasks/todo.md` are still empty it adds one line asking the agent to record scope and plan there, even when another skill pack drives planning; when notes exist but no run does, it gives the exact `run-state init` command. Per-prompt reminders stay silent for empty notes.
 - Panel host shell: `button.secondary` (quiet outline), `button.small` (compact row action) and `.sr-only` classes for panels, so panels stop repeating inline styles.
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
