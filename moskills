@@ -50,6 +50,10 @@ Commands:
                                             context; --event prints Claude Code hook JSON
                                             (UserPromptSubmit, SessionStart). Silent when
                                             nothing is recorded or MOSKILLS_NO_CONTEXT=1.
+  visual-flag                               Claude Code PostToolUse hook (JSON on stdin):
+                                            a UI file edit flags the run's current task;
+                                            run-state done then needs visual proof.
+                                            Off with MOSKILLS_NO_VISUAL_GATE=1.
   version                                   Print the standard version.
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
@@ -912,6 +916,11 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  visual-flag) # PostToolUse hook: never fails, silent when off or without node
+    [ "${MOSKILLS_NO_VISUAL_GATE:-0}" = 1 ] && exit 0
+    command -v node >/dev/null 2>&1 || exit 0
+    node "$SCRIPT_DIR/lib/visual-flag.cjs" 2>/dev/null || true
+    exit 0 ;;
   design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
