@@ -8,6 +8,7 @@ Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code p
 
 **Breaking:** the legacy `setupskill.sh` installer and its duplicate `templates/claude/STATE.md` and `CLAUDE.md` are removed; use `moskills init`. Moving an old project over: `migrations/README.md`.
 
+- **`/preview` builder check:** `/preview` now sizes the work first (quick task, small change, project), asks one question per message and plays its understanding back, and has an independent subagent read the spec as the builder before the user approves it (`preview/builder-check.md`). Its description triggers for new features, apps and projects, and yields to another brainstorming skill that is already running.
 - Panel host shell: `button.secondary` (quiet outline), `button.small` (compact row action) and `.sr-only` classes for panels, so panels stop repeating inline styles.
 - **Review loop:** `moskills run-state auto-review` runs a challenger check command and records the verdict against the task's review budget (#27).
 - **Live dashboard:** `GET /api/stream` pushes run changes to the dashboard over Server-Sent Events (#28).
