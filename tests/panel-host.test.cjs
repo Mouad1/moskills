@@ -78,6 +78,13 @@ test('panel host: shell, manifest, isolated renders, guarded actions, loopback o
   await t.test('shell CSS offers secondary/small buttons and sr-only text for panels', async () => {
     const css = (await request(host.port, { pathname: '/assets/shell.css' })).body;
     for (const sel of ['button.secondary', 'button.small', '.sr-only']) assert.ok(css.includes(sel), sel);
+    assert.match(css, /\.card-title \{[^}]*font-size: 1\.25rem/, 'card titles stand out from 14px body text');
+    assert.match(css, /max-width: 720px[\s\S]*\.zone-left \{ order: -2; \}[\s\S]*\.zone-right \{ order: -1; \}/, 'phone: today, then actions, then work');
+  });
+
+  await t.test('shell JS keeps the open/closed state of <details data-keep> across refreshes', async () => {
+    const js = (await request(host.port, { pathname: '/assets/shell.js' })).body;
+    assert.match(js, /details\[data-keep\]/);
   });
 
   await t.test('GET /api/panels lists panels (ordered) and skipped ones', async () => {
