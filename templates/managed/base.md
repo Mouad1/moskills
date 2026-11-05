@@ -28,8 +28,8 @@ This standard controls the flow of non-trivial work, even when another skill pac
 
 | Stage | Helper when installed | moskills skill | Gate before the next stage |
 | --- | --- | --- | --- |
-| Idea to spec | `superpowers:brainstorming` | `/preview` | Human: the user approves the spec. Record its path under Agreed scope in `tasks/todo.md`; checkpoint. |
-| Spec to plan | `superpowers:writing-plans` | `/modular-build` or the plan in `tasks/todo.md` | Human: the user approves the plan. Record its path; start the run with `run-state init` using the plan's tasks. |
+| Idea to spec | `superpowers:brainstorming` | `/preview` | Human: the user approves the spec, `docs/prd.md` changes and the new rules in `docs/rules.md` (now `accepted`). Record the spec path under Agreed scope in `tasks/todo.md`; checkpoint. |
+| Spec to plan | `superpowers:writing-plans` | `/modular-build` or the plan in `tasks/todo.md` | Human: the user approves the plan. Record its path; start the run with `run-state init --rules <ids>` using the plan's tasks, and link each task to the rule IDs it proves. |
 | Build a task | `superpowers:test-driven-development` | `/tdd` | Behavior: the task's check passes through `run-state wrap`. Then propose a commit for that task. |
 | UI change | the same build helper | `/tdd`, `/preview` for states to look at | Visual: a screenshot or browser check through `run-state wrap`, or the user looks at the states and says yes. |
 | Module or feature done | none | `/gatekeeper` | Human: the user approves the result, then `run-state accept`; `run-state done` must exit 0. |
@@ -38,6 +38,15 @@ This standard controls the flow of non-trivial work, even when another skill pac
 - When a helper skill finishes or hands off to another skill, return to this table before invoking anything else. Run the gate, then pick the next stage's helper or moskills skill.
 - Use a helper only for its own stage. A helper's progress ledger (for example `.superpowers/sdd/`) may stay, but it never replaces `.claude/STATE.md` and `tasks/todo.md`: mirror each milestone there (spec approved, plan approved, task proven, before a long wait, session end).
 - Without a helper, use the moskills skill for the stage. The gates are the same either way.
+
+### Product reference and rules
+
+`docs/prd.md` says why and for whom (one page); `docs/rules.md` lists each business rule with a measurable expectation and the check that proves it. Run-state computes each rule's proof status; nobody types it. Keep them current:
+
+- Scope changes: add a PRD Change log line and add, change or retire the rules it touches.
+- A new edge case or failure mode appears: propose an If/Then rule as `draft`.
+- Code and a rule disagree: stop, show the mismatch, and propose the fix to the code or the rule; never silently edit an accepted rule. Changing an accepted rule's meaning makes it `draft` until the user approves it.
+- Quick tasks touch neither file; small changes touch only the rule lines they affect.
 
 ```mermaid
 flowchart LR
