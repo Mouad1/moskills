@@ -547,6 +547,7 @@ project hook.
 ## More Docs
 
 - [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
+- [Product requirements](docs/prd.md) and [business rules](docs/rules.md): what moskills promises, each rule tied to the test that proves it.
 - [Live session script](docs/live-session.md): step-by-step first trial of 0.9.0 in Claude Code, with a scorecard.
 - [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
 - [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
