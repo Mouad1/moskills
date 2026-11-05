@@ -34,7 +34,7 @@ usage() {
 Usage: moskills <command> [options]
 
 Commands:
-  init    [--target <path>] [--with-hooks] [--agents] [--force]
+  init    [--target <path>] [--no-hooks] [--agents] [--force]
                                             Install the standard into a project.
   sync    [--target <path>] [--force] [--agents]
                                             Upgrade managed files to the latest version.
@@ -50,6 +50,10 @@ Commands:
                                             context; --event prints Claude Code hook JSON
                                             (UserPromptSubmit, SessionStart). Silent when
                                             nothing is recorded or MOSKILLS_NO_CONTEXT=1.
+  commit-gate                               Claude Code PreToolUse hook (JSON on stdin):
+                                            deny `git commit` while a run task covering
+                                            changed files has stale or missing proof.
+                                            Off with MOSKILLS_NO_COMMIT_GATE=1.
   visual-flag                               Claude Code PostToolUse hook (JSON on stdin):
                                             a UI file edit flags the run's current task;
                                             run-state done then needs visual proof.
@@ -88,7 +92,8 @@ Multi-repo:
 
 Options:
   --force       init/sync: overwrite managed files even if hand-edited.
-  --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
+  --no-hooks    init only: skip the Git pre-commit wrapper that runs agent-guard.sh
+                (installed by default in Git repositories; --with-hooks still accepted).
   --hook        notice only: print Claude Code SessionStart hook JSON instead of text.
   --agents      init/sync: also install skills in .agents/skills and a managed
                 block in AGENTS.md (read by Antigravity, Codex, and others).
@@ -833,28 +838,43 @@ cmd_status() {
 
 # Re-inject the saved plan into the agent's context (Claude Code hooks).
 # Adds the active run's progress and the exact proof command when a run exists.
-# Silent outside projects, when nothing is recorded, or with MOSKILLS_NO_CONTEXT=1.
+# At session start it also nudges: once when the notes are empty, and to start
+# a run when notes exist without one. Per-prompt output stays silent for empty
+# notes. Silent outside projects or with MOSKILLS_NO_CONTEXT=1.
 cmd_context() {
   [ "${MOSKILLS_NO_CONTEXT:-0}" = 1 ] && return 0
   [ -d "$TARGET" ] && is_project || return 0
-  lines=$(status_summary) || return 0
-  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || lines=''
-  run=''
-  if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
-    if [ "${MOSKILLS_DISTRIBUTION:-}" = npm ]; then cli=moskills; else cli="sh '$SCRIPT_DIR/moskills'"; fi
-    run=$(node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" "$cli" 2>/dev/null) || run=''
-  fi
-  [ -n "$lines$run" ] || return 0
-  if [ -n "$lines" ] && [ -n "$run" ]; then lines="$lines
-$run"; else lines="$lines$run"; fi
-  [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
   case "$EVENT" in
-    UserPromptSubmit|SessionStart) ;;
+    ''|UserPromptSubmit|SessionStart) ;;
     *) die "context: unsupported --event: $EVENT" ;;
   esac
+  lines=$(status_summary) || return 0
+  printf '%s\n' "$lines" | grep -v -e ': unknown$' >/dev/null || lines=''
+  if [ "${MOSKILLS_DISTRIBUTION:-}" = npm ]; then cli=moskills; else cli="sh '$SCRIPT_DIR/moskills'"; fi
+  has_node=0; command -v node >/dev/null 2>&1 && has_node=1
+  run=''
+  if [ -d "$TARGET/.moskills/runs" ] && [ "$has_node" -eq 1 ]; then
+    run=$(node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" "$cli" 2>/dev/null) || run=''
+  fi
+  if [ -z "$lines$run" ]; then
+    [ "$EVENT" = SessionStart ] || return 0
+    context_json 'moskills: .claude/STATE.md and tasks/todo.md are empty. For non-trivial work, record the agreed scope and plan there and checkpoint at each milestone, even when another skill pack drives ideation or planning.'
+    return 0
+  fi
+  if [ -n "$lines" ] && [ -n "$run" ]; then lines="$lines
+$run"; else lines="$lines$run"; fi
+  if [ "$EVENT" = SessionStart ] && [ -z "$run" ] && [ "$has_node" -eq 1 ] && [ ! -d "$TARGET/.moskills/runs" ]; then
+    lines="$lines
+No run yet: once the plan is approved, start one so checks become proof: $cli run-state init --goal \"<goal>\" --scope <files> --tasks \"<t1>,<t2>\""
+  fi
+  [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
+  context_json "$(printf 'moskills saved plan (advisory notes; the run lines come from .moskills/runs and are authoritative):\n%s' "$lines")"
+}
+
+# Print Claude Code hook JSON with $1 as additionalContext for $EVENT.
+context_json() {
   # JSON-escape backslashes and quotes, then join lines with \n.
-  body=$(printf 'moskills saved plan (advisory notes; the run lines come from .moskills/runs and are authoritative):\n%s\n' "$lines" |
-    sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR > 1 { printf "\\n" } { printf "%s", $0 }')
+  body=$(printf '%s\n' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | awk 'NR > 1 { printf "\\n" } { printf "%s", $0 }')
   printf '{"hookSpecificOutput": {"hookEventName": "%s", "additionalContext": "%s"}}\n' "$EVENT" "$body"
 }
 
@@ -916,6 +936,11 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  commit-gate) # PreToolUse hook: never fails, allows when off or without node
+    [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ] && exit 0
+    command -v node >/dev/null 2>&1 || exit 0
+    node "$SCRIPT_DIR/lib/commit-gate.cjs" 2>/dev/null || true
+    exit 0 ;;
   visual-flag) # PostToolUse hook: never fails, silent when off or without node
     [ "${MOSKILLS_NO_VISUAL_GATE:-0}" = 1 ] && exit 0
     command -v node >/dev/null 2>&1 || exit 0
@@ -926,7 +951,7 @@ case "$CMD" in
 esac
 TARGET=$(pwd)
 FORCE=0
-WITH_HOOKS=0
+WITH_HOOKS=1
 HOOK=0
 EVENT=''
 AGENTS=0
@@ -944,6 +969,7 @@ while [ "$#" -gt 0 ]; do
     --all)    [ "$#" -ge 2 ] || die '--all requires a root path'; ALL_ROOT=$2; shift 2 ;;
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
+    --no-hooks) WITH_HOOKS=0; shift ;;
     --hook)   HOOK=1; shift ;;
     --event)  [ "$#" -ge 2 ] || die '--event requires a hook event name'; EVENT=$2; shift 2 ;;
     --agents) AGENTS=1; shift ;;

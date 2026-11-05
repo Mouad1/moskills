@@ -84,7 +84,7 @@ Call the work done only after validation output has been observed and any remain
 
 ## Optional Hooks
 
-Hooks are installed only with `--with-hooks`.
+The Git pre-commit hook is installed by default in Git repositories; pass `--no-hooks` to skip it.
 
 ```text
 git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit

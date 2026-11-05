@@ -172,16 +172,17 @@ test_skills_have_single_primary_goal() {
 
 
 
-test_hooks_are_not_installed_by_default() {
+test_hooks_are_installed_by_default() {
   project=$(make_project hooks-default)
   output_file="$TMP_ROOT/hooks-default-output.txt"
   git -C "$project" init >/dev/null 2>&1
 
   run_installer --target "$project" >"$output_file"
 
-  assert_not_exists "$project/.git/hooks/pre-commit"
+  assert_file "$project/.git/hooks/pre-commit"
+  assert_contains "$project/.git/hooks/pre-commit" 'agent-guard.sh'
   assert_file "$project/.claude/hooks/agent-guard.sh"
-  pass 'git pre-commit hook is not installed by default'
+  pass 'git pre-commit hook is installed by default'
 }
 
 test_hooks_install_with_flag() {
@@ -348,14 +349,14 @@ test_moskills_init_with_hooks_installs_git_hook() {
   pass 'moskills init --with-hooks installs git pre-commit hook'
 }
 
-test_moskills_init_without_hooks_flag_skips_git_hook() {
+test_moskills_init_no_hooks_skips_git_hook() {
   project=$(make_project cli-hooks-default)
   git -C "$project" init >/dev/null 2>&1
 
-  run_moskills init --target "$project" >/dev/null
+  run_moskills init --target "$project" --no-hooks >/dev/null
 
   assert_not_exists "$project/.git/hooks/pre-commit"
-  pass 'moskills init without --with-hooks leaves git hooks alone'
+  pass 'moskills init --no-hooks leaves git hooks alone'
 }
 
 test_moskills_init_with_hooks_preserves_existing_hook() {
@@ -1447,7 +1448,7 @@ mkdir -p "$TMP_ROOT"
 test_generic_install_creates_claude_files
 test_commands_point_to_matching_skills
 test_skills_have_single_primary_goal
-test_hooks_are_not_installed_by_default
+test_hooks_are_installed_by_default
 test_hooks_install_with_flag
 test_agent_guard_checks_staged_content_not_worktree
 test_agent_guard_allows_markdown_setext_heading
@@ -1459,7 +1460,7 @@ test_init_preserves_existing_gitignore_content
 test_init_without_git_repo_skips_gitignore
 test_sync_adds_missing_gitignore_entry
 test_moskills_init_with_hooks_installs_git_hook
-test_moskills_init_without_hooks_flag_skips_git_hook
+test_moskills_init_no_hooks_skips_git_hook
 test_moskills_init_with_hooks_preserves_existing_hook
 test_sync_restores_deleted_managed_file
 test_sync_removes_retired_managed_files
