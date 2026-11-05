@@ -465,7 +465,7 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 
 | Command | Purpose |
 |---|---|
-| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>] [--after <id>]` | Initialize run record, brief, and event history; `--after` refuses unless that run is done |
+| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>] [--after <id>] [--rules <ids>]` | Initialize run record, brief, and event history; `--after` refuses unless that run is done; `--rules` names the business rules (from `docs/rules.md`) this run must prove |
 | `moskills run-state check --id <id> --check <cid> --cmd <cmd> [--files <files>]` | Execute check, compute file hashes, and save evidence |
 | `moskills run-state complete --id <id> --task <tid> --checks <cid1,cid2>` | Verify evidence and mark task finished |
 | `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
@@ -483,7 +483,9 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 | `moskills run-state claim-task --id <id> --agent <aid> [--task <tid>] [--ttl <ms>]` | Claim the next ready task under the run lock |
 | `moskills run-state ingest-evidence --id <id> --check <cid> --source <name> --status <passed\|failed> [--code <n>] [--output <text>] [--files <files>]` | Record evidence produced elsewhere, such as CI |
 | `moskills run-state require-visual --id <id> [--task <tid>] [--files <files>]` | Mark a task as changing the UI. `done` then needs current proof under check `visual-<tid>` over those files (`ingest-evidence --source screenshot --files ...`), or acceptance recorded after them. With the plugin, editing a UI file (`.tsx`, `.jsx`, `.vue`, `.svelte`, `.css`, `.scss`, `.sass`, `.less`, `.html`) does this for the newest run's current task; `MOSKILLS_NO_VISUAL_GATE=1` turns that off |
-| `moskills run-state done --id <id> [--json]` | Exit 0 only when every task has current proof and acceptance still holds, and every UI task has visual proof; otherwise list what is missing |
+| `moskills run-state link --id <id> --task <tid> --rules <ids>` | Link business rule IDs from `docs/rules.md` to the task whose proof proves them |
+| `moskills run-state rules [--json] [--print]` | Show each rule's proof status (proven, stale, failing, unproven, draft, retired) across all runs and rewrite the Proof status block in `docs/rules.md` (`--print` leaves the file alone) |
+| `moskills run-state done --id <id> [--json]` | Exit 0 only when every task has current proof and acceptance still holds, and every UI task has visual proof; otherwise list what is missing. With `init --rules` or linked rules, it also refuses while a rule is missing from `docs/rules.md`, still draft, retired, or proven by no task |
 | `moskills run-state list [--json]` | List every run (module) with progress and done state |
 | `moskills design <init\|check\|css>` | One checked design file; see [/design-system](#design-system) |
 | `moskills run-state notes [--id <id>] [--print]` | Rewrite the generated Run proof block in `.claude/STATE.md` (other run commands do this automatically) |
