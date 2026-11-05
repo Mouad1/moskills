@@ -1,22 +1,44 @@
 ---
 name: preview
-description: "Use when: turning a vague idea into a concrete design before coding. Runs before /align-intent. Explores scope, approaches, and tradeoffs through dialogue, then produces a written spec. Do not trigger when intent is already clear or /align-intent is already active."
+description: "Use when: an idea is vague, or a new feature, app or project needs a design before coding. Sizes the work, asks one question at a time, plays understanding back, and writes a spec that an independent builder reads before the user approves it. If another brainstorming skill is already running, let it finish and record its spec path instead of starting a second session."
 ---
 
 # Preview
 
 Primary goal: Turn an unclear idea into a concrete spec before implementation. Respect design decisions and authorization already supplied by the user; do not reopen settled scope.
 
+## Size the work
+
+Once you understand what the user wants, name a size in plain words. The user can override it. If the work grows mid-task, stop, say so, and move up a size.
+
+| Size | Where the description lives | Then |
+| --- | --- | --- |
+| Quick, clear task | the request itself | do it; no spec |
+| Small change | a short description in chat, approved in chat | build it through the normal workflow |
+| Project | a written spec in `docs/specs/` | builder check, user approval, then the plan |
+
+If the request is really several independent projects, say so, agree on an order, and preview them one at a time.
+
+## Conversation
+
+- Ask one question per message, as a single plain sentence. Match the user's words; never use process jargon.
+- Start open: ask about a real moment ("the last time you...") so the user describes the need in their own words. Offer a short menu only when they are stuck; when they say "you decide", propose something concrete.
+- Find out early which choices the user wants to make (platform, language, tools) and which they hand to you. Choices you make go in the spec as your call.
+- Ask the question that exposes risk: "What would make you wince if I got this wrong?"
+- Play back as you go: once one part is clear, describe it back in a short paragraph, then move to the next part. Mark guesses as guesses and end each playback by asking what is wrong or missing.
+- Think of several approaches privately; show a comparison only when it helps the user decide.
+
 ## Steps
 
 1. **Explore context** — read project files, docs, recent commits. If `design.md` exists, read it: mockups use its tokens, shell, and components, and choices the user makes in the Visual Companion are written back into it (see the `design-system` skill). Do not keep a second set of design values in the spec.
-2. **Detect frontend** — check rules below; start Visual Companion if triggered.
-3. **Resolve missing decisions** — when the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Ask only questions necessary to settle consequential ambiguity. Infer routine choices from context; prefer concise multiple choice when useful.
-4. **Compare approaches if needed** — explain meaningful tradeoffs and recommend one; skip alternatives when the chosen approach is already clear.
+2. **Size the work** — use the table above. Quick tasks and small changes skip steps 6 and 7.
+3. **Detect frontend** — check rules below; start Visual Companion if triggered.
+4. **Resolve missing decisions** — follow the Conversation rules. When the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Infer routine choices from context.
 5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically.
-6. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.
-7. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec and ask once before implementation. Do not seek per-section approval or a second approval for the same design.
-8. **Continue** — apply align-intent only if consequential intent remains unresolved; otherwise proceed within the approved scope. No slash command is required from the user.
+6. **Builder check** — before showing the spec, give it to a fresh subagent with the prompt in `builder-check.md` (next to this file). Tell the user a reviewer reads it first and you may come back once with a few questions. Sort what comes back into the three piles the prompt defines: put already-answered points into the spec, settle builder-can-decide points yourself and mark them as your call, and bring only the user's-call points to the user, in one message, most important first. Without a subagent tool, read the spec yourself as that builder and record the limitation.
+7. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.
+8. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec with the short list of calls you made, and ask once before implementation. Do not seek per-section approval or a second approval for the same design.
+9. **Hand back** — record the spec path under Agreed scope in `tasks/todo.md`. Apply align-intent only if consequential intent remains unresolved; otherwise continue to the plan within the approved scope. No slash command is required from the user.
 
 ## Visual Companion
 
@@ -154,7 +176,7 @@ Non-goals:
 - Never batch unrelated concerns into one spec.
 - YAGNI: cut any feature not needed for the stated goal.
 - Do not propose unrelated refactors.
-- Fix spec issues inline — no re-review cycle.
+- Fix spec issues inline. One builder check per spec; no further review cycles.
 - Preserve existing authorization. Never commit, push, or merge without user validation; spec creation alone does not authorize these actions.
 - If scope spans multiple independent subsystems, decompose first; run one sub-project through preview at a time.
 - Stop the Visual Companion server when the brainstorming session ends.
