@@ -34,7 +34,7 @@ usage() {
 Usage: moskills <command> [options]
 
 Commands:
-  init    [--target <path>] [--with-hooks] [--agents] [--force]
+  init    [--target <path>] [--no-hooks] [--agents] [--force]
                                             Install the standard into a project.
   sync    [--target <path>] [--force] [--agents]
                                             Upgrade managed files to the latest version.
@@ -50,6 +50,10 @@ Commands:
                                             context; --event prints Claude Code hook JSON
                                             (UserPromptSubmit, SessionStart). Silent when
                                             nothing is recorded or MOSKILLS_NO_CONTEXT=1.
+  commit-gate                               Claude Code PreToolUse hook (JSON on stdin):
+                                            deny `git commit` while a run task covering
+                                            changed files has stale or missing proof.
+                                            Off with MOSKILLS_NO_COMMIT_GATE=1.
   version                                   Print the standard version.
   evolvebook <command> [args]               Evolvebooks: guides for one kind of job that
                                             improve every run (setup, new, list, link,
@@ -84,7 +88,8 @@ Multi-repo:
 
 Options:
   --force       init/sync: overwrite managed files even if hand-edited.
-  --with-hooks  init only: install the Git pre-commit wrapper that runs agent-guard.sh.
+  --no-hooks    init only: skip the Git pre-commit wrapper that runs agent-guard.sh
+                (installed by default in Git repositories; --with-hooks still accepted).
   --hook        notice only: print Claude Code SessionStart hook JSON instead of text.
   --agents      init/sync: also install skills in .agents/skills and a managed
                 block in AGENTS.md (read by Antigravity, Codex, and others).
@@ -927,12 +932,17 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
+  commit-gate) # PreToolUse hook: never fails, allows when off or without node
+    [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ] && exit 0
+    command -v node >/dev/null 2>&1 || exit 0
+    node "$SCRIPT_DIR/lib/commit-gate.cjs" 2>/dev/null || true
+    exit 0 ;;
   design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
 TARGET=$(pwd)
 FORCE=0
-WITH_HOOKS=0
+WITH_HOOKS=1
 HOOK=0
 EVENT=''
 AGENTS=0
@@ -950,6 +960,7 @@ while [ "$#" -gt 0 ]; do
     --all)    [ "$#" -ge 2 ] || die '--all requires a root path'; ALL_ROOT=$2; shift 2 ;;
     --force)  FORCE=1; shift ;;
     --with-hooks) WITH_HOOKS=1; shift ;;
+    --no-hooks) WITH_HOOKS=0; shift ;;
     --hook)   HOOK=1; shift ;;
     --event)  [ "$#" -ge 2 ] || die '--event requires a hook event name'; EVENT=$2; shift 2 ;;
     --agents) AGENTS=1; shift ;;
