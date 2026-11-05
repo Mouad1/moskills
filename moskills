@@ -2,7 +2,7 @@
 # moskills — portfolio standard manager (init | sync | doctor | notice | evolvebook)
 # Managed files live under .claude/standard, .claude/commands, .claude/skills,
 # .claude/hooks/agent-guard.sh and are OWNED by this tool (never hand-edit).
-# Project-owned files (CLAUDE.md, STATE.md, tasks/) are seeded once, never overwritten.
+# Project-owned files (CLAUDE.md, STATE.md, tasks/, docs/prd.md, docs/rules.md) are seeded once, never overwritten.
 set -eu
 
 # resolve symlinks so a launcher in ~/.local/bin finds the real install
@@ -275,6 +275,8 @@ seed_project() { # $1 = target
   seed_one "$PROJECT_TPL/settings.local.json"  "$t/.claude/settings.local.json"
   seed_one "$PROJECT_TPL/tasks/todo.md"        "$t/tasks/todo.md"
   seed_one "$PROJECT_TPL/tasks/lessons.md"     "$t/tasks/lessons.md"
+  seed_one "$PROJECT_TPL/docs/prd.md"          "$t/docs/prd.md"
+  seed_one "$PROJECT_TPL/docs/rules.md"        "$t/docs/rules.md"
 }
 
 install_git_hook() { # $1 = target — pre-commit wrapper running agent-guard.sh

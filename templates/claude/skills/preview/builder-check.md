@@ -8,7 +8,7 @@ You are the builder who will implement the spec at `<spec path>`. You have not t
 
 Read the spec, then the project files it names (manifests, existing code, `design.md`, `CLAUDE.md`) only as far as you need to judge it. Do not edit any file.
 
-List every point that would stop you or make you guess while planning or building: a missing input or output, an undefined term, two parts that contradict, a success criterion you cannot check, a decision that changes what gets built.
+List every point that would stop you or make you guess while planning or building: a missing input or output, an undefined term, two parts that contradict, a success criterion you cannot check, a decision that changes what gets built. If `docs/rules.md` has rules for this work, also list any rule whose expectation is not measurable, has no proof check, or tests more than one behaviour, and any `[NEEDS CLARIFICATION]` still open in the spec or `docs/prd.md`.
 
 Sort each point into exactly one pile:
 

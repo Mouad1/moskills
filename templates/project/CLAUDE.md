@@ -18,6 +18,8 @@ Read existing project instructions and constraints before implementation. Ask on
 - `.claude/STATE.md`: agreed scope, dependency order, gate evidence, blockers, exact next action.
 - `tasks/todo.md`: checkable plan, Finished, Still not done, and review results.
 - `tasks/lessons.md`: preventive rules from prior corrections and confirmed causes.
+- `docs/prd.md`: why the product exists, for whom, measurable goals, non-goals.
+- `docs/rules.md`: business rules with measurable expectations and the checks that prove them.
 - Existing manifests, scripts, and architecture documentation: actual stack, commands, and boundaries.
 
 Create or update documentation only when needed for the task. Preserve project-owned instructions outside the managed imports when syncing moskills.
