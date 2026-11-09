@@ -14,6 +14,9 @@ export MOSKILLS_CLAUDE
 MOSKILLS_NO_UPDATE_CHECK=1
 export MOSKILLS_NO_UPDATE_CHECK
 unset CLAUDE_CONFIG_DIR MOSKILLS_LATEST_URL MOSKILLS_CACHE_DIR
+# never warn about the developer's own Claude plugin source; the source test turns it back on
+MOSKILLS_LOCAL_PLUGIN=1
+export MOSKILLS_LOCAL_PLUGIN
 # evolvebooks resolve their home from HOME and XDG_CONFIG_HOME only
 unset EVOLVEBOOKS_HOME XDG_CONFIG_HOME
 
@@ -1412,6 +1415,36 @@ PY
   pass 'plugin-autoupdate turns on Claude Code auto-update without breaking settings'
 }
 
+test_plugin_source_warns_when_not_github() {
+  h="$TMP_ROOT/home-source"; mkdir -p "$h/.claude/plugins"
+  project=$(make_project plugin-source)
+  out="$TMP_ROOT/plugin-source.txt"
+  printf '{ "moskills": { "source": { "source": "directory", "path": "/old/moskills/.worktrees/pr39" }, "autoUpdate": true } }\n' > "$h/.claude/plugins/known_marketplaces.json"
+  HOME=$h MOSKILLS_LOCAL_PLUGIN=0 run_moskills plugin-autoupdate --check >"$out"
+  assert_contains "$out" '/old/moskills/.worktrees/pr39'
+  assert_contains "$out" 'not GitHub'
+  assert_contains "$out" '/plugin marketplace remove moskills'
+  assert_contains "$out" '/plugin marketplace add Mouad1/moskills'
+  HOME=$h MOSKILLS_LOCAL_PLUGIN=0 run_moskills notice --target "$project" --hook >"$out"
+  assert_contains "$out" '.worktrees/pr39'
+  python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$out" || fail 'notice --hook must stay valid JSON'
+  HOME=$h MOSKILLS_LOCAL_PLUGIN=1 run_moskills notice --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'MOSKILLS_LOCAL_PLUGIN=1 must silence the source warning'
+  printf '{ "moskills": { "source": { "source": "github", "repo": "Mouad1/moskills" }, "autoUpdate": true } }\n' > "$h/.claude/plugins/known_marketplaces.json"
+  HOME=$h MOSKILLS_LOCAL_PLUGIN=0 run_moskills notice --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'a GitHub source needs no warning'
+  printf '{ "moskills": { "source": { "source": "git", "url": "https://github.com/Mouad1/moskills.git" } } }\n' > "$h/.claude/plugins/known_marketplaces.json"
+  HOME=$h MOSKILLS_LOCAL_PLUGIN=0 run_moskills notice --target "$project" >"$out"
+  [ ! -s "$out" ] || fail 'a git URL to Mouad1/moskills needs no warning'
+  if command -v node >/dev/null 2>&1; then
+    printf '{ "moskills": { "source": { "source": "directory", "path": "/x" } } }\n' > "$h/k.json"
+    rc=0; node "$ROOT_DIR/lib/claude-settings.js" source "$h/none.json" "$h/k.json" >"$out" || rc=$?
+    [ "$rc" -eq 4 ] || fail "node source must exit 4 for a local folder, got $rc"
+    assert_contains "$out" 'directory /x'
+  fi
+  pass 'plugin source check names a stale local marketplace and the fix'
+}
+
 test_claude_settings_node_fallback_matches() {
   command -v node >/dev/null 2>&1 || { pass 'claude-settings node fallback (skipped: no node)'; return 0; }
   d="$TMP_ROOT/node-settings"; mkdir -p "$d"
@@ -1474,6 +1507,7 @@ test_npm_notice_uses_available_update_commands
 test_notice_reports_newer_release
 test_notice_caches_latest_and_survives_offline
 test_plugin_autoupdate_edits_claude_settings_safely
+test_plugin_source_warns_when_not_github
 test_claude_settings_node_fallback_matches
 test_setup_turns_on_plugin_autoupdate
 test_plugin_commands_offer_autoupdate

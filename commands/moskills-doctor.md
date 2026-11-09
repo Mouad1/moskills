@@ -31,6 +31,13 @@ Then make sure this plugin keeps itself up to date:
 sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate --check
 ```
 
+If it prints a `WARN` that the plugin installs from somewhere other than GitHub
+(for example a local `.worktrees/...` folder), tell the user that copy does not
+get updates from main, and give them the three commands from the warning to run
+in Claude Code (`/plugin marketplace remove moskills`, `/plugin marketplace add
+Mouad1/moskills`, `/plugin install moskills@moskills`), then restart. Do not
+edit their Claude settings yourself.
+
 If it prints `off`, ask the user: "Turn on automatic moskills updates? New
 releases then install when Claude Code starts. (yes/no)". On yes, run
 `sh "${CLAUDE_PLUGIN_ROOT}/moskills" plugin-autoupdate` and show its output
