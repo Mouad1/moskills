@@ -186,7 +186,8 @@ project that should carry the standard:
 ```
 
 This installs the managed layer (`.claude/standard/`, commands, skills, guard
-hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`),
+hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`,
+`docs/prd.md`, `docs/rules.md`),
 adds `.claude/settings.local.json` to `.gitignore`, and records the installed
 version in `.moskills.json`.
 
@@ -383,6 +384,8 @@ Files inside their own project after `/moskills-init`:
 - `.claude/skills/`: deeper workflows the agent can load when needed.
 - `.claude/STATE.md`: durable context outside the chat window.
 - `tasks/`: seeded todo and lessons files, yours to edit.
+- `docs/prd.md`: one-page product reference (problem, users, measurable goals, non-goals), filled by `/preview`.
+- `docs/rules.md`: business rules register: one measurable rule per row with the check that proves it; run-state computes each rule's proof status.
 - `.moskills.json`: records the installed standard version for `doctor`/`sync`.
 - `.claude/hooks/agent-guard.sh`: staged-file guard script.
 - `.git/hooks/pre-commit`: installed by default in Git repositories (skip with `--no-hooks`).

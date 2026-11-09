@@ -13,9 +13,9 @@ Once you understand what the user wants, name a size in plain words. The user ca
 
 | Size | Where the description lives | Then |
 | --- | --- | --- |
-| Quick, clear task | the request itself | do it; no spec |
-| Small change | a short description in chat, approved in chat | build it through the normal workflow |
-| Project | a written spec in `docs/specs/` | builder check, user approval, then the plan |
+| Quick, clear task | the request itself | do it; no spec, no rule change |
+| Small change | a short description in chat, approved in chat; add or change the rule lines it touches in `docs/rules.md` | build it through the normal workflow |
+| Project | `docs/prd.md` (created or updated), a written spec in `docs/specs/`, and draft rules in `docs/rules.md` | builder check, user approval, then the plan |
 
 If the request is really several independent projects, say so, agree on an order, and preview them one at a time.
 
@@ -34,10 +34,10 @@ If the request is really several independent projects, say so, agree on an order
 2. **Size the work** — use the table above. Quick tasks and small changes skip steps 6 and 7.
 3. **Detect frontend** — check rules below; start Visual Companion if triggered.
 4. **Resolve missing decisions** — follow the Conversation rules. When the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Infer routine choices from context.
-5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically.
+5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically. For a project, also fill or update `docs/prd.md` (one page: problem, users, goals with measurable targets, non-goals, core journeys, constraints, open questions; add a Change log line) and add one row per business rule to `docs/rules.md` with state `draft`: an EARS-style sentence, a measurable expectation, and the check that will prove it. The spec and PRD refer to rules by ID instead of repeating them. Mark gaps `[NEEDS CLARIFICATION: ...]`; never guess.
 6. **Builder check** — before showing the spec, give it to a fresh subagent with the prompt in `builder-check.md` (next to this file). Tell the user a reviewer reads it first and you may come back once with a few questions. Sort what comes back into the three piles the prompt defines: put already-answered points into the spec, settle builder-can-decide points yourself and mark them as your call, and bring only the user's-call points to the user, in one message, most important first. Without a subagent tool, read the spec yourself as that builder and record the limitation.
 7. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.
-8. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec with the short list of calls you made, and ask once before implementation. Do not seek per-section approval or a second approval for the same design.
+8. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec with the short list of calls you made and the rule IDs it adds or changes, and ask once before implementation. Do not seek per-section approval or a second approval for the same design. When the user approves, set those rules to `accepted`.
 9. **Hand back** — record the spec path under Agreed scope in `tasks/todo.md`. Apply align-intent only if consequential intent remains unresolved; otherwise continue to the plan within the approved scope. No slash command is required from the user.
 
 ## Visual Companion
