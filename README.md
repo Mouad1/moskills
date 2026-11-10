@@ -2,582 +2,105 @@
 
 By [Mouad Belghiti](https://belghitis.com).
 
-moskills is my small skill pack for working with AI agents without letting the work become random.
+**moskills keeps AI coding agents honest.** You describe work in plain words. moskills makes the agent agree on what to build before coding, prove each step with a real check, and stop calling work "done" until the proof is current and you have accepted it.
 
-It is the fruit of learning from engineers, experts, and successful GitHub repos. I pulled together the patterns that kept showing up: spec ideas before coding, align first, use shared language, map the system, create fast feedback loops, checkpoint progress, validate before done, leave clean handoffs, and track every implementation decision as a reproducible recipe.
+It is the fruit of learning from engineers, experts, and successful GitHub repos: spec before code, align first, fast feedback loops, checkpoints, validation before done, clean handoffs. moskills turns those habits into rules, skills and hooks your agent follows on its own. No command names to learn.
 
-Set up each project once, then ask your agent normally. It selects relevant skills and keeps answers short. Slash commands remain optional.
-
-**moskills 0.9.0 is the current release** (Claude Code plugin and source). npm still has 0.8.1, without the run-state engine; publishing 0.9.0 there is pending (see [Roadmap](docs/roadmap.md)). See [npm installation and everyday use](docs/npm-installation.md) for supported platforms:
-
-```sh
-npm install -g moskills
-cd your-project
-moskills init
-```
-
-Open your agent in that project and ask: “Fix this bug” or “Build this feature.”
-
-Quick visual tour: [docs/diagrams](docs/diagrams/README.md).
-
-Start with a short, practical trial: [Build something useful with moskills](docs/quick-start.md).
-
-Where the project stands and what comes next: [Roadmap](docs/roadmap.md).
-
-Try the setup from installation to a verified result: [A–Z testing walkthrough](docs/testing-from-a-to-z.md).
+Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.0** (npm still ships 0.8.1, without the run-state engine).
 
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
 
-## What Has Already Been Implemented (Completed & Shipped)
+## What it does
 
-```mermaid
-mindmap
-  root((moskills Shipped))
-    Distribution
-      npm package & npx support (v0.8.1 on npm)
-      Zero runtime dependencies
-      Safe copies & drift detection
-      Clean uninstalls & cache resilience
-    Core Skills Suite
-      /preview (UI & Spec + Live Companion)
-      /design-system (One checked design.md: tokens, shell, components, screens)
-      /align-intent (Goals, Risks, Constraints)
-      /shared-language (Domain Glossary)
-      /system-map (Dependencies & Blast Radius)
-      /tdd (Red-Green-Refactor)
-      /diagnose (Root-cause debugging)
-      /checkpoint (Durable factual progress)
-      /gatekeeper (Completion audit)
-      /modular-build (One module at a time, each proven and accepted)
-      /compress-input (Terse technical comms)
-      /handoff (Clean agent compaction)
-      /project-dna (Reproducible build recipes)
-      /learn (Corrections become rules)
-    Evolvebooks Subsystem
-      /evolvebook new, use, setup, link, export
-      Never-list and Toolbox progression
-      Vault integration (Obsidian)
-    Run-State Engine (in source, not on npm yet)
-      Evidence with exit codes and SHA-256 file hashes
-      Stale proof reopens tasks
-      Review budget and challenger auto-review
-      Dependency-aware invalidation
-      Task leases and parallel claiming
-      Local dashboard with live updates
-    Multi-Agent & Platform Support
-      Claude Code Plugin & marketplace
-      Codex ~/.agents/skills
-      Antigravity ~/.gemini/config/skills
-      Git pre-commit guard (--with-hooks)
+| Without moskills | With moskills |
+|---|---|
+| Agent starts coding from a vague brief | `/preview` sizes the work, asks one question at a time, writes a spec and a one-page PRD you approve |
+| "Fast", "works well": goals nobody can check | `docs/rules.md`: each business rule has a measurable expectation and the check that proves it |
+| "Tests pass" written by hand | `run-state wrap` runs the check and records exit code + file hashes |
+| A file changes after the test ran; nobody notices | Proof goes stale, the task reopens, `git commit` is refused |
+| UI "looks fine" without anyone looking | A UI edit flags the task: screenshot or your eyes required |
+| Plan forgotten after a long session | Scope and next step are re-injected at every prompt and after compaction |
+| Agent declares "done" | `done` exits 0 only when every task and rule is proven and you accepted it |
+
+## How a task flows
+
+```text
+Idea -> Spec (/preview) -> Plan -> Build (/tdd) -> UI check -> Module done (/gatekeeper) -> Pause (/handoff)
+          you approve     you approve  check passes   someone looks   you accept
 ```
 
-### Core Architecture Overview
-
-| Area | Features & Components | Shipped Status |
-|---|---|---|
-| **Distribution** | `npm install -g moskills`, `npx moskills init`, Claude Code marketplace, `install.sh` | **v0.8.1 published on npm** (0 dependencies) |
-| **Project Safety** | Seed once (`CLAUDE.md`, `.claude/STATE.md`, project task seeds); checksum-tracked managed files; pre-commit guard | **Shipped & Verified** |
-| **Agent Interop** | Claude Code plugin, Codex (`~/.agents/skills`), Antigravity (`~/.gemini/config/skills`) | **Shipped & Verified** |
-| **Skills Engine** | 14 core agent workflow skills plus `/evolvebook`, with automatic trigger descriptions (`Use when:`) | **Shipped & Verified** |
-| **Run-State Engine** | `moskills run-state`: evidence capture, stale-proof detection, review budget, dependency impact, task leases, dashboard | **Shipped in 0.9.0** (plugin and source; npm pending) |
-| **Evolvebooks** | Job guide lifecycle (`new`, `use`, `setup`, `link`, `export`) with Never-lists and Toolbox | **Shipped & Verified** |
-| **Reference & Docs** | A–Z walkthrough, architecture guide & Obsidian Canvas, quick-start guide, quote-builder demo | **Shipped & Verified** |
+Each arrow is a gate. Behavior gates are decided by a check, visual gates by a screenshot, human gates by you. Other skill packs (superpowers, ...) may do a stage's work; the gate stays with moskills.
 
 ## Installed Commands
 
-- `/preview`: turn a vague idea into a written spec before any code is written. Auto-starts a Visual Companion browser server for frontend projects.
-- `/design-system`: keep one `design.md` (tokens, app shell, components, screens) that `/preview` reads; `moskills design check` verifies contrast and component use, `moskills design css` turns tokens into CSS variables.
-- `/align-intent`: confirm goals, constraints, success criteria, non-goals, and risks before coding.
-- `/shared-language`: turn project jargon into a glossary agents and humans can share.
-- `/system-map`: map modules, data flow, dependencies, risk areas, and the safest change boundary.
-- `/tdd`: run the red, green, refactor loop for behavior changes.
-- `/diagnose`: debug by reproducing the issue and finding root cause before fixing.
-- `/checkpoint`: record factual progress, Git deltas, blockers, commands run, and next steps.
-- `/gatekeeper`: validate completed work against the active intent model before reporting completion.
-- `/modular-build`: build an app one module at a time; each module is a run that must pass `/gatekeeper` and your acceptance before the next starts.
-- `/compress-input`: switch to short, direct technical communication.
-- `/handoff`: compact current work so another agent can continue.
-- `/project-dna`: log what was built as a structured, reproducible entry with a Replay Prompt.
-- `/learn`: turn a correction or confirmed root cause into a rule in `tasks/lessons.md`, and promote repeated rules.
-- `/evolvebook`: turn one kind of job (an article, a landing page, a NestJS module) into a guide that improves every run. See [Evolvebooks](#evolvebooks).
+You rarely type these: the agent picks them from what you ask. Slash commands force one.
 
-## Evolvebooks
-
-> An evolvebook is a guide for one kind of job. It remembers what good looks
-> like, what we already made, and what went wrong, so every run is better than
-> the last.
-
-moskills says *how we work on any task*; an evolvebook says *how we do one
-specific job well*. Three moments, no files to learn:
-
-| Moment | You say | What happens |
-|---|---|---|
-| Create, once | `/evolvebook new article` | One message with the examples it found and three short questions, one summary, you reply "ok" |
-| Use, every run | "write an article about signals" | "Using the article evolvebook (5 examples, 7 runs)", one Brief message, a plan that must differ from past runs, a Check, two closing questions |
-| Grow, any time | "add this as a good example", "never do X again" | Saved after your yes. Mistakes seen twice and steps repeated in 3 runs are proposed as rules and Toolbox items |
-
-Two diagrams, the anatomy of a book and how a run fits the moskills flow, are
-in **[docs/evolvebook.md](docs/evolvebook.md)** (images in
-[docs/diagrams](docs/diagrams/README.md)).
-
-| Command | Does |
+| Command | Use it to |
 |---|---|
-| `/evolvebook` | List your books |
-| `/evolvebook new <job>` | Create a book |
-| `/evolvebook use <job>` | Run with a book (usually automatic) |
-| `/evolvebook setup` | Choose where books live (asked the first time) |
-| `/evolvebook link` | Use your books in Codex and Antigravity too |
-| `/evolvebook export <job>` | One file for ChatGPT or Claude web |
+| `/preview` | Turn an idea into a spec, PRD and draft rules before code |
+| `/align-intent` | Fix goal, scope, success criteria and rule IDs; start a run |
+| `/tdd` | Red, green, refactor, with proof recorded per task |
+| `/diagnose` | Reproduce a bug and find root cause before fixing |
+| `/gatekeeper` | Audit a module: all proof current, all rules proven |
+| `/modular-build` | Build an app one accepted module at a time |
+| `/checkpoint`, `/handoff` | Save progress; leave the next session an exact next step |
+| `/learn` | Turn a correction into a rule in `tasks/lessons.md` |
+| `/design-system` | Keep one checked `design.md` for UI work |
+| `/shared-language`, `/system-map`, `/project-dna`, `/compress-input`, `/evolvebook` | Glossary, blast radius, build recipes, terse mode, job guides |
 
-## How the Agent Knows When to Use Skills
-
-### 1. Automatic (the default)
-
-Each skill is a folder with a `SKILL.md` file. The top of that file holds a
-short description with a `Use when:` trigger line. For example:
-
-```yaml
----
-name: diagnose
-description: "Use when: debugging bugs, failing tests, broken builds, regressions, performance issues, or unexpected behavior."
----
-```
-
-The agent reads these descriptions and matches them against what you are asking
-for.
-
-This is why the descriptions matter more than the command names. A precise
-`Use when:` line is what makes the skill discoverable and self-triggering.
-
-### 2. Manual (the slash command)
-
-Typing the slash command, like `/diagnose`, forces that skill to run even if the agent did not trigger it on its own.
+Full list: [command reference](docs/command-reference.md).
 
 ## Install
 
-moskills installs a versioned **standard** into each project: managed files
-owned by the tool (`.claude/standard/`, commands, skills, guard hook) that
-upgrades rewrite, plus project seeds you own (`CLAUDE.md`, `.claude/STATE.md`,
-`tasks/`) that are created once and never touched again.
-
-Pick your route. Neither needs a manual clone.
-
-| You use | Install |
-|---|---|
-| Claude Code | the plugin, below |
-| Antigravity, Codex, other agents | one terminal line, see [Other agents](#other-agents-antigravity-codex-) |
-| Both | both; they share nothing and do not conflict |
-
-### Claude Code
-
-The `moskills` CLI ships inside the plugin and is driven by its meta-commands.
-From inside Claude Code, add the marketplace once, then install:
+**Claude Code**, inside Claude Code:
 
 ```text
 /plugin marketplace add Mouad1/moskills
 /plugin install moskills@moskills
-```
-
-This makes all skills and slash commands available globally. Then, inside each
-project that should carry the standard:
-
-```text
 /moskills-init
 ```
 
-This installs the managed layer (`.claude/standard/`, commands, skills, guard
-hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`,
-`docs/prd.md`, `docs/rules.md`),
-adds `.claude/settings.local.json` to `.gitignore`, and records the installed
-version in `.moskills.json`.
+Run `/moskills-init` once per project. Turn on auto-update with `/moskills-doctor`.
 
-In a Git repository, init also installs the Git pre-commit guard (blocks
-conflict markers and risky placeholder phrases in staged files). To skip it,
-pass `--no-hooks`:
-
-```text
-sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --no-hooks
-```
-
-With the Claude Code plugin, a commit gate also runs before `git commit`: when
-a run-state run exists, it denies the commit while a task covering changed
-files has missing, failed or stale proof (`MOSKILLS_NO_COMMIT_GATE=1` turns it
-off).
-
-### Updating
-
-Updates are automatic once auto-update is on for the marketplace. Third-party
-marketplaces start with it off, so turn it on once, any of these ways:
-
-- run `/moskills-doctor` and answer yes when it offers automatic updates;
-- `/plugin` → **Marketplaces** → moskills → enable auto-update;
-- or add this to `~/.claude/settings.json` (the one-line install and
-  `moskills plugin-autoupdate` write it for you):
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "moskills": {
-      "source": { "source": "github", "repo": "Mouad1/moskills" },
-      "autoUpdate": true
-    }
-  }
-}
-```
-
-Until it is on, the session-start line tells you when a newer moskills is
-available (checked once a day; `MOSKILLS_NO_UPDATE_CHECK=1` turns it off). Claude Code then pulls every new release from
-`main` at session start. A release is picked up only when `version` is bumped
-(the test suite keeps `VERSION`, `plugin.json`, `marketplace.json` and the
-CHANGELOG in step).
-
-To update by hand instead:
-
-```text
-/plugin marketplace update moskills
-/plugin update moskills@moskills
-```
-
-Each project keeps its own standard version in `.moskills.json`. At session
-start the plugin compares it with the installed plugin and, when they differ,
-shows one line:
-
-```text
-moskills standard v0.6.0 is older than the plugin v0.6.2: run /moskills-sync
-```
-
-Then, inside that project:
-
-```text
-/moskills-sync
-```
-
-`/moskills-doctor` reports drift: outdated version, hand-edited managed files,
-missing project files. It also checks that the plugin updates itself. `moskills notice --target <path>` prints the same
-one-line check from a terminal.
-
-### Developing moskills locally
-
-Keep your normal install on the GitHub marketplace and load a working copy
-for one session only:
-
-```sh
-claude --plugin-dir ~/path/to/moskills
-```
-
-Do not register a working clone as a directory marketplace: Claude Code would
-install whatever branch happens to be checked out.
-
-## Other agents (Antigravity, Codex, …)
-
-moskills skills are plain `SKILL.md` folders, so any agent that reads that
-format can use them. No Claude Code needed.
-
-**1. Install once: paste one line in a terminal.**
+**Codex, Antigravity, other agents**, in a terminal:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh
+cd your-project && moskills init --agents
 ```
 
-It downloads moskills to `~/.moskills` (with git when available, otherwise a
-plain download), adds the `moskills` command to `~/.local/bin`, then asks up to
-three questions. Enter accepts the default (yes):
+**npm**: `npm install -g moskills`, then `moskills init` ([details](docs/npm-installation.md)).
 
-1. Link moskills to the agents it found (Antigravity, Codex)?
-2. Back up and replace old copies of moskills skills? (only asked if some exist)
-3. Set up evolvebooks in `~/.evolvebooks`? (skipped when already configured)
-4. Claude Code found: install the moskills plugin there too? (only asked if `claude` is installed)
-5. Update moskills automatically every day? (macOS; on Linux it prints a cron line)
+Then open your agent in the project and ask: "Build this feature" or "Fix this bug".
 
-So one line gives you moskills and evolvebooks in every agent on the machine,
-Claude Code included.
-
-Prefer to read the script first:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh -o install.sh
-less install.sh
-sh install.sh
-```
-
-Running the line again is safe: it updates the install and re-checks the links.
-`MOSKILLS_YES=1` accepts every default without asking.
-
-Where the skills go:
-
-| Agent | Global skills folder |
-|---|---|
-| Antigravity | `~/.gemini/config/skills/` |
-| Codex (and `.agents` readers) | `~/.agents/skills/` |
-
-They are links to `~/.moskills`, so every update reaches every agent at once.
-Folders that are not moskills links are never touched without your yes; old
-copies are backed up to `~/.moskills-backups/` first.
-
-**2. Per project:**
-
-```sh
-moskills init --agents     # or: moskills sync --agents on an existing project
-```
-
-This also writes `.agents/skills/` and a managed block in `AGENTS.md`, which
-Antigravity and Codex read at the start of a session. The block tells the
-agent to run `moskills notice`, so version drift is reported there too.
-`moskills init` suggests `--agents` when it sees an `AGENTS.md` or another agent.
-
-The project must be the agent's workspace. The Antigravity IDE does this when
-you open the folder; the `agy` CLI does not use the current directory by
-default, so start it with `agy --add-dir .`.
-
-**3. Day to day:**
-
-| Command | Does |
-|---|---|
-| `moskills status` | In a project: five lines (Goal, Finished, Still not done, Blocker, Next). Elsewhere, or with `--verbose`: version, linked agents, command on PATH, daily update |
-| `moskills setup` | Run the questions again (new agent installed, changed your mind) |
-| `moskills self-update` | Update now instead of waiting for the daily run |
-| `moskills uninstall` | Remove the links, the daily update and `~/.moskills` |
-| `moskills evolvebook <command>` | Evolvebooks from the terminal: `setup`, `list`, `new`, `link`, `export`, `where` |
-| `moskills run-state <command>` | Saved run progress with proof: `init`, `check`, `wrap`, `complete`, `resume`, `status`, `accept`, `dashboard`, ... Run `moskills run-state help` |
-
-Requirements: `sh` plus git, curl or wget. macOS, Linux and WSL. For native Windows use the npm install (see [npm installation](docs/npm-installation.md#native-windows)).
-Automatic updates need the git install.
-
-For development, keep a separate clone and do not point `MOSKILLS_HOME` at
-it: `self-update` refuses to run on a branch other than `main` or with local
-changes, and `uninstall` never deletes a folder it did not install.
-
-## Configure evolvebooks
-
-Your evolvebooks live in one folder, the **Home**. The first `/evolvebook`
-command asks one question when none is set:
-
-1. Default folder `~/.evolvebooks/` (recommended if unsure)
-2. A folder inside your Obsidian vault (default subfolder `Evolvebooks/`)
-3. Any other folder of markdown files
-4. Only inside projects (`.evolvebooks/` in each repo)
-
-Run it again anytime with `/evolvebook setup` (terminal:
-`moskills evolvebook setup`). The Home is looked up in this order, first hit
-wins:
-
-| Order | Where | Use it for |
-|---|---|---|
-| 1 | `EVOLVEBOOKS_HOME` environment variable | A one-off or CI override |
-| 2 | nearest `.evolvebooks.json` walking up: `{ "home": "<path>" }` | A repo or folder that points to shared books |
-| 3 | `~/.config/evolvebooks/config.json` (written by setup) | Your normal choice |
-| 4 | `~/.evolvebooks/` | The default |
-
-Team books live in `<repo>/.evolvebooks/` and win over a personal book with
-the same name. `moskills doctor` and `moskills status` show the Home;
-`moskills init` tells you when it is not configured yet. Agents read and write
-only inside the Home and `.evolvebooks/`: a Home inside an Obsidian vault
-keeps the rest of the vault off-limits.
+Updating, local development, evolvebook setup, file list and uninstall: [full install guide](docs/install.md).
 
 ## What users get
 
-Files inside their own project after `/moskills-init`:
+`moskills init` adds to your project:
 
-- `CLAUDE.md` (root): seeded once, yours to edit — imports the standard through a managed marker block.
-- `.claude/standard/`: the managed rules — base router, three-tier delegation model, session protocol. Owned by moskills, rewritten on sync.
-- `.claude/commands/`: slash commands they can call directly.
-- `.claude/skills/`: deeper workflows the agent can load when needed.
-- `.claude/STATE.md`: durable context outside the chat window.
-- `tasks/`: seeded todo and lessons files, yours to edit.
-- `docs/prd.md`: one-page product reference (problem, users, measurable goals, non-goals), filled by `/preview`.
-- `docs/rules.md`: business rules register: one measurable rule per row with the check that proves it; run-state computes each rule's proof status.
-- `.moskills.json`: records the installed standard version for `doctor`/`sync`.
-- `.claude/hooks/agent-guard.sh`: staged-file guard script.
-- `.git/hooks/pre-commit`: installed by default in Git repositories (skip with `--no-hooks`).
-- `.gitignore` entry keeping `.claude/settings.local.json` out of version control.
+- **Rules** in `.claude/standard/`, imported by `CLAUDE.md`. Managed by moskills; `moskills sync` upgrades them.
+- **Skills and commands** in `.claude/skills/` and `.claude/commands/`.
+- **Your files**, created once and never overwritten:
+  - `docs/prd.md`: problem, users, measurable goals, non-goals.
+  - `docs/rules.md`: business rules register with live proof status.
+  - `.claude/STATE.md`: scope, gates, next step.
+  - `tasks/`: plan and lessons.
+- **Guards**: a Git pre-commit check (conflict markers, placeholders) and, in Claude Code, a commit gate on stale proof.
 
-## What I use in this repo
+`moskills doctor` reports drift; `moskills status` prints Goal, Finished, Still not done, Blocker, Next.
 
-This repo keeps the source of the pack:
+## More docs
 
-- `moskills`: the CLI (`init` / `sync` / `doctor` / `status` / `run-state` / `evolvebook` / ...) bundled into the plugin.
-- `bin/moskills.cjs`: the npm entry point that launches the CLI.
-- `lib/`: the run-state engine, its CLI and dashboard, the dependency scanner, the status summary, and settings helpers.
-- `templates/managed/`: the managed standard files copied to `.claude/standard/`.
-- `templates/claude/`: commands, skills, and hooks copied into projects.
-- `templates/project/`: project-owned seeds (`CLAUDE.md`, `STATE.md`, `tasks/`).
-- `.claude-plugin/`: plugin and marketplace manifests.
-- `commands/`: plugin meta-commands (`/moskills-init`, `/moskills-sync`, `/moskills-doctor`).
-- `tests/`: shell smoke tests (`run-tests.sh`) and Node tests (`*.test.cjs`); run all with `npm test`.
-- `docs/`: usage docs and examples.
+- [Quick start](docs/quick-start.md) and [A–Z testing walkthrough](docs/testing-from-a-to-z.md)
+- [Architecture](docs/architecture.md), [lifecycle](docs/lifecycle.md), [diagrams](docs/diagrams/README.md)
+- [Product requirements](docs/prd.md) and [business rules](docs/rules.md) of moskills itself
+- [Evolvebooks](docs/evolvebook.md), [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md)
 
-## Lifecycle
+## Contributing
 
-Project Start -> /shared-language
+Do not push directly to the default branch. Push a branch and open a pull request. Run `npm test` before you do.
 
-New Feature -> /preview -> /align-intent -> /evolvebook use (if a book matches) -> /system-map -> Coding Phase with /tdd or /diagnose and /checkpoint -> /gatekeeper -> /project-dna -> Done
+## Who made this
 
-After a correction or confirmed root cause, use `/learn`. If work must pause, use `/handoff`.
-
-## Plan Reminder (Claude Code plugin)
-
-Notes on disk are easy for an agent to forget late in a long session or after
-the conversation is compacted. The plugin re-reads them for you:
-
-- **Every prompt** (`UserPromptSubmit`): adds the five `moskills status` lines
-  (Goal, Finished, Still not done, Blocker, Next) to the agent's context, about
-  50 tokens. Silent until something is recorded.
-- **After compaction** (`SessionStart` with `compact`): adds the same five lines.
-- **When a run exists** (`moskills run-state`): also adds the run's goal, finished
-  tasks, stale proof, next ready task, and the exact command to record proof.
-  Skills then prove each check through the run instead of writing "passed" by hand.
-- Turn it off with `MOSKILLS_NO_CONTEXT=1`. Codex and Antigravity have no such
-  hook; they read the notes at session start through `AGENTS.md`.
-
-```mermaid
-flowchart LR
-  Prompt[Each prompt or compaction] --> Hook[moskills context]
-  Hook --> Notes[Saved project notes]
-  Notes --> Lines[Five status lines]
-  Lines --> Agent[Agent context]
-```
-
-## Hook Flow
-
-The Git pre-commit hook is installed by default in Git repositories; pass
-`--no-hooks` to init to skip it (works in both the plugin CLI and the legacy
-script).
-
-## Git Workflow Rule
-
-Do not push directly to the default branch. Push a branch and open a pull request.
-
-Internal planning files stay local. This repo ignores `tasks/` and `docs/superpowers/` so private plans, specs, and working notes are not shipped with the public pack.
-
-```text
-git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit
-```
-
-The guard checks staged files. It blocks conflict markers and selected risky placeholder phrases. It also prints simple validation suggestions, like `npm test` for Node or `pytest` for Python.
-
-## Installed Files
-
-```text
-CLAUDE.md               # seeded once, imports the standard via marker block
-.moskills.json          # installed standard version
-tasks/                  # seeded todo + lessons files, project-owned
-.claude/
-  STATE.md
-  settings.local.json   # local settings, git-ignored
-  standard/
-    base.md
-    delegation.md
-    session-protocol.md
-    .manifest.sum       # checksums of managed files, used by doctor
-  commands/
-    preview.md
-    design-system.md
-    align-intent.md
-    shared-language.md
-    system-map.md
-    tdd.md
-    diagnose.md
-    checkpoint.md
-    gatekeeper.md
-    modular-build.md
-    compress-input.md
-    handoff.md
-    project-dna.md
-    learn.md
-  skills/
-    preview/
-      SKILL.md
-      scripts/
-        start-server.sh
-        stop-server.sh
-        server.cjs
-        helper.js
-        frame-template.html
-    design-system/
-      SKILL.md
-    align-intent/
-      SKILL.md
-    shared-language/
-      SKILL.md
-    system-map/
-      SKILL.md
-    tdd/
-      SKILL.md
-    diagnose/
-      SKILL.md
-    checkpoint/
-      SKILL.md
-    gatekeeper/
-      SKILL.md
-    modular-build/
-      SKILL.md
-    compress-input/
-      SKILL.md
-    handoff/
-      SKILL.md
-    project-dna/
-      SKILL.md
-      references/
-        templates.md
-    learn/
-      SKILL.md
-    evolvebook/
-      SKILL.md
-      book/             # files copied into each new evolvebook
-      scripts/
-        evolvebook.sh   # helper: home, index, repeat check, record, link, export
-  hooks/
-    agent-guard.sh
-.git/
-  hooks/
-    pre-commit        # skipped with --no-hooks
-```
-
-## Uninstall
-
-From your machine (Antigravity, Codex install): `moskills uninstall`. It
-removes the links, the daily update and `~/.moskills`. Claude Code plugin:
-`/plugin uninstall moskills@moskills`.
-
-From one project: remove `.claude/` and `.moskills.json` from the target project, and delete the
-moskills marker block (between `<!-- moskills:begin -->` and
-`<!-- moskills:end -->`) from the root `CLAUDE.md` — the rest of that file and
-`tasks/` are yours to keep. With `--agents`, also remove `.agents/skills/` and
-the marker block in `AGENTS.md`. If the Git hook was installed, remove
-`.git/hooks/pre-commit` only if it is the moskills wrapper and not a custom
-project hook.
-
-## More Docs
-
-- [Roadmap](docs/roadmap.md): what shipped, what is next, and the backlog.
-- [Product requirements](docs/prd.md) and [business rules](docs/rules.md): what moskills promises, each rule tied to the test that proves it.
-- [Live session script](docs/live-session.md): step-by-step first trial of 0.9.0 in Claude Code, with a scorecard.
-- [Architecture](docs/architecture.md): scoped agents, quality gates, run state, evidence, and Finished / Still not done tracking.
-- [Quick start](docs/quick-start.md), [A–Z testing walkthrough](docs/testing-from-a-to-z.md), [npm installation](docs/npm-installation.md)
-- [docs/diagrams](docs/diagrams/README.md) (all diagrams as SVG/PNG, with sources)
-- [docs/evolvebook.md](docs/evolvebook.md) (anatomy and lifecycle diagrams)
-- [docs/lifecycle.md](docs/lifecycle.md)
-- [docs/command-reference.md](docs/command-reference.md)
-- [docs/pain-points.md](docs/pain-points.md)
-- [docs/examples/node-project.md](docs/examples/node-project.md)
-- [docs/examples/python-project.md](docs/examples/python-project.md)
-
-```mermaid
-flowchart LR
-    Request["Describe the goal"] --> Skills["Use relevant moskills skills"]
-    Skills --> Checks["Verify and checkpoint"]
-    Checks --> Handoff["Complete or hand off"]
-```
-
-This diagram summarizes the current skill workflow. The roadmap tracks what
-is shipped and what is still planned.
-
-## Who Made This
-
-moskills is built and maintained by Mouad Belghiti.
-
-- Website: [belghitis.com](https://belghitis.com)
-- Write-up on the thinking behind it: [How I keep AI coding agents structured](https://belghitis.com)
-
-If moskills helps you, a star on the repo and a link back to
-[belghitis.com](https://belghitis.com) are appreciated.
+Built and maintained by Mouad Belghiti: [belghitis.com](https://belghitis.com). If moskills helps you, a star and a link back are appreciated.
