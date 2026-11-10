@@ -115,7 +115,10 @@ claude --plugin-dir ~/path/to/moskills
 ```
 
 Do not register a working clone as a directory marketplace: Claude Code would
-install whatever branch happens to be checked out.
+install whatever branch happens to be checked out. The session-start notice,
+`/moskills-doctor` and setup warn when the moskills marketplace points anywhere
+other than GitHub, with the commands to switch back. Set
+`MOSKILLS_LOCAL_PLUGIN=1` to silence that warning while you develop on purpose.
 
 ## Other agents (Antigravity, Codex, …)
 
