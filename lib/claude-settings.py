@@ -1,9 +1,12 @@
 """Claude Code auto-update for the moskills marketplace.
 
-usage: claude-settings.py check|enable <settings.json> <known_marketplaces.json>
+usage: claude-settings.py check|enable|source <settings.json> <known_marketplaces.json>
 check:  exit 0 when auto-update is on, 1 when off.
 enable: set extraKnownMarketplaces.moskills.autoUpdate = true in the user
         settings, keeping every other key (and an existing moskills source).
+source: print where the moskills marketplace installs from ("github Mouad1/moskills",
+        "directory <path>", "git <url>"); exit 0 for the GitHub repository,
+        4 for anything else, 1 when no moskills marketplace is registered.
 Exit 3 when the settings file is not valid JSON: it is never rewritten then.
 """
 import json
@@ -18,8 +21,41 @@ def load(path):
         return json.load(f)
 
 
+def describe(src):
+    kind = src.get("source", "")
+    where = src.get("repo") or src.get("url") or src.get("path") or ""
+    return ("%s %s" % (kind, where)).strip()
+
+
+def official(src):
+    kind = src.get("source")
+    if kind == "github":
+        return (src.get("repo") or "").lower() == "mouad1/moskills"
+    if kind in ("git", "url"):
+        url = (src.get("url") or "").lower().rstrip("/")
+        return url.endswith("github.com/mouad1/moskills") or url.endswith("github.com/mouad1/moskills.git")
+    return False
+
+
+def source(settings, known):
+    """The registered marketplace wins; settings only declare one to add."""
+    for path, pick in ((known, lambda d: d.get("moskills")),
+                       (settings, lambda d: (d.get("extraKnownMarketplaces") or {}).get("moskills"))):
+        try:
+            entry = pick(load(path)) or {}
+        except ValueError:
+            continue
+        src = entry.get("source")
+        if isinstance(src, dict) and src:
+            print(describe(src))
+            return 0 if official(src) else 4
+    return 1
+
+
 def main():
     mode, settings, known = sys.argv[1:4]
+    if mode == "source":
+        return source(settings, known)
     try:
         data = load(settings)
     except ValueError:

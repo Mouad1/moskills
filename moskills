@@ -360,6 +360,8 @@ claude_plugin_installed() {
 }
 
 install_claude_plugin() {
+  srcw=$(plugin_source_warning)
+  [ -z "$srcw" ] || warn "$srcw"
   "$CLAUDE_BIN" plugin marketplace add Mouad1/moskills >/dev/null 2>&1 || true
   if "$CLAUDE_BIN" plugin install moskills@moskills >/dev/null 2>&1; then
     log 'Claude Code: moskills plugin installed (restart Claude Code to load it)'
@@ -382,12 +384,24 @@ plugin_autoupdate() {
   fi
 }
 
+# One line when the moskills marketplace installs from somewhere other than
+# GitHub (often a local folder left behind), else nothing. Silenced by
+# MOSKILLS_LOCAL_PLUGIN=1 for intentional local development.
+plugin_source_warning() {
+  [ "${MOSKILLS_LOCAL_PLUGIN:-0}" = 1 ] && return 0
+  src=$(plugin_autoupdate source 2>/dev/null) && return 0
+  [ -n "$src" ] || return 0
+  printf '%s' "the moskills plugin installs from $src, not GitHub (Mouad1/moskills), so it misses updates from main. Fix in Claude Code: /plugin marketplace remove moskills, then /plugin marketplace add Mouad1/moskills, then /plugin install moskills@moskills, and restart"
+}
+
 cmd_plugin_autoupdate() {
   settings="${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
   manual='In Claude Code: /plugin -> Marketplaces -> moskills -> enable auto-update'
   rc=0
   if [ "$CHECK" -eq 1 ]; then
     plugin_autoupdate check || rc=$?
+    srcw=$(plugin_source_warning)
+    [ -z "$srcw" ] || warn "$srcw"
     case "$rc" in
       0) log 'Claude Code auto-update for moskills: on' ;;
       1) log 'Claude Code auto-update for moskills: off (turn it on: moskills plugin-autoupdate)' ;;
@@ -583,6 +597,10 @@ cmd_notice() {
         msg="moskills standard v$v is newer than the plugin v$STANDARD_VERSION: update the moskills plugin"
       fi
     fi
+  fi
+  srcw=$(plugin_source_warning)
+  if [ -n "$srcw" ]; then
+    if [ -n "$msg" ]; then msg="$msg. Also: $srcw"; else msg=$srcw; fi
   fi
   lv=$(latest_version)
   if [ -n "$lv" ] && version_lt "$STANDARD_VERSION" "$lv"; then
