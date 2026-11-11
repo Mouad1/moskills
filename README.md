@@ -86,7 +86,7 @@ Updating, local development, evolvebook setup, file list and uninstall: [full in
   - `docs/rules.md`: business rules register with live proof status.
   - `.claude/STATE.md`: scope, gates, next step.
   - `tasks/`: plan and lessons.
-- **Guards**: a Git pre-commit check (conflict markers, placeholders) and, in Claude Code, a commit gate on stale proof.
+- **Guards**: the Git pre-commit hook blocks conflict markers, placeholder phrases, and a commit of files whose run proof is missing, failed, or stale. Claude Code denies that `git commit` in the session as well. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off.
 
 `moskills doctor` reports drift; `moskills status` prints Goal, Finished, Still not done, Blocker, Next.
 
