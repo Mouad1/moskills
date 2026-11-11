@@ -81,6 +81,14 @@ test('hook flags the task when the agent edits a UI file', () => {
   assert.equal(hook(dir, path.join(dir, 'src/App.tsx')), '', 'no repeat note for a file already flagged');
 });
 
+test('npm launcher runs the hook with the hook JSON on stdin', () => {
+  const dir = project('npm-launcher');
+  const input = JSON.stringify({ hook_event_name: 'PostToolUse', tool_name: 'Edit', cwd: dir, tool_input: { file_path: path.join(dir, 'src/App.tsx') } });
+  const r = spawnSync('node', [path.join(root, 'bin/moskills.cjs'), 'visual-flag'], { cwd: dir, input, env, encoding: 'utf8', timeout: 60000 });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(JSON.parse(r.stdout).hookSpecificOutput.additionalContext, /src\/App\.tsx/);
+});
+
 test('hook ignores non-UI files, missing runs and the opt-out', () => {
   const dir = project('ignore');
   assert.equal(hook(dir, path.join(dir, 'src/logic.js')), '');

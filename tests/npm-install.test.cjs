@@ -179,6 +179,14 @@ test('packed npm installation lifecycle uses durable project copies', async t =>
     assert.match(unknown.stderr, /unknown command.*typo/i);
     assert.doesNotMatch(unknown.stdout, /schedule-update|self-update/);
   });
+  await t.test('hook commands run from the packed bin and never fail', () => {
+    for (const command of ['commit-gate', 'visual-flag']) {
+      const r = spawnSync(cli, [command], { cwd: scratch, env, input: 'not json', encoding: 'utf8', timeout: 120000 });
+      assert.ifError(r.error);
+      assert.equal(r.status, 0, command + ': ' + r.stderr);
+      assert.doesNotMatch(r.stderr + r.stdout, /unknown command/i, command);
+    }
+  });
   await t.test('npm-owned lifecycle commands cannot create cache links', () => {
     for (const command of ['setup', 'link', 'unlink', 'uninstall', 'self-update', 'schedule-update']) {
       const r = call([command]);

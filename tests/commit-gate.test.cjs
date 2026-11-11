@@ -99,6 +99,20 @@ test('follows git -C to the repository being committed', () => {
   denied(r.stdout.trim());
 });
 
+test('npm launcher runs the gate with the hook JSON on stdin', () => {
+  const dir = repo('npm-launcher');
+  provenRun(dir);
+  fs.writeFileSync(path.join(dir, 'a.js'), 'changed after proof\n');
+  const input = JSON.stringify({ tool_name: 'Bash', cwd: dir, tool_input: { command: 'git commit -am x' } });
+  const npmCli = path.join(root, 'bin/moskills.cjs');
+  const r = spawnSync('node', [npmCli, 'commit-gate'], { cwd: dir, input, env, encoding: 'utf8', timeout: 60000 });
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(denied(r.stdout.trim()), /task-1/);
+  const bad = spawnSync('node', [npmCli, 'commit-gate'], { cwd: dir, input: 'not json', env, encoding: 'utf8', timeout: 60000 });
+  assert.equal(bad.status, 0, bad.stderr);
+  assert.equal(bad.stdout.trim(), '');
+});
+
 test('MOSKILLS_NO_COMMIT_GATE=1 turns it off', () => {
   const dir = repo('optout');
   provenRun(dir);
