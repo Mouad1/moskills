@@ -9,13 +9,13 @@ Primary goal: Validate work before completion.
 
 ## Steps
 
-1. Read the agreed scope and acceptance criteria from `.claude/STATE.md` and `tasks/todo.md` when present.
-2. Determine applicable and required gates: behavior, visual presentation when affected, code/config/document quality, and human completion validation when requested. Derive actual commands from project files; do not invent them.
-3. When an evolvebook is active, include its `check.md`: automatic items first, then human items. Run relevant available checks within authorization. For changed behavior, inspect useful test feedback; inspect changed visual states when presentation matters.
-4. **When a run exists** (`.moskills/runs/`): run `run-state resume` first. Execute each required automated check through `run-state wrap --task <id> --auto-complete -- <command>` instead of running it by hand; its gate is `passed` only when that proof is current. A task the engine will not complete stays **Still not done**. Record the human gate with `run-state accept --by <name>` only after the user explicitly approves; never accept for them. When `run-state done` names a task whose UI changed, look at the changed screens (screenshot or running app) and record it with `run-state ingest-evidence --check visual-<task> --source screenshot --files <files>`; record it only after looking. When `docs/rules.md` exists, run `run-state rules` and report each rule declared for the run as proven, stale, failing or unproven; a required gate fails while any of them is not proven.
-5. Compare observed results with acceptance criteria. Record each gate as `passed`, `failed`, `unknown`, or `not applicable`, with evidence or a reason and next action.
+1. When a run exists, start from one command: `run-state done`. Its proof brief is the whole audit: scope, goal, each check, whether that proof is current, the recorded command, rules, visual proof, acceptance, and why the run is or is not done, and do not open `.moskills/runs`, `run.json`, or evidence JSON, and do not judge proof by reading `.claude/STATE.md` or `tasks/todo.md`. A non-zero exit means not done; the brief on stdout is still the result. Do not run a second command to assemble that picture.
+2. Re-run a check only when the brief marks it stale, failing, or missing. Use the brief's re-run command (`run-state wrap --task <id> --auto-complete -- <command>` for a behavior check). A check marked current already passed; do not re-run it. If you re-ran anything, run `run-state done` once more and report from that new brief.
+3. When an evolvebook is active, include its `check.md` for items the brief does not cover. Do not re-run a check the brief marks current.
+4. Record the human gate with `run-state accept --by <name>` only after the user explicitly approves; never accept for them. When the brief says visual proof is missing, look at the changed screens (screenshot or running app) and only then record it with the brief's ingest command.
+5. Compare the brief with the acceptance criteria. Record each gate as `passed`, `failed`, `unknown`, or `not applicable`, with evidence or a reason and next action. Current proof is a passed behavior gate.
 6. If a required gate is failed or unknown, including requested human validation still pending, report **Still not done**. Optional unavailable checks remain explicit limitations. Never count unknown as passed.
-7. Update `.claude/STATE.md` under `Validation History` (when a run exists, the generated Run proof block already holds the automated results; record the gates it does not cover) and its current gate table; update Finished / Still not done in `tasks/todo.md`. Reuse existing headings rather than creating duplicate histories.
+7. Update `.claude/STATE.md` under `Validation History` from the brief (the generated Run proof block already holds the automated results; do not edit inside it) and update Finished / Still not done in `tasks/todo.md`. Reuse existing headings rather than creating duplicate histories.
 
 ## Concise report
 
@@ -30,8 +30,8 @@ Limitations / next action:
 
 ## Rules
 
-- When a run exists, its recorded proof overrides any Markdown claim; if they disagree, fix the Markdown.
-- Claim passed checks only from observed output or direct inspection. Prefer relevant automated/browser checks to visual guessing.
+- When a run exists, the proof brief overrides any Markdown claim; if they disagree, fix the Markdown.
+- Claim passed checks only from the proof brief or from a check you re-ran because the brief marked it stale, failing, or missing. Prefer relevant automated/browser checks to visual guessing.
 - Do not hide failures or mark pending requested human validation as complete.
 - No useful feedback loop means unknown; identify the smallest next check.
 - Completion checks do not authorize commit, push, or merge; those require user validation separately.

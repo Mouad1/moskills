@@ -58,7 +58,9 @@ test('done refuses until every declared rule is accepted and proven by a task', 
   assert.match(out, /BR-002: still draft/);
   assert.match(out, /BR-002: declared for this run but no task proves it/);
   assert.match(out, /BR-009: not in docs\/rules\.md/);
-  assert.doesNotMatch(out, /BR-001/);
+  assert.match(out, /BR-001 proven/);
+  assert.doesNotMatch(out.split('Proof brief:')[0], /BR-001/);
+  assert.doesNotMatch(out, /Because: BR-001/);
   fs.writeFileSync(path.join(dir, 'docs/rules.md'), rulesFile([['BR-001', 'accepted'], ['BR-002', 'accepted']]));
   run(dir, ['init', '--force', '--goal', 'g', '--scope', 'a.js', '--tasks', 'build', '--rules', 'BR-001,BR-002']);
   run(dir, ['link', '--task', 'task-1', '--rules', 'BR-001,BR-002']);

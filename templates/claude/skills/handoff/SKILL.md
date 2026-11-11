@@ -12,14 +12,12 @@ headings as `/checkpoint`, so the next agent reads one place, not two.
 
 ## Steps
 
-1. Read `.claude/STATE.md` when present. If a legacy `.claude/HANDOFF.md`
-   exists, fold its open items into `.claude/STATE.md` and say so.
-2. Inspect current Git status. When a run exists, run `run-state resume` (it refreshes the Run proof block in `.claude/STATE.md`) and name the run id and next ready task in the entry.
-3. Update `Current run` in `.claude/STATE.md`: set **Status** (awaiting user,
-   blocked, or parked) and **Next action / blocker**.
-4. Append one entry titled `Handoff` under the existing `Checkpoints` heading,
-   using the format below. Do not create a separate handoff file.
-5. Keep enough detail that another agent can continue without reading the full chat.
+1. When a run exists, start from one command: `run-state resume`. Its proof brief names the run, goal, finished work, blockers, verification, and the exact next step, and do not open `.moskills/runs`, `run.json`, or evidence JSON. A check the brief marks current already passed; do not re-run it. When the brief marks a check stale, failing, or missing, copy that re-run command into Exact next step; do not run it while writing the handoff.
+2. Inspect current Git status only for the branch and changed files. Do not use it to judge proof.
+3. Read `.claude/STATE.md` only to update it. If a legacy `.claude/HANDOFF.md` exists, fold its open items into `.claude/STATE.md` and say so.
+4. Update `Current run` in `.claude/STATE.md`: set **Status** (awaiting user, blocked, or parked) and **Next action / blocker** from the brief.
+5. Append one entry titled `Handoff` under the existing `Checkpoints` heading, using the format below. Do not create a separate handoff file.
+6. Keep enough detail that another agent can continue without reading the full chat.
 
 ## Format
 
@@ -37,4 +35,5 @@ Exact next step:
 
 - Separate facts from assumptions.
 - Do not claim verification that was not observed; pending required checks stay Still not done.
-- Include exact commands when they matter.
+- Do not re-run a check the proof brief marks current. A stale, failing, or missing check is the next step, not a command to run while writing the handoff.
+- Include exact commands when they matter. Use the re-run command from the proof brief.
