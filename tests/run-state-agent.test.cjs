@@ -165,6 +165,39 @@ function provenProject(name) {
   return dir;
 }
 
+test('run-state status reports stale proof and refreshes the STATE.md block', () => {
+  const dir = seeded('status-live');
+  assert.equal(runState(dir, ['init', '--goal', 'g', '--scope', 'a.js', '--tasks', 'one']).status, 0);
+  assert.equal(runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']).status, 0);
+  assert.match(block(dir), /1\/1 tasks finished with current proof/);
+
+  fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 2;\n');
+  const r = runState(dir, ['status']);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /task-1 \[stale\]/);
+  assert.doesNotMatch(r.stdout, /task-1 \[finished\]/);
+  const written = block(dir);
+  assert.match(written, /stale proof/);
+  assert.match(written, /still not done \(proof stale\)/);
+  assert.doesNotMatch(written, /finished with current proof/);
+  assert.equal(readRun(dir).tasks[0].status, 'finished', 'status does not rewrite the run');
+});
+
+test('an unchanged proof refresh does not rewrite STATE.md', () => {
+  const dir = seeded('notes-noop');
+  assert.equal(runState(dir, ['init', '--goal', 'g', '--scope', 'a.js', '--tasks', 'one']).status, 0);
+  assert.equal(runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']).status, 0);
+  const file = path.join(dir, '.claude/STATE.md');
+  const before = fs.readFileSync(file, 'utf8');
+  assert.doesNotMatch(block(dir), /\d{4}-\d{2}-\d{2}/, 'the generated block has no clock timestamp');
+  const mtime = fs.statSync(file).mtimeMs;
+  context(dir);
+  assert.equal(runState(dir, ['notes']).status, 0);
+  context(dir, ['--event', 'UserPromptSubmit']);
+  assert.equal(fs.readFileSync(file, 'utf8'), before);
+  assert.equal(fs.statSync(file).mtimeMs, mtime);
+});
+
 test('an edited proven file is stale in STATE.md and rules before resume', () => {
   const dir = provenProject('story-stale');
   const finished = block(dir);

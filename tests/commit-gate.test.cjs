@@ -386,6 +386,46 @@ test('bash -c and sh -c commits are judged like a direct git commit', () => {
   }
 });
 
+// A task can have a passing check and still leave a scoped file with no
+// proof. That staged file is missing, same as a task that has no checks.
+test('a staged in-scope file the check does not cover is missing proof', () => {
+  const dir = installed('partial-scope');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  fs.writeFileSync(path.join(dir, 'price.test.cjs'), 'ok\n');
+  fs.mkdirSync(path.join(dir, 'src'));
+  fs.writeFileSync(path.join(dir, 'src', 'price.cjs'), 'module.exports = 1;\n');
+  runState(dir, ['init', '--id', 'default', '--scope', 'price.cjs,price.test.cjs,src/price.cjs', '--tasks', 'price total']);
+  runState(dir, ['wrap', '--id', 'default', '--task', 'task-1', '--files', 'price.cjs,price.test.cjs', '--auto-complete', '--silent', '--', 'true']);
+
+  sh(dir, 'git', ['add', 'price.cjs', 'price.test.cjs']);
+  const covered = gitCommit(dir, ['-m', 'covered']);
+  assert.equal(covered.status, 0, covered.stdout + covered.stderr);
+
+  fs.writeFileSync(path.join(dir, 'src', 'price.cjs'), 'x\n');
+  fs.writeFileSync(path.join(dir, 'note.txt'), 'outside the run scope\n');
+  sh(dir, 'git', ['add', 'note.txt']);
+  assert.equal(gate(dir, 'git commit -m note'), '');
+  const outside = gitCommit(dir, ['-m', 'note']);
+  assert.equal(outside.status, 0, outside.stdout + outside.stderr);
+
+  sh(dir, 'git', ['add', 'src/price.cjs']);
+  const commit = gitCommit(dir, ['-m', 'x']);
+  assert.notEqual(commit.status, 0, commit.stdout + commit.stderr);
+  assert.match(commit.stderr, /src\/price\.cjs/);
+  assert.match(commit.stderr, /missing/);
+  assert.match(commit.stderr, /no proof recorded/);
+  assert.match(commit.stderr, /task-1/);
+  assert.match(commit.stderr, /moskills run-state wrap --id default --task task-1 --auto-complete --/);
+  const landed = spawnSync('git', ['log', '--oneline'], { cwd: dir, env, encoding: 'utf8', timeout: 60000 });
+  assert.doesNotMatch(landed.stdout, /^x\b/m);
+
+  const reason = denied(gate(dir, 'git commit -m x', {}, 2));
+  assert.match(reason, /src\/price\.cjs/);
+  assert.match(reason, /missing/);
+  assert.match(reason, /no proof recorded/);
+  assert.match(reason, /moskills run-state wrap --id default --task task-1 --auto-complete --/);
+});
+
 test('src/price.cjs does not match proof recorded for price.cjs', () => {
   const dir = installed('exact-path');
   fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');

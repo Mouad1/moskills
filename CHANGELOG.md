@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1
+
+Patch on 0.9.0. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.
+
+- **Commit gate:** a staged file in a task's scope is `missing` when none of that task's checks recorded it, even if another check for the same task already passed. Both the git hook and the Claude hook refuse it.
+- **`run-state status`:** prints the same live proof view as the Run proof block (`stale` after a proven file is edited, not the stored `finished`) and rewrites that block. It still does not write `run.json`.
+- **STATE.md stays quiet and tracked:** the generated block has no clock, and a refresh that does not change the text does not write the file. `.claude/STATE.md` stays in git. It holds the project's notes, so it is not gitignored and the commit gate does not skip or refuse it.
+
 ## 0.9.0
 
 Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code plugin picks it up from `main`.
