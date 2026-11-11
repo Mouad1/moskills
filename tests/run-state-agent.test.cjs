@@ -253,3 +253,58 @@ test('doctor reports run-state readiness without failing', () => {
   const r = spawnSync('sh', [path.join(root, 'moskills'), 'doctor', '--target', dir], { env, encoding: 'utf8' });
   assert.match(r.stdout, /run-state: ready \(node v\d+[^)]*\), 1 run\(s\)/);
 });
+
+// Live re-test N1: two runs, then status --id default, the per-prompt hook,
+// and resume --id default. The block must stay on one run (the active run
+// recorded by init/resume, else the newest) so the hook does not rewrite it.
+test('two runs do not flap the STATE.md proof block across status, the prompt hook, and resume', () => {
+  const dir = seeded('two-run-flap');
+  assert.equal(runState(dir, ['init', '--id', 'default', '--goal', 'price total', '--scope', 'a.js', '--tasks', 'price total']).status, 0);
+  assert.equal(runState(dir, ['init', '--id', 'r2', '--goal', 'tax', '--tasks', 'tax']).status, 0);
+  const file = path.join(dir, '.claude/STATE.md');
+  const text = () => fs.readFileSync(file, 'utf8');
+  const runLine = (body) => {
+    const m = body.match(/### Run proof: (\S+) - ([^\n]+)/);
+    assert.ok(m, body);
+    return `${m[1]} - ${m[2]}`;
+  };
+  const cli = (args) => {
+    const r = spawnSync('sh', [path.join(root, 'moskills'), ...args],
+      { cwd: dir, env, encoding: 'utf8', timeout: 60000 });
+    assert.equal(r.status, 0, r.stderr || r.stdout);
+    return r;
+  };
+
+  assert.equal(runLine(text()), 'r2 - tax', 'the run started last is the block until resume says otherwise');
+  const before = text();
+  const mtime = fs.statSync(file).mtimeMs;
+
+  const status = cli(['run-state', 'status', '--id', 'default']);
+  assert.match(status.stdout, /Run: default/);
+  assert.equal(runLine(text()), 'r2 - tax');
+  assert.equal(text(), before, 'status --id default must not retarget the block');
+  assert.equal(fs.statSync(file).mtimeMs, mtime);
+
+  const hook = cli(['context', '--event', 'UserPromptSubmit', '--target', '.']);
+  const hookText = JSON.parse(hook.stdout).hookSpecificOutput.additionalContext;
+  assert.match(hookText, /Active run: r2 - tax/);
+  assert.equal(runLine(text()), 'r2 - tax');
+  assert.equal(text(), before, 'the per-prompt hook must not flip the block to another run');
+  assert.equal(fs.statSync(file).mtimeMs, mtime);
+
+  cli(['run-state', 'resume', '--id', 'default']);
+  assert.equal(runLine(text()), 'default - price total');
+  const afterResume = text();
+  const resumeMtime = fs.statSync(file).mtimeMs;
+
+  const r2Path = path.join(dir, '.moskills/runs/r2/run.json');
+  const r2 = JSON.parse(fs.readFileSync(r2Path, 'utf8'));
+  r2.updatedAt = '2099-01-01T00:00:00.000Z';
+  fs.writeFileSync(r2Path, JSON.stringify(r2));
+  const again = cli(['context', '--event', 'UserPromptSubmit', '--target', '.']);
+  const againText = JSON.parse(again.stdout).hookSpecificOutput.additionalContext;
+  assert.match(againText, /Active run: default - price total/);
+  assert.doesNotMatch(againText, /Active run: r2/);
+  assert.equal(text(), afterResume, 'a newer other run must not make the hook retarget the block');
+  assert.equal(fs.statSync(file).mtimeMs, resumeMtime);
+});

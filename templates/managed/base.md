@@ -14,10 +14,10 @@ Users describe work in ordinary language. Select relevant capabilities automatic
 | New behavior or changed behavior | TDD where useful |
 | Bug, failed check, or unexpected behavior | Diagnose |
 | Meaningful progress or context change | Checkpoint |
-| Work ready for verification | Gatekeeper |
+| "Is the module done?", "is X done?", "can we ship?", or other work ready for verification | Gatekeeper skill. Invoke it; do not answer from the Run proof block or run-state alone |
 | Significant decision or implementation | Project DNA |
 | Correction, rejected review, confirmed root cause, or a preference to keep | Learn |
-| Pause or continuation in another session | Handoff |
+| "resume", "pick up where we left off", "continue from last session", or any pause or continuation in another session | Handoff skill. Invoke it; `run-state resume` is a step inside that skill, not the reply |
 | Create, use, list, link, or export a recurring-job guide | Evolvebook |
 
 Use installed skills when available. If a capability or tool is unavailable, perform its documented steps directly and record the limitation; never invent a tool, check, or result.
@@ -85,7 +85,7 @@ If an evolvebooks home is configured, read its `EVOLVEBOOKS.md` and project `.ev
 
 ## Run state (proof the tools check)
 
-For non-trivial work with checkable acceptance criteria, keep a run: `moskills run-state` saves each check's exit code, output and file hashes, reopens tasks when checked files change, and refuses to mark a task finished without passing, current proof. When a run exists it is the source of truth for task and gate status. Every run-state command that changes the run rewrites the **Run proof** block in `.claude/STATE.md`; never edit inside that block.
+For non-trivial work with checkable acceptance criteria, keep a run: `moskills run-state` saves each check's exit code, output and file hashes, reopens tasks when checked files change, and refuses to mark a task finished without passing, current proof. When a run exists it is the source of truth for task and gate status. The **Run proof** block in `.claude/STATE.md` shows the active run (the one `run-state init` or `run-state resume` recorded, otherwise the newest) and is refreshed from live proof; reading another run does not retarget it. Never edit inside that block. "Is the module done?", "is X done?", and "can we ship?" are answered by the gatekeeper skill, not by this block. "resume", "pick up where we left off", and "continue from last session" are answered by the handoff skill.
 
 - **CLI:** use the exact command shown in the `Record proof` line of the plan reminder. Without it, use `moskills` when it is on PATH, else `sh ~/.moskills/moskills`. If none works, work from the Markdown notes and record the limitation.
 - **Start once:** `run-state init --goal "<goal>" --scope <files> --tasks "<t1>,<t2>"`. Never re-initialize an existing run; continue it with `run-state resume`.

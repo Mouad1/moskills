@@ -465,11 +465,11 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 
 | Command | Purpose |
 |---|---|
-| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>] [--after <id>] [--rules <ids>]` | Initialize run record, brief, and event history; `--after` refuses unless that run is done; `--rules` names the business rules (from `docs/rules.md`) this run must prove |
+| `moskills run-state init --id <id> --goal <g> [--scope <files>] [--tasks <t1,t2>] [--after <id>] [--rules <ids>]` | Initialize run record, brief, and event history, and record this run as the active one shown in the Run proof block; `--after` refuses unless that run is done; `--rules` names the business rules (from `docs/rules.md`) this run must prove |
 | `moskills run-state check --id <id> --check <cid> --cmd <cmd> [--files <files>]` | Execute check, compute file hashes, and save evidence |
 | `moskills run-state complete --id <id> --task <tid> --checks <cid1,cid2>` | Verify evidence and mark task finished |
-| `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
-| `moskills run-state status --id <id>` | Show live task proof (finished, stale, failing) and acceptance, and refresh the Run proof block in `.claude/STATE.md`. Does not write `run.json` |
+| `moskills run-state resume --id <id>` | Record this run as the active one, invalidate stale proof from file modifications, and get the next ready task |
+| `moskills run-state status --id <id>` | Show live task proof (finished, stale, failing) and acceptance for that run, and refresh the Run proof block for the active run. Does not retarget the block and does not write `run.json` |
 | `moskills run-state accept --id <id> --by <user> [--notes <text>]` | Record human acceptance bound to current scope hashes |
 | `moskills run-state wrap --id <id> [--task <tid>] [--check <cid>] [--files <files>] [--auto-complete] -- <command>` | Run a command, stream its output, and record it as evidence |
 | `moskills run-state impact --id <id> --files <files>` | List tasks and checks affected by changed files, including through imports |
@@ -488,7 +488,7 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 | `moskills run-state done --id <id> [--json]` | Exit 0 only when every task has current proof and acceptance still holds, and every UI task has visual proof; otherwise list what is missing. With `init --rules` or linked rules, it also refuses while a rule is missing from `docs/rules.md`, still draft, retired, or proven by no task |
 | `moskills run-state list [--json]` | List every run (module) with progress and done state |
 | `moskills design <init\|check\|css>` | One checked design file; see [/design-system](#design-system) |
-| `moskills run-state notes [--id <id>] [--print]` | Rewrite the generated Run proof block in `.claude/STATE.md` (other run commands do this automatically) |
+| `moskills run-state notes [--id <id>] [--print]` | Refresh the Run proof block for the active run (`--print` shows the `--id` run without writing). Other run commands refresh that same block |
 | `moskills run-state dashboard --id <id> [--port <n>]` | Open the local dashboard (default port 4040) |
 
 Leases and claiming coordinate agents that share one filesystem. They are not a network service.
