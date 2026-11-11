@@ -4,10 +4,12 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 
 ## Start
 
-1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present. When `.moskills/runs/` exists, run `run-state resume` first: it reopens tasks whose proof went stale and names the next ready task.
-2. Inspect the current branch and working tree. Preserve existing changes; choose an appropriate branch for implementation according to project rules.
-3. Restate the requested outcome briefly. Route ordinary language to needed capabilities without asking the user to remember commands.
-4. For non-trivial work, record a plan, dependency order, and acceptance/gate criteria before implementation. Continue authorized work without adding approval stops for routine choices.
+1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present. When `.moskills/runs/` exists, run `run-state resume` to reopen tasks whose proof went stale and name the next ready task.
+2. If the user said "resume", "pick up where we left off", or "continue from last session", invoke the handoff skill and follow it. `run-state resume` is a step inside that skill, not the reply.
+3. If the user asked "Is the module done?", "is X done?", or "can we ship?", invoke the gatekeeper skill and follow it. Do not answer from the Run proof block or the plan reminder alone.
+4. Inspect the current branch and working tree. Preserve existing changes; choose an appropriate branch for implementation according to project rules.
+5. Restate the requested outcome briefly. Route ordinary language to needed capabilities without asking the user to remember commands.
+6. For non-trivial work, record a plan, dependency order, and acceptance/gate criteria before implementation. Continue authorized work without adding approval stops for routine choices.
 
 ## During work
 

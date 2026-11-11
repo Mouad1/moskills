@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.2
+
+Patch on 0.9.1. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.
+
+- **Skill triggering:** the `gatekeeper` and `handoff` descriptions say what the skill does and when to use it, in third person, and name the phrases "Is the module done?", "is X done?", "can we ship?", "resume", "pick up where we left off", and "continue from last session". The managed standard and the plan reminder send those phrases to the skill. Answering them from the Run proof block or from `run-state resume` alone is no longer the path.
+- **STATE.md run stays put:** the Run proof block follows the active run recorded by `run-state init` and `run-state resume`, and the newest run only when none is recorded. `status --id`, the per-prompt context hook, and a newer other run no longer retarget it, so a prompt does not rewrite the tracked file.
+
 ## 0.9.1
 
 Patch on 0.9.0. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.

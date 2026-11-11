@@ -917,7 +917,7 @@ $run"; else lines="$lines$run"; fi
 No run yet: once the plan is approved, start one so checks become proof: $cli run-state init --goal \"<goal>\" --scope <files> --tasks \"<t1>,<t2>\""
   fi
   [ -n "$EVENT" ] || { printf '%s\n' "$lines"; return 0; }
-  context_json "$(printf 'moskills saved plan (advisory notes; the run lines come from .moskills/runs and are authoritative):\n%s' "$lines")"
+  context_json "$(printf 'moskills saved plan (advisory notes; run lines mirror the active run). "Is the module done?", "is X done?", and "can we ship?" go to the gatekeeper skill. "resume", "pick up where we left off", and "continue from last session" go to the handoff skill. Do not answer those from these lines alone:\n%s' "$lines")"
 }
 
 # Print Claude Code hook JSON with $1 as additionalContext for $EVENT.

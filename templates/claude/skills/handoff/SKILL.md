@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "Use when: compacting current conversation, preparing another agent to continue, pausing work, summarizing changed files, blockers, verification, and next steps."
+description: "Writes a handoff into .claude/STATE.md so the next session can continue: branch and changed files, decisions, blockers, verification, and the exact next step. Use when the user says \"resume\", \"pick up where we left off\", \"continue from last session\", \"pause\", or \"hand this off\". Use this skill whenever the user wants to resume, continue, or pick up earlier work, even if they do not say handoff."
 ---
 
 # Handoff
