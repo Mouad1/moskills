@@ -321,6 +321,7 @@ gitignore_entry() { # $1 = target, $2 = line. One line, once.
 ensure_gitignore() { # $1 = target — keep local install details out of git
   gitignore_entry "$1" '.claude/settings.local.json'
   gitignore_entry "$1" '.claude/hooks/moskills-root'
+  gitignore_entry "$1" '.moskills/runs/'
 }
 
 record_install_root() { # $1 = target — where this install's lib/commit-gate.cjs lives
