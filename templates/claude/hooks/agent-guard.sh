@@ -135,10 +135,6 @@ if [ -f pyproject.toml ] || [ -f requirements.txt ] || [ -f setup.py ]; then
   say 'agent-guard: suggested Python validation: pytest'
 fi
 
-if [ ! -f .claude/STATE.md ] || ! grep -F 'Date:' .claude/STATE.md >/dev/null 2>&1; then
-  say 'agent-guard: warning: no checkpoint entry in .claude/STATE.md'
-fi
-
 if ! check_run_proof; then
   failures=$((failures + 1))
 fi

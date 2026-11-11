@@ -298,10 +298,13 @@ test_init_adds_settings_local_to_gitignore() {
 
   assert_file "$project/.gitignore"
   assert_contains "$project/.gitignore" '.claude/settings.local.json'
+  grep -qxF '.moskills/runs/' "$project/.gitignore" || fail 'expected .moskills/runs/ in .gitignore'
 
   run_moskills init --target "$project" >/dev/null
   count=$(grep -cxF '.claude/settings.local.json' "$project/.gitignore")
   [ "$count" = "1" ] || fail 'expected single .gitignore entry after re-init'
+  count=$(grep -cxF '.moskills/runs/' "$project/.gitignore")
+  [ "$count" = "1" ] || fail 'expected single .moskills/runs/ entry after re-init'
   pass 'init adds settings.local.json to .gitignore once'
 }
 
@@ -338,6 +341,7 @@ test_sync_adds_missing_gitignore_entry() {
 
   assert_file "$project/.gitignore"
   grep -qxF '.claude/settings.local.json' "$project/.gitignore" || fail 'expected sync to add gitignore entry'
+  grep -qxF '.moskills/runs/' "$project/.gitignore" || fail 'expected sync to add .moskills/runs/'
   pass 'sync adds missing gitignore entry'
 }
 

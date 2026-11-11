@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
+const { RunStateEngine } = require('../lib/run-state.cjs');
 const root = path.resolve(__dirname, '..');
 const cli = path.join(root, 'moskills');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'moskills gate '));
@@ -71,6 +72,17 @@ test('allows a commit whose proof is current', () => {
   assert.equal(gate(dir, 'git add a.js && git commit -m "build"'), '');
 });
 
+test('git add is seen when the cwd is a symlink to the repo', () => {
+  const dir = repo('symlink-real');
+  provenRun(dir);
+  fs.writeFileSync(path.join(dir, 'a.js'), 'changed after proof\n');
+  const link = path.join(scratch, 'symlink-cwd');
+  fs.symlinkSync(dir, link);
+  const reason = denied(gate(link, 'git add a.js && git commit -m build', {}, 2));
+  assert.match(reason, /a\.js/);
+  assert.match(reason, /task-1/);
+});
+
 test('denies a commit when a changed file made the proof stale', () => {
   const dir = repo('stale');
   provenRun(dir);
@@ -92,6 +104,7 @@ test('follows git -C to the repository being committed', () => {
   const dir = repo('dash-c');
   provenRun(dir);
   fs.writeFileSync(path.join(dir, 'a.js'), 'changed after proof\n');
+  sh(dir, 'git', ['add', 'a.js']);
   const elsewhere = path.join(scratch, 'elsewhere');
   fs.mkdirSync(elsewhere, { recursive: true });
   const input = JSON.stringify({ tool_name: 'Bash', cwd: elsewhere, tool_input: { command: `git -C "${dir}" commit -m x` } });
@@ -275,4 +288,137 @@ test('TODO: implement later still exits 1', () => {
   assert.equal(commit.status, 1, commit.stdout + commit.stderr);
   assert.match(commit.stdout + commit.stderr, /blocked placeholder phrase/);
   assert.match(commit.stdout + commit.stderr, /note\.txt/);
+});
+
+function runState(dir, args) {
+  sh(dir, 'node', [path.join(root, 'lib/run-state-cli.cjs'), ...args]);
+}
+
+// A scoped file that has never been checked is "missing" proof. Both gates
+// must refuse it and name the wrap command.
+test('a staged in-scope file with no proof blocks the commit', () => {
+  const dir = installed('missing-proof');
+  runState(dir, ['init', '--id', 'r2', '--goal', 'tax', '--scope', 'tax.cjs', '--tasks', 'tax']);
+  fs.writeFileSync(path.join(dir, 'tax.cjs'), 'module.exports = 1;\n');
+  const engine = new RunStateEngine(dir);
+  assert.ok(engine.getImpactedTasks('r2', ['tax.cjs']).impactedTaskIds.includes('task-1'));
+  assert.deepEqual(engine.getImpactedTasks('r2', ['note.txt']).impactedTaskIds, []);
+
+  fs.writeFileSync(path.join(dir, 'note.txt'), 'outside the run scope\n');
+  sh(dir, 'git', ['add', 'note.txt']);
+  const outside = gitCommit(dir, ['-m', 'note']);
+  assert.equal(outside.status, 0, outside.stdout + outside.stderr);
+
+  sh(dir, 'git', ['add', 'tax.cjs']);
+  const commit = gitCommit(dir, ['-m', 'tax']);
+  assert.notEqual(commit.status, 0, commit.stdout + commit.stderr);
+  const text = commit.stderr;
+  assert.match(text, /missing/);
+  assert.match(text, /no proof recorded/);
+  assert.match(text, /tax\.cjs/);
+  assert.match(text, /task-1/);
+  assert.match(text, /run r2/);
+  assert.match(text, /moskills run-state wrap --id r2 --task task-1 --auto-complete --/);
+  assert.match(text, /git pre-commit hook/);
+  assert.match(text, /will not bypass/);
+
+  const reason = denied(gate(dir, 'git commit -m tax', {}, 2));
+  assert.match(reason, /missing/);
+  assert.match(reason, /no proof recorded/);
+  assert.match(reason, /tax\.cjs/);
+  assert.match(reason, /moskills run-state wrap --id r2 --task task-1 --auto-complete --/);
+  assert.match(reason, /git pre-commit hook/);
+  assert.match(reason, /will not bypass/);
+});
+
+// The git hook and PreToolUse must judge the files the commit would contain.
+// An unstaged edit of a proven file does not deny a commit of something else.
+// `git commit -a` / `-am` would include that tracked edit, so those deny.
+test('unstaged edits do not deny a commit that leaves them out', () => {
+  const dir = installed('same-files');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  runState(dir, ['init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+  runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  sh(dir, 'git', ['add', 'price.cjs']);
+  const proven = gitCommit(dir, ['-m', 'proven']);
+  assert.equal(proven.status, 0, proven.stdout + proven.stderr);
+
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n// stale\n');
+  fs.writeFileSync(path.join(dir, 'other.txt'), 'unrelated\n');
+  sh(dir, 'git', ['add', 'other.txt']);
+
+  assert.equal(gate(dir, 'git commit -m other'), '');
+  assert.equal(gate(dir, 'git add other.txt && git commit -m other'), '');
+  const commit = gitCommit(dir, ['-m', 'other']);
+  assert.equal(commit.status, 0, commit.stdout + commit.stderr);
+  assert.match(sh(dir, 'git', ['log', '--oneline']), /other/);
+
+  for (const command of ['git commit -am x', 'git commit -a -m x', 'git commit --all -m x']) {
+    const reason = denied(gate(dir, command, {}, 2));
+    assert.match(reason, /price\.cjs/);
+    assert.match(reason, /task-1/);
+    assert.match(reason, /git pre-commit hook/);
+    assert.match(reason, /moskills run-state wrap --id default --task task-1 --auto-complete --/);
+  }
+});
+
+test('bash -c and sh -c commits are judged like a direct git commit', () => {
+  const dir = installed('shell-c');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  runState(dir, ['init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+  runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  sh(dir, 'git', ['add', 'price.cjs']);
+  const proven = gitCommit(dir, ['-m', 'proven']);
+  assert.equal(proven.status, 0, proven.stdout + proven.stderr);
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n// stale\n');
+
+  assert.equal(gate(dir, "bash -c 'git status'"), '');
+  assert.equal(gate(dir, 'sh -c "git status"'), '');
+  for (const command of [
+    "bash -c 'git commit -am x'",
+    'sh -c "git commit -am x"',
+    "bash -lc 'git commit -a -m x'"
+  ]) {
+    const reason = denied(gate(dir, command, {}, 2));
+    assert.match(reason, /price\.cjs/);
+    assert.match(reason, /git pre-commit hook/);
+    assert.match(reason, /moskills run-state wrap --id default --task task-1 --auto-complete -- true/);
+  }
+});
+
+test('src/price.cjs does not match proof recorded for price.cjs', () => {
+  const dir = installed('exact-path');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  runState(dir, ['init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+  runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  sh(dir, 'git', ['add', 'price.cjs']);
+  const proven = gitCommit(dir, ['-m', 'proven']);
+  assert.equal(proven.status, 0, proven.stdout + proven.stderr);
+
+  const engine = new RunStateEngine(dir);
+  assert.ok(engine.getImpactedTasks('default', ['price.cjs']).impactedTaskIds.includes('task-1'));
+  assert.ok(engine.getImpactedTasks('default', ['./price.cjs']).impactedTaskIds.includes('task-1'));
+  assert.deepEqual(engine.getImpactedTasks('default', ['src/price.cjs']).impactedTaskIds, []);
+
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n// stale\n');
+  fs.mkdirSync(path.join(dir, 'src'));
+  fs.writeFileSync(path.join(dir, 'src', 'price.cjs'), 'module.exports = 2;\n');
+  sh(dir, 'git', ['add', 'src/price.cjs']);
+  assert.equal(gate(dir, 'git commit -m src'), '');
+  const commit = gitCommit(dir, ['-m', 'src only']);
+  assert.equal(commit.status, 0, commit.stdout + commit.stderr);
+});
+
+test('init gitignores .moskills/runs and a fresh commit does not warn about checkpoints', () => {
+  const dir = installed('gitignore-runs');
+  const gi = fs.readFileSync(path.join(dir, '.gitignore'), 'utf8');
+  assert.match(gi, /(^|\n)\.moskills\/runs\/(\n|$)/);
+  const repoGi = fs.readFileSync(path.join(root, '.gitignore'), 'utf8');
+  assert.match(repoGi, /(^|\n)\.moskills\/runs\/(\n|$)/);
+
+  fs.writeFileSync(path.join(dir, 'note.txt'), 'hello\n');
+  sh(dir, 'git', ['add', 'note.txt']);
+  const commit = gitCommit(dir, ['-m', 'note']);
+  assert.equal(commit.status, 0, commit.stdout + commit.stderr);
+  assert.doesNotMatch(commit.stdout + commit.stderr, /no checkpoint/);
 });

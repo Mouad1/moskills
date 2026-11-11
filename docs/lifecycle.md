@@ -82,15 +82,15 @@ The command compares observed checks against the active intent model and separat
 
 Call the work done only after validation output has been observed and any remaining unknowns or risks are reported.
 
-## Optional Hooks
+## Git pre-commit hook
 
-The Git pre-commit hook is installed by default in Git repositories; pass `--no-hooks` to skip it.
+The Git pre-commit hook is installed by default in Git repositories. It runs for every agent and for a commit from the terminal. Pass `--no-hooks` to skip installing it. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off.
 
 ```text
 git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit
 ```
 
-The hook checks staged files for conflict markers and selected risky placeholder phrases. It does not replace `/gatekeeper`; it is a last local guard before commit.
+The hook checks staged files for conflict markers and selected risky placeholder phrases. It also enforces the run-proof gate: a commit is refused while a staged file in a run's scope has missing, failed, or stale proof. It does not replace `/gatekeeper`; it is a last local guard before commit.
 
 ## Handoff
 

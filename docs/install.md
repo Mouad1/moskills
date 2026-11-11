@@ -37,21 +37,30 @@ project that should carry the standard:
 This installs the managed layer (`.claude/standard/`, commands, skills, guard
 hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`,
 `docs/prd.md`, `docs/rules.md`),
-adds `.claude/settings.local.json` to `.gitignore`, and records the installed
+adds `.claude/settings.local.json` and `.moskills/runs/` to `.gitignore`, and records the installed
 version in `.moskills.json`.
 
-In a Git repository, init also installs the Git pre-commit guard (blocks
-conflict markers and risky placeholder phrases in staged files). To skip it,
-pass `--no-hooks`:
+In a Git repository, init installs the Git pre-commit hook. It is on by
+default and runs for every agent and for a `git commit` typed in a terminal.
+Pass `--no-hooks` to skip installing it:
 
 ```text
 sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --no-hooks
 ```
 
-With the Claude Code plugin, a commit gate also runs before `git commit`: when
-a run-state run exists, it denies the commit while a task covering changed
-files has missing, failed or stale proof (`MOSKILLS_NO_COMMIT_GATE=1` turns it
-off).
+The hook blocks conflict markers and risky placeholder phrases in staged
+files. It also enforces the run-proof gate: when a run exists, a commit is
+refused while a staged file in that run's scope has missing, failed, or stale
+proof. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off. Claude Code runs
+the same check before `git commit`; the git hook is what stops a terminal
+commit from bypassing it.
+
+On npm 11, installing Claude Code skips its postinstall unless that package's
+scripts are allowed, so the `claude` binary never appears. Install it with:
+
+```sh
+npm i -g @anthropic-ai/claude-code --allow-scripts=@anthropic-ai/claude-code
+```
 
 ### Updating
 
