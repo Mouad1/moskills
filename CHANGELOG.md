@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Git commit gate (hard lock):** the git pre-commit hook now refuses a commit while a run task covering a staged file has missing, failed or stale proof, with no AI host running. It checks the staged content, not the working tree, names the task, the file and the `run-state wrap` command, and fails closed when runs exist but no moskills CLI is found (looked up as `MOSKILLS_BIN`, then `moskills` on PATH, then `npx moskills@<installed version>`). New `moskills commit-gate --staged`; `MOSKILLS_NO_COMMIT_GATE=1` skips it. Run `moskills sync` to get the new hook script.
+
 ## 0.9.0
 
 Changes since 0.8.2. Not yet published to npm (npm has 0.8.1); the Claude Code plugin picks it up from `main`.

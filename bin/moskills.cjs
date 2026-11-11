@@ -48,12 +48,14 @@ if (NODE_COMMANDS[command]) {
   process.exit(direct.status === null ? 1 : direct.status);
 }
 // Host hooks read their JSON on stdin and never fail, like `sh moskills commit-gate`.
+// `commit-gate --staged` is the git pre-commit check: its exit code counts.
 const HOOKS = { 'commit-gate': 'commit-gate.cjs', 'visual-flag': 'visual-flag.cjs' };
 if (HOOKS[command]) {
-  spawnSync(process.execPath, [path.join(__dirname, '..', 'lib', HOOKS[command])], {
-    stdio: ['inherit', 'inherit', 'ignore'], env: { ...process.env, MOSKILLS_DISTRIBUTION: 'npm' }
+  const staged = command === 'commit-gate' && args[1] === '--staged';
+  const r = spawnSync(process.execPath, [path.join(__dirname, '..', 'lib', HOOKS[command]), ...(staged ? ['--staged'] : [])], {
+    stdio: ['inherit', 'inherit', staged ? 'inherit' : 'ignore'], env: { ...process.env, MOSKILLS_DISTRIBUTION: 'npm' }
   });
-  process.exit(0);
+  process.exit(staged ? (r.status === 0 ? 0 : 1) : 0);
 }
 if (command === 'status' && verbose) args.push('--verbose');
 const blocked = ['setup', 'link', 'unlink', 'uninstall', 'self-update', 'schedule-update'];

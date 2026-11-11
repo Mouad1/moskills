@@ -16,6 +16,8 @@
 | MSK-008 | Where no moskills project is present, the context hook shall print nothing. | empty stdout outside a project | `tests/context-hook.test.cjs` "silent outside a project" | accepted | PRD constraints |
 | MSK-009 | When a managed file is deleted, sync shall restore it. | file present again after `moskills sync` | `tests/run-tests.sh` `test_sync_restores_deleted_managed_file` | accepted | PRD journey 4 |
 | MSK-010 | While a run declares rules, `run-state done` shall refuse until each rule is accepted and linked to a task with current proof. | done exits 1 listing draft, unknown or unlinked rules | `tests/run-state-rules.test.cjs` "done refuses until every declared rule is accepted and proven by a task" | accepted | PRD journey 1 |
+| MSK-011 | When runs exist and a staged file has missing, failed or stale proof, the git pre-commit hook shall refuse the commit with no AI host running, checking the staged content. | `git commit` exits non-zero naming the task, the file and `run-state wrap`; a proven blob staged with an unstaged edit commits | `tests/git-commit-gate.test.cjs` "a real git commit of a stale proven file fails, naming the task", "the staged content is checked, not the working tree" | accepted | PRD goal 1 |
+| MSK-012 | If runs exist and no moskills CLI can be found, then the git pre-commit hook shall refuse the commit. | `git commit` exits non-zero naming MOSKILLS_BIN | `tests/git-commit-gate.test.cjs` "runs exist but no moskills CLI can be found: the hook fails closed" | accepted | PRD constraints |
 
 ## Proof status
 

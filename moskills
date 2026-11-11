@@ -50,9 +50,11 @@ Commands:
                                             context; --event prints Claude Code hook JSON
                                             (UserPromptSubmit, SessionStart). Silent when
                                             nothing is recorded or MOSKILLS_NO_CONTEXT=1.
-  commit-gate                               Claude Code PreToolUse hook (JSON on stdin):
+  commit-gate [--staged]                    Claude Code PreToolUse hook (JSON on stdin):
                                             deny `git commit` while a run task covering
                                             changed files has stale or missing proof.
+                                            --staged: git pre-commit check of the staged
+                                            content; exits 1 on a problem.
                                             Off with MOSKILLS_NO_COMMIT_GATE=1.
   visual-flag                               Claude Code PostToolUse hook (JSON on stdin):
                                             a UI file edit flags the run's current task;
@@ -956,7 +958,9 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
-  commit-gate) # PreToolUse hook: never fails, allows when off or without node
+  commit-gate) # --staged: git pre-commit check, exits 1 on stale proof (fails closed)
+    [ "${1:-}" = --staged ] && exec node "$SCRIPT_DIR/lib/commit-gate.cjs" --staged
+    # PreToolUse hook: never fails, allows when off or without node
     [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ] && exit 0
     command -v node >/dev/null 2>&1 || exit 0
     node "$SCRIPT_DIR/lib/commit-gate.cjs" 2>/dev/null || true

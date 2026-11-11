@@ -16,7 +16,7 @@ moskills maps specific agent failures to small commands with one job each.
 | `/compress-input` | Agent replies are too verbose, burying the next action and wasting attention during focused work. | Short, direct communication modes while preserving exact technical terms, commands, paths, and errors. |
 | `/learn` | The same mistake, correction, or preference keeps coming back instead of being reused. | One imperative rule in `tasks/lessons.md`, promoted to `CLAUDE.md` (project or personal) once it repeats. |
 | `/handoff` | Another agent or future session needs to continue, but the useful context is mixed into a long transcript. | A compact handoff with goal, decisions, changed files, blockers, verification, and next actions. |
-| Optional Git hook | Conflict markers or risky placeholder text reach staged files because final checks were skipped. | `agent-guard.sh` blocks selected staged-file hazards before commit. |
+| Optional Git hook | Conflict markers or risky placeholder text reach staged files because final checks were skipped. | `agent-guard.sh` blocks selected staged-file hazards before commit, and, when runs exist, staged files whose run-state proof is missing, failed or stale (`moskills commit-gate --staged`). |
 
 Use the commands together for full lifecycle coverage:
 
