@@ -72,6 +72,17 @@ test('allows a commit whose proof is current', () => {
   assert.equal(gate(dir, 'git add a.js && git commit -m "build"'), '');
 });
 
+test('git add is seen when the cwd is a symlink to the repo', () => {
+  const dir = repo('symlink-real');
+  provenRun(dir);
+  fs.writeFileSync(path.join(dir, 'a.js'), 'changed after proof\n');
+  const link = path.join(scratch, 'symlink-cwd');
+  fs.symlinkSync(dir, link);
+  const reason = denied(gate(link, 'git add a.js && git commit -m build', {}, 2));
+  assert.match(reason, /a\.js/);
+  assert.match(reason, /task-1/);
+});
+
 test('denies a commit when a changed file made the proof stale', () => {
   const dir = repo('stale');
   provenRun(dir);
