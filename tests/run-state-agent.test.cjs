@@ -130,8 +130,81 @@ test('stale proof shows in the reminder before anyone runs resume', () => {
   fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 2;\n');
   assert.match(context(dir), /Run tasks: 0\/1 finished; stale proof: task-1 \(run resume\)/);
   assert.match(runState(dir, ['notes', '--print']).stdout, /still not done \(proof stale\)/);
+  const written = block(dir);
+  assert.match(written, /stale/);
+  assert.doesNotMatch(written, /finished with current proof/);
   const run = JSON.parse(fs.readFileSync(path.join(dir, '.moskills/runs/default/run.json'), 'utf8'));
   assert.equal(run.tasks[0].status, 'finished', 'views never write the run');
+});
+
+// Accepted rule linked to the task, so `rules` has a proof status to agree with the block.
+function withRule(dir) {
+  fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'docs/rules.md'), [
+    '# Business rules', '', '## Rules', '',
+    '| ID | Rule | Expected (measurable) | Proof | State | Source |',
+    '| --- | --- | --- | --- | --- | --- |',
+    '| BR-001 | When a.js loads, the system shall export 1 | exports 1 | true | accepted | prd |',
+    ''
+  ].join('\n'));
+}
+function ruleStatus(stdout) {
+  const line = stdout.split('\n').find(l => l.startsWith('BR-001'));
+  assert.ok(line, stdout);
+  return line.trim().split(/\s+/)[2];
+}
+function readRun(dir) {
+  return JSON.parse(fs.readFileSync(path.join(dir, '.moskills/runs/default/run.json'), 'utf8'));
+}
+function provenProject(name) {
+  const dir = seeded(name);
+  withRule(dir);
+  assert.equal(runState(dir, ['init', '--goal', 'g', '--scope', 'a.js', '--tasks', 'one', '--rules', 'BR-001']).status, 0);
+  assert.equal(runState(dir, ['link', '--task', 'task-1', '--rules', 'BR-001']).status, 0);
+  assert.equal(runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']).status, 0);
+  return dir;
+}
+
+test('an edited proven file is stale in STATE.md and rules before resume', () => {
+  const dir = provenProject('story-stale');
+  const finished = block(dir);
+  assert.match(finished, /1\/1 tasks finished with current proof/);
+  assert.match(finished, /\| task-1 one \| finished \|/);
+  assert.equal(ruleStatus(runState(dir, ['rules']).stdout), 'proven');
+
+  fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 2;\n');
+  const rulesOut = runState(dir, ['rules']).stdout;
+  const status = ruleStatus(rulesOut);
+  assert.equal(status, 'stale');
+  const written = block(dir);
+  assert.match(written, /stale/);
+  assert.doesNotMatch(written, /finished with current proof/);
+  assert.match(written, new RegExp(status));
+  assert.match(context(dir), /stale proof: task-1/);
+  assert.equal(readRun(dir).tasks[0].status, 'finished', 'rules and context do not rewrite the run');
+});
+
+test('a failing re-wrap is failing in STATE.md, rules, and run.json, then a green re-wrap is finished', () => {
+  const dir = provenProject('story-failing');
+  const original = fs.readFileSync(path.join(dir, 'a.js'), 'utf8');
+  fs.writeFileSync(path.join(dir, 'a.js'), 'module.exports = 2;\n');
+  assert.notEqual(runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'false']).status, 0);
+
+  const written = block(dir);
+  assert.match(written, /failing/);
+  assert.doesNotMatch(written, /stale/);
+  assert.doesNotMatch(written, /\bfailed\b/);
+  assert.doesNotMatch(written, /finished with current proof/);
+  assert.equal(ruleStatus(runState(dir, ['rules']).stdout), 'failing');
+  assert.equal(readRun(dir).tasks[0].status, 'failing');
+
+  fs.writeFileSync(path.join(dir, 'a.js'), original);
+  assert.equal(runState(dir, ['wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']).status, 0);
+  const restored = block(dir);
+  assert.match(restored, /1\/1 tasks finished with current proof/);
+  assert.match(restored, /\| task-1 one \| finished \|/);
+  assert.equal(ruleStatus(runState(dir, ['rules']).stdout), 'proven');
+  assert.equal(readRun(dir).tasks[0].status, 'finished');
 });
 
 test('the reminder names tasks held by another agent', () => {

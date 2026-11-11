@@ -859,12 +859,22 @@ status_summary() { # five advisory lines from saved project notes
   LC_ALL=C awk -v statefile="$state" -f "$SCRIPT_DIR/lib/status-summary.awk" "$@" </dev/null
 }
 
+# Rewrite the STATE.md Run proof block from the live hash view. No run.json write.
+refresh_run_proof() {
+  [ "${MOSKILLS_NO_NOTES:-0}" = 1 ] && return 0
+  [ -d "$TARGET/.moskills/runs" ] || return 0
+  command -v node >/dev/null 2>&1 || return 0
+  node -e 'require(process.argv[1]).writeLatestNotes(process.argv[2])' \
+    "$SCRIPT_DIR/lib/run-notes.cjs" "$TARGET" >/dev/null 2>&1 || true
+}
+
 cmd_status() {
   [ -d "$TARGET" ] || die "target does not exist: $TARGET"
   if is_project; then
     status_summary
     if [ -d "$TARGET/.moskills/runs" ] && command -v node >/dev/null 2>&1; then
       node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" 2>/dev/null || true
+      refresh_run_proof
     fi
     [ "$VERBOSE" -eq 1 ] || return 0
   fi
@@ -890,6 +900,9 @@ cmd_context() {
   run=''
   if [ -d "$TARGET/.moskills/runs" ] && [ "$has_node" -eq 1 ]; then
     run=$(node "$SCRIPT_DIR/lib/run-summary.cjs" "$TARGET" "$cli" 2>/dev/null) || run=''
+  fi
+  if [ -n "$run" ]; then
+    refresh_run_proof
   fi
   if [ -z "$lines$run" ]; then
     [ "$EVENT" = SessionStart ] || return 0
