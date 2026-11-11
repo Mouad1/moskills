@@ -6,7 +6,7 @@ By [Mouad Belghiti](https://belghitis.com).
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos: spec before code, align first, fast feedback loops, checkpoints, validation before done, clean handoffs. moskills turns those habits into rules, skills and hooks your agent follows on its own. No command names to learn.
 
-Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.2** (npm still ships 0.8.1, without the run-state engine).
+Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.3** (npm still ships 0.8.1, without the run-state engine).
 
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
 

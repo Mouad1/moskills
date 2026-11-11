@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.3
+
+Patch on 0.9.2. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.
+
+- **Proof brief:** `run-state resume`, `run-state done`, and `run-state status` each print one proof brief (scope, goal, every check, rules, visual proof, acceptance, and the re-run command). gatekeeper starts from `run-state done` and handoff from `run-state resume`. A check is re-run only when that brief marks it stale, failing, or missing. Current proof is not re-run, and the skills do not open run files or evidence JSON. The 0.9.2 triggering descriptions are unchanged.
+- **Portable proof:** recorded working directories and proof paths are relative to the project root. Older records that stored an absolute path still count when the file hashes match, and that read rewrites them to relative paths. A copied or moved project with unchanged files keeps current proof.
+
 ## 0.9.2
 
 Patch on 0.9.1. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.

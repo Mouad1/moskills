@@ -79,7 +79,7 @@ test('2. Capture one real check: local runner records output, exit code, time, w
   assert.equal(evidence.exitCode, 0);
   assert.ok(evidence.stdout.includes('price ok'));
   assert.ok(evidence.durationMs >= 0);
-  assert.equal(evidence.cwd, dir);
+  assert.equal(evidence.cwd, '.');
   assert.ok(evidence.fileHashes['price.cjs']);
 
   // Evidence saved under evidence/

@@ -54,7 +54,7 @@ test('skills and the stage table feed and check the files', () => {
   assert.match(preview, /docs\/rules\.md/);
   assert.match(read('templates/claude/skills/preview/builder-check.md'), /measurable/i);
   assert.match(read('templates/claude/skills/align-intent/SKILL.md'), /--rules/);
-  assert.match(read('templates/claude/skills/gatekeeper/SKILL.md'), /run-state rules/);
+  assert.match(read('templates/claude/skills/gatekeeper/SKILL.md'), /proof brief is the whole audit:[\s\S]*\brules/);
   const base = read('templates/managed/base.md');
   assert.match(base, /docs\/rules\.md/);
   assert.match(base, /never (silently )?edit an accepted rule/i);
