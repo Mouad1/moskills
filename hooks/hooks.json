@@ -34,7 +34,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" commit-gate 2>/dev/null || true"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" commit-gate",
+            "onFailure": "block"
           }
         ]
       }
@@ -45,7 +46,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" visual-flag 2>/dev/null || true"
+            "command": "sh \"${CLAUDE_PLUGIN_ROOT}/moskills\" visual-flag"
           }
         ]
       }

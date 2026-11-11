@@ -52,8 +52,10 @@ Commands:
                                             nothing is recorded or MOSKILLS_NO_CONTEXT=1.
   commit-gate                               Claude Code PreToolUse hook (JSON on stdin):
                                             deny `git commit` while a run task covering
-                                            changed files has stale or missing proof.
-                                            Off with MOSKILLS_NO_COMMIT_GATE=1.
+                                            changed files has missing, failed, or stale
+                                            proof. Prints deny JSON and exits 2.
+                                            The Git pre-commit hook refuses the same
+                                            commit. Off with MOSKILLS_NO_COMMIT_GATE=1.
   visual-flag                               Claude Code PostToolUse hook (JSON on stdin):
                                             a UI file edit flags the run's current task;
                                             run-state done then needs visual proof.
@@ -301,19 +303,30 @@ install_git_hook() { # $1 = target — pre-commit wrapper running agent-guard.sh
   log "Installed Git pre-commit hook: $hook_dest"
 }
 
-ensure_gitignore() { # $1 = target — keep seeded local settings out of git
+gitignore_entry() { # $1 = target, $2 = line. One line, once.
   t=$1
-  entry='.claude/settings.local.json'
+  entry=$2
   [ -e "$t/.git" ] || return 0
   gi="$t/.gitignore"
+  if [ -f "$gi" ] && grep -qxF "$entry" "$gi"; then return 0; fi
   if [ -f "$gi" ]; then
-    grep -qxF "$entry" "$gi" && return 0
     [ -n "$(tail -c 1 "$gi")" ] && printf '\n' >> "$gi"
     printf '%s\n' "$entry" >> "$gi"
   else
     printf '%s\n' "$entry" > "$gi"
   fi
   log "Added $entry to .gitignore"
+}
+
+ensure_gitignore() { # $1 = target — keep local install details out of git
+  gitignore_entry "$1" '.claude/settings.local.json'
+  gitignore_entry "$1" '.claude/hooks/moskills-root'
+}
+
+record_install_root() { # $1 = target — where this install's lib/commit-gate.cjs lives
+  t=$1
+  mkdir -p "$t/.claude/hooks"
+  printf '%s\n' "$SCRIPT_DIR" > "$t/.claude/hooks/moskills-root"
 }
 
 # ---------- drift check ----------
@@ -435,6 +448,7 @@ cmd_init() {
   install_managed "$t"
   seed_project "$t"
   ensure_gitignore "$t"
+  record_install_root "$t"
   install_git_hook "$t"
   ensure_marker "$t"
   write_manifest "$t"
@@ -497,6 +511,7 @@ cmd_sync() {
   fi
 
   ensure_gitignore "$t"
+  record_install_root "$t"
   ensure_marker "$t"
   write_manifest "$t"
   log "Sync complete."
@@ -956,16 +971,29 @@ CMD=$1; shift
 case "$CMD" in
   evolvebook|evolvebooks) exec sh "$EVOLVEBOOK" "$@" ;;
   run-state) exec node "$SCRIPT_DIR/lib/run-state-cli.cjs" "$@" ;;
-  commit-gate) # PreToolUse hook: never fails, allows when off or without node
+  commit-gate) # PreToolUse: deny JSON + exit 2. Parse errors exit 2 too.
+    case "${1:-}" in
+      --help|-h|help)
+        node "$SCRIPT_DIR/lib/commit-gate.cjs" --help
+        exit 0 ;;
+    esac
     [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ] && exit 0
-    command -v node >/dev/null 2>&1 || exit 0
-    node "$SCRIPT_DIR/lib/commit-gate.cjs" 2>/dev/null || true
-    exit 0 ;;
-  visual-flag) # PostToolUse hook: never fails, silent when off or without node
+    if ! command -v node >/dev/null 2>&1; then
+      printf '%s\n' 'moskills commit gate: node is required to check proof' >&2
+      exit 2
+    fi
+    exec node "$SCRIPT_DIR/lib/commit-gate.cjs" "$@" ;;
+  visual-flag) # PostToolUse hook. A missing node stays quiet; do not hide a crash.
+    case "${1:-}" in
+      --help|-h|help)
+        printf '%s\n' 'moskills visual-flag — Claude Code PostToolUse hook (JSON on stdin).'
+        printf '%s\n' 'Flags a UI file edit so run-state done asks for visual proof.'
+        printf '%s\n' 'Off with MOSKILLS_NO_VISUAL_GATE=1.'
+        exit 0 ;;
+    esac
     [ "${MOSKILLS_NO_VISUAL_GATE:-0}" = 1 ] && exit 0
     command -v node >/dev/null 2>&1 || exit 0
-    node "$SCRIPT_DIR/lib/visual-flag.cjs" 2>/dev/null || true
-    exit 0 ;;
+    exec node "$SCRIPT_DIR/lib/visual-flag.cjs" "$@" ;;
   design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
 esac
