@@ -40,6 +40,8 @@ hook), seeds project files once (`CLAUDE.md`, `.claude/STATE.md`, `tasks/`,
 adds `.claude/settings.local.json` and `.moskills/runs/` to `.gitignore`, and records the installed
 version in `.moskills.json`.
 
+`.claude/STATE.md` is not on that ignore list, and the commit gate does not skip or refuse it. The file is the project's notes (goal, checkpoints, findings), so ignoring it would drop them from the repo and refusing it would block an ordinary checkpoint commit. The generated Run proof block inside the file is rewritten only when its text changes, and that text has no clock, so a prompt that does not change proof leaves the file untouched.
+
 In a Git repository, init installs the Git pre-commit hook. It is on by
 default and runs for every agent and for a `git commit` typed in a terminal.
 Pass `--no-hooks` to skip installing it:
@@ -242,7 +244,7 @@ CLAUDE.md               # seeded once, imports the standard via marker block
 .moskills.json          # installed standard version
 tasks/                  # seeded todo + lessons files, project-owned
 .claude/
-  STATE.md
+  STATE.md              # project notes, tracked; the proof block changes only when proof does
   settings.local.json   # local settings, git-ignored
   standard/
     base.md

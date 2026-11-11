@@ -469,7 +469,7 @@ Run-State & Evidence Engine (verifiable progress; SHA-256 hashes detect changes 
 | `moskills run-state check --id <id> --check <cid> --cmd <cmd> [--files <files>]` | Execute check, compute file hashes, and save evidence |
 | `moskills run-state complete --id <id> --task <tid> --checks <cid1,cid2>` | Verify evidence and mark task finished |
 | `moskills run-state resume --id <id>` | Invalidate stale proof from file modifications and get next ready task |
-| `moskills run-state status --id <id>` | Inspect run tasks, evidence status, and acceptance state |
+| `moskills run-state status --id <id>` | Show live task proof (finished, stale, failing) and acceptance, and refresh the Run proof block in `.claude/STATE.md`. Does not write `run.json` |
 | `moskills run-state accept --id <id> --by <user> [--notes <text>]` | Record human acceptance bound to current scope hashes |
 | `moskills run-state wrap --id <id> [--task <tid>] [--check <cid>] [--files <files>] [--auto-complete] -- <command>` | Run a command, stream its output, and record it as evidence |
 | `moskills run-state impact --id <id> --files <files>` | List tasks and checks affected by changed files, including through imports |
