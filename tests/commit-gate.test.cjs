@@ -230,6 +230,33 @@ test('git commit is allowed when the staged proof is current', () => {
   assert.match(sh(dir, 'git', ['log', '--oneline']), /proven/);
 });
 
+test('git commit checks the staged content, not the working tree', () => {
+  const rs = path.join(root, 'lib/run-state-cli.cjs');
+  const proven = 'module.exports = 800;\n';
+  const setup = name => {
+    const dir = installed(name);
+    fs.writeFileSync(path.join(dir, 'price.cjs'), proven);
+    sh(dir, 'node', [rs, 'init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+    sh(dir, 'node', [rs, 'wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+    return dir;
+  };
+  // Stale bytes staged, proven bytes back on disk: the commit would carry the stale file.
+  const stale = setup('git-staged-stale');
+  fs.writeFileSync(path.join(stale, 'price.cjs'), 'module.exports = 1;\n');
+  sh(stale, 'git', ['add', 'price.cjs']);
+  fs.writeFileSync(path.join(stale, 'price.cjs'), proven);
+  const refused = gitCommit(stale, ['-m', 'stale blob']);
+  assert.notEqual(refused.status, 0, `stale staged blob committed\n${refused.stdout}${refused.stderr}`);
+  assert.match(refused.stderr, /task-1/);
+  assert.match(refused.stderr, /price\.cjs/);
+  // Proven bytes staged, unproven edit only on disk: the commit carries the proven file.
+  const current = setup('git-staged-current');
+  sh(current, 'git', ['add', 'price.cjs']);
+  fs.writeFileSync(path.join(current, 'price.cjs'), 'module.exports = 2; // not staged\n');
+  const allowed = gitCommit(current, ['-m', 'proven blob']);
+  assert.equal(allowed.status, 0, allowed.stdout + allowed.stderr);
+});
+
 test('git commit of a failed proof exits non-zero and names the file', () => {
   const dir = installed('git-failed');
   const rs = path.join(root, 'lib/run-state-cli.cjs');

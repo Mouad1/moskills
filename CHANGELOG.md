@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Commit gate checks what is staged:** the git pre-commit check now judges proof against the staged content (`git show :path`), not the working tree. Staging a stale version and restoring the proven file on disk no longer slips through; a proven version staged next to an unstaged edit commits.
+
 ## 0.9.3
 
 Patch on 0.9.2. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.
