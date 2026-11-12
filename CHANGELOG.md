@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Commit gate checks what is staged:** the git pre-commit check now judges proof against the staged content (`git show :path`), not the working tree. Staging a stale version and restoring the proven file on disk no longer slips through; a proven version staged next to an unstaged edit commits.
 - **Doctor lock report:** `moskills doctor` prints one `lock` line per gate: `commit-proof` (hard when the git pre-commit hook can run the proof check, soft when only the Claude Code hook guards commits), `ci-proof` (hard when a workflow runs `run-state done`) and `visual-flag` (soft with the plugin hook). Each non-hard line names its fix. Doctor fails when runs exist but a plain git commit is not checked for proof.
 
 ## 0.9.3
