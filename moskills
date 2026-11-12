@@ -518,6 +518,63 @@ cmd_sync() {
   log "Sync complete."
 }
 
+# ---------- lock report (doctor) ----------
+# Per gate: hard = holds with no AI host (git hook, CI); soft = only inside a
+# host (Claude Code plugin hook); missing = nothing enforces it.
+host_hooks() { # 0 when this CLI is a plugin install whose hooks steer Claude Code
+  [ "${MOSKILLS_DISTRIBUTION:-}" != npm ] && [ -f "$SCRIPT_DIR/hooks/hooks.json" ]
+}
+
+proof_check_found() { # $1 = target: can the pre-commit hook find lib/commit-gate.cjs?
+  if [ -n "${MOSKILLS_ROOT:-}" ] && [ -f "$MOSKILLS_ROOT/lib/commit-gate.cjs" ]; then return 0; fi
+  if [ -f "$1/.claude/hooks/moskills-root" ]; then
+    root=$(sed -n '1p' "$1/.claude/hooks/moskills-root" | tr -d '\r')
+    [ -n "$root" ] && [ -f "$root/lib/commit-gate.cjs" ] && return 0
+  fi
+  command -v moskills >/dev/null 2>&1
+}
+
+commit_lock() { # $1 = target; prints "<level> (<how>)"
+  t=$1
+  why=''
+  if ! git -C "$t" rev-parse --git-dir >/dev/null 2>&1; then
+    why='not a git repository'
+  else
+    hook=$(git -C "$t" rev-parse --git-path hooks/pre-commit 2>/dev/null)
+    case "$hook" in /*) ;; *) hook="$t/$hook" ;; esac
+    if [ ! -f "$hook" ] || ! grep -q 'agent-guard' "$hook"; then
+      why='no git pre-commit hook; run moskills init without --no-hooks'
+    elif ! grep -q -- '--git-hook' "$t/.claude/hooks/agent-guard.sh" 2>/dev/null; then
+      why='pre-commit hook does not check proof; run moskills sync'
+    elif ! command -v node >/dev/null 2>&1; then
+      why='node not found; the pre-commit proof check needs Node.js 18+'
+    elif ! proof_check_found "$t"; then
+      why='pre-commit hook cannot find the proof check; run moskills sync or set MOSKILLS_ROOT'
+    fi
+  fi
+  if [ -z "$why" ]; then printf 'hard (git pre-commit)\n'
+  elif host_hooks; then printf 'soft (Claude Code PreToolUse only; %s)\n' "$why"
+  else printf 'missing (%s)\n' "$why"
+  fi
+}
+
+ci_lock() { # $1 = target
+  for wf in "$1"/.github/workflows/*.yml "$1"/.github/workflows/*.yaml; do
+    [ -f "$wf" ] || continue
+    if grep -q 'run-state done' "$wf"; then
+      printf 'hard (%s)\n' "${wf#"$1"/}"
+      return 0
+    fi
+  done
+  printf 'missing (no CI workflow runs run-state done)\n'
+}
+
+visual_lock() {
+  if host_hooks; then printf 'soft (Claude Code PostToolUse; run-state require-visual by hand elsewhere)\n'
+  else printf 'missing (no host hook flags UI edits; run run-state require-visual by hand)\n'
+  fi
+}
+
 cmd_doctor() {
   t=$TARGET
   issues=0
@@ -553,7 +610,18 @@ cmd_doctor() {
     printf '%-20s AGENTS.md missing managed block (run moskills sync)\n' "$name"
     issues=1
   fi
+  commit=$(commit_lock "$t")
+  case "$commit" in
+    hard*) ;;
+    *) if [ -d "$t/.moskills/runs" ] && git -C "$t" rev-parse --git-dir >/dev/null 2>&1; then
+         printf '%-20s runs exist but a plain git commit is not checked for proof\n' "$name"
+         issues=1
+       fi ;;
+  esac
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
+  printf '%-20s lock commit-proof: %s\n' "$name" "$commit"
+  printf '%-20s lock ci-proof: %s\n' "$name" "$(ci_lock "$t")"
+  printf '%-20s lock visual-flag: %s\n' "$name" "$(visual_lock)"
   # informational only: never changes the drift result
   if command -v node >/dev/null 2>&1; then
     runs=0

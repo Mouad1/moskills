@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Doctor lock report:** `moskills doctor` prints one `lock` line per gate: `commit-proof` (hard when the git pre-commit hook can run the proof check, soft when only the Claude Code hook guards commits), `ci-proof` (hard when a workflow runs `run-state done`) and `visual-flag` (soft with the plugin hook). Each non-hard line names its fix. Doctor fails when runs exist but a plain git commit is not checked for proof.
+
 ## 0.9.3
 
 Patch on 0.9.2. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.

@@ -24,6 +24,8 @@ Interpret the output for the user:
 - `edited managed file` — someone hand-edited a standard-owned file; see `/moskills-sync` for the resolution flow.
 - `missing project file` — seed it via `/moskills-init` (init never overwrites existing files).
 - `NOT INSTALLED` — offer to run `/moskills-init`.
+- `lock <gate>: hard|soft|missing` — whether the gate holds with no AI host (hard: git pre-commit or CI), only inside Claude Code (soft), or not at all (missing). Read the reason in brackets aloud and offer its fix.
+- `runs exist but a plain git commit is not checked for proof` — proof can leak through a terminal commit; offer `/moskills-sync` (or re-run init without `--no-hooks`).
 
 Then make sure this plugin keeps itself up to date:
 
