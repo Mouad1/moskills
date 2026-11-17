@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: diagnose-build-broke
+tags: [triggers, diagnose]
+execution:
+  prompt: "The build broke right after my last change and I do not know why."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: diagnose-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?diagnose"'
