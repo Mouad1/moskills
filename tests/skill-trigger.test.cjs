@@ -32,6 +32,11 @@ test('gatekeeper description triggers on done and ship questions', () => {
   assert.match(description('templates/claude/skills/gatekeeper/SKILL.md'), /passed, failed, unknown/);
 });
 
+test('gatekeeper description stays quiet on questions about what done means', () => {
+  // evals/triggers/collision-question-not-gatekeeper fired gatekeeper 2 of 3 runs.
+  assert.match(description('templates/claude/skills/gatekeeper/SKILL.md'), /Not for questions about what done means/);
+});
+
 test('handoff description triggers on resume and continue phrases', () => {
   assertTrigger('templates/claude/skills/handoff/SKILL.md', [
     'resume', 'pick up where we left off', 'continue from last session'

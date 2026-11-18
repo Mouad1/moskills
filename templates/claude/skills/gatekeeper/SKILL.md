@@ -1,6 +1,6 @@
 ---
 name: gatekeeper
-description: "Audits agreed scope before work is called done: runs the required checks, separates passed, failed, unknown, and not-applicable results, and reports Finished or Still not done with evidence. Use when the user asks \"Is the module done?\", \"is X done?\", \"can we ship?\", \"is this finished?\", or \"ready to ship?\". Use this skill whenever the user asks whether a module, feature, task, or change is done or shippable, even if they do not say gatekeeper or name a check."
+description: "Audits agreed scope before work is called done: runs the required checks, separates passed, failed, unknown, and not-applicable results, and reports Finished or Still not done with evidence. Use when the user asks \"Is the module done?\", \"is X done?\", \"can we ship?\", \"is this finished?\", or \"ready to ship?\". Use this skill whenever the user asks whether a module, feature, task, or change is done or shippable, even if they do not say gatekeeper or name a check. Not for questions about what done means or how moskills works; answer those directly."
 ---
 
 # Gatekeeper
