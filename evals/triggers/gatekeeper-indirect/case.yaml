@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: gatekeeper-indirect
+tags: [triggers, harder, gatekeeper]
+execution:
+  prompt: "I think we are good here. Anything left before I tell the team it works?"
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: gatekeeper-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?gatekeeper"'

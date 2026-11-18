@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Trigger evals:** `evals/triggers/` holds 18 `claude plugin eval` cases for gatekeeper, handoff and diagnose: 3 direct and 1 indirect request per skill, 3 requests (typo fix, plain questions) that must trigger no skill, and 3 requests aimed at a neighbouring skill that must not trigger it (tag `harder` for the indirect and neighbour cases). Draft rules MSK-020 to MSK-023 in `docs/rules.md` set the pass rate. Run: `claude plugin eval . --tag triggers --ablation none --runs 3 --max-cost-usd 6`. On Opus 5.5 (Claude Code 2.1.326): 52 of 54 runs passed for $4.23. "What does done mean for a run?" fired gatekeeper in 2 of 3 runs. Evals load no `CLAUDE.md`, so this measures the skill descriptions alone.
 - **Commit gate checks what is staged:** the git pre-commit check now judges proof against the staged content (`git show :path`), not the working tree. Staging a stale version and restoring the proven file on disk no longer slips through; a proven version staged next to an unstaged edit commits.
 - **Doctor lock report:** `moskills doctor` prints one `lock` line per gate: `commit-proof` (hard when the git pre-commit hook can run the proof check, soft when only the Claude Code hook guards commits), `ci-proof` (hard when a workflow runs `run-state done`) and `visual-flag` (soft with the plugin hook). Each non-hard line names its fix. Doctor fails when runs exist but a plain git commit is not checked for proof.
 
