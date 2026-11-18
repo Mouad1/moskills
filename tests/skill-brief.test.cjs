@@ -1,7 +1,8 @@
 'use strict';
 // gatekeeper and handoff must answer from one run-state command. That command
 // prints a proof brief. A check is re-run only when the brief marks it stale,
-// failing, or missing. The 0.9.2 triggering descriptions stay as they are.
+// failing, or missing. The triggering descriptions change only with eval proof
+// (evals/triggers/); gatekeeper's last sentence came from a false-trigger case.
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -41,7 +42,7 @@ function runState(dir, args) {
   });
 }
 
-const GATEKEEPER_DESCRIPTION = 'Audits agreed scope before work is called done: runs the required checks, separates passed, failed, unknown, and not-applicable results, and reports Finished or Still not done with evidence. Use when the user asks "Is the module done?", "is X done?", "can we ship?", "is this finished?", or "ready to ship?". Use this skill whenever the user asks whether a module, feature, task, or change is done or shippable, even if they do not say gatekeeper or name a check.';
+const GATEKEEPER_DESCRIPTION = 'Audits agreed scope before work is called done: runs the required checks, separates passed, failed, unknown, and not-applicable results, and reports Finished or Still not done with evidence. Use when the user asks "Is the module done?", "is X done?", "can we ship?", "is this finished?", or "ready to ship?". Use this skill whenever the user asks whether a module, feature, task, or change is done or shippable, even if they do not say gatekeeper or name a check. Not for questions about what done means or how moskills works; answer those directly.';
 const HANDOFF_DESCRIPTION = 'Writes a handoff into .claude/STATE.md so the next session can continue: branch and changed files, decisions, blockers, verification, and the exact next step. Use when the user says "resume", "pick up where we left off", "continue from last session", "pause", or "hand this off". Use this skill whenever the user wants to resume, continue, or pick up earlier work, even if they do not say handoff.';
 
 test('gatekeeper starts from run-state done and does not re-run current proof', () => {
