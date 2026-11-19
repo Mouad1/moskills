@@ -8,6 +8,10 @@ It is the fruit of learning from engineers, experts, and successful GitHub repos
 
 Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.3** (npm still ships 0.8.1, without the run-state engine).
 
+![moskills demo: a check passes, the code changes, done says no and git commit is refused](docs/demo/moskills-demo.gif)
+
+A real session, recorded with [vhs](https://github.com/charmbracelet/vhs) from [`docs/demo/moskills-demo.tape`](docs/demo/moskills-demo.tape): the test passes and is recorded, the code changes, `done` says no and `git commit` is refused.
+
 ![moskills workflow](docs/diagrams/moskills-workflow.svg)
 
 ## What it does
