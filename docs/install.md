@@ -53,7 +53,9 @@ sh "${CLAUDE_PLUGIN_ROOT}/moskills" init --target . --no-hooks
 The hook blocks conflict markers and risky placeholder phrases in staged
 files. It also enforces the run-proof gate: when a run exists, a commit is
 refused while a staged file in that run's scope has missing, failed, or stale
-proof. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off. Claude Code runs
+proof. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off; a commit it lets
+through without current proof is still recorded in the run, and an accepted
+result goes back to pending. Claude Code runs
 the same check before `git commit`; the git hook is what stops a terminal
 commit from bypassing it.
 
