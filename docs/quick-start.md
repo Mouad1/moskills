@@ -31,7 +31,7 @@ Ask your agent:
 Requires an agent that reads project instructions, Node.js 18+, and macOS, Linux, or WSL. Published npm installation was checked on 2026-10-13.
 
 ```sh
-npm install -g moskills@0.8.1
+npm install -g moskills@0.9.3
 MOSKILLS_DEMO=$(mktemp -d "${TMPDIR:-/tmp}/moskills-demo.XXXXXX")
 cd "$MOSKILLS_DEMO"
 moskills init
@@ -47,7 +47,7 @@ Paste:
 
 > Build a local quote builder for a photographer. I can enter business and customer names, add services with quantity and price in euros, apply a discount, and print a clear quote. Start with photography €200 and editing €100: a 10% discount must give €270. Agree on rules first, test calculations before building the page, then check it in a browser on desktop and mobile. Keep it small, use no dependencies, and do not commit or publish. Finish with result, proof, and Still not done in five lines.
 
-The [reference demo](examples/quote-builder/README.md) lives in this repository; npm 0.8.1 installs the agent workflow only. Calculations, desktop/mobile flows, and one-page print preview were checked; PDF saving remains your manual check.
+The [reference demo](examples/quote-builder/README.md) lives in this repository; the npm package installs the agent workflow and the run-state engine, not the demo. Calculations, desktop/mobile flows, and one-page print preview were checked; PDF saving remains your manual check.
 
 If instructions were missed: “Read this project's AGENTS.md and installed moskills instructions, then retry.”
 
@@ -77,6 +77,6 @@ Let one potential customer try sample data. Observe difficulties; ask whether th
 
 ## Keep proof, not promises (0.9.0+)
 
-Add one sentence to your build prompt: "Start a moskills run for this and record every check through it." The run saves each test's command, exit code and file hashes. If a checked file changes, that task reopens. `moskills run-state status` and the **Run proof** block in `.claude/STATE.md` show what is really finished; `moskills dashboard` shows it in a browser. Until 0.9.0 is on npm, install from source as in the [A–Z guide](testing-from-a-to-z.md).
+Add one sentence to your build prompt: "Start a moskills run for this and record every check through it." The run saves each test's command, exit code and file hashes. If a checked file changes, that task reopens. `moskills run-state status` and the **Run proof** block in `.claude/STATE.md` show what is really finished; `moskills dashboard` shows it in a browser.
 
 Share one demo, one proof, one customer lesson. [Full verification](testing-from-a-to-z.md). [Customer-discovery principle](https://www.ycombinator.com/library/Gh-yc-guide-to-business-models).

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **README:** a demo GIF of a real session (proof recorded, code edited, `done` refuses, `git commit` refused), recorded with vhs from `docs/demo/moskills-demo.tape`; a CI badge, an npm badge and the trigger eval results, detailed in `docs/evals.md`. Docs no longer say npm ships 0.8.1.
 - **gatekeeper stays quiet on questions about done:** its description now ends with "Not for questions about what done means or how moskills works; answer those directly." Before, "In moskills, what does the word done mean for a run?" fired gatekeeper in 2 of 3 runs. After, on Opus 5.5: 0 of 3, and the 4 gatekeeper trigger cases still fire 12 of 12 ($1.26).
 - **Trigger evals:** `evals/triggers/` holds 18 `claude plugin eval` cases for gatekeeper, handoff and diagnose: 3 direct and 1 indirect request per skill, 3 requests (typo fix, plain questions) that must trigger no skill, and 3 requests aimed at a neighbouring skill that must not trigger it (tag `harder` for the indirect and neighbour cases). Draft rules MSK-020 to MSK-023 in `docs/rules.md` set the pass rate. Run: `claude plugin eval . --tag triggers --ablation none --runs 3 --max-cost-usd 6`. On Opus 5.5 (Claude Code 2.1.326): 52 of 54 runs passed for $4.23. "What does done mean for a run?" fired gatekeeper in 2 of 3 runs. Evals load no `CLAUDE.md`, so this measures the skill descriptions alone.
 - **Commit gate checks what is staged:** the git pre-commit check now judges proof against the staged content (`git show :path`), not the working tree. Staging a stale version and restoring the proven file on disk no longer slips through; a proven version staged next to an unstaged edit commits.
@@ -9,7 +10,7 @@
 
 ## 0.9.3
 
-Patch on 0.9.2. Not yet published to npm. The Claude Code plugin picks it up from `main` only because this version changed.
+Patch on 0.9.2. Published to npm on 2026-11-19 from commit b049c01 (`npm install -g moskills@0.9.3`); the changes under Unreleased are not in it.
 
 - **Proof brief:** `run-state resume`, `run-state done`, and `run-state status` each print one proof brief (scope, goal, every check, rules, visual proof, acceptance, and the re-run command). gatekeeper starts from `run-state done` and handoff from `run-state resume`. A check is re-run only when that brief marks it stale, failing, or missing. Current proof is not re-run, and the skills do not open run files or evidence JSON. The 0.9.2 triggering descriptions are unchanged.
 - **Portable proof:** recorded working directories and proof paths are relative to the project root. Older records that stored an absolute path still count when the file hashes match, and that read rewrites them to relative paths. A copied or moved project with unchanged files keeps current proof.

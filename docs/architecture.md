@@ -271,10 +271,10 @@ POSIX shell on macOS, Linux, or WSL. It supplies a CLI and project assets, not a
 AI agent or account. The full proposed workflow does not ship as an integrated
 runtime.
 
-Version 0.8.1 is published on npm. Version 0.9.0 (the run-state engine) is
-not on the registry yet; to try it, clone the source, run its checks,
-pack it locally, and install that tarball into an isolated prefix or use npx with
-the local tarball. Read the [npm installation guide](npm-installation.md)
+Version 0.9.3 (with the run-state engine) is published on npm. To try
+unreleased changes from `main`, clone the source, run its checks, pack it
+locally, and install that tarball into an isolated prefix or use npx with the
+local tarball. Read the [npm installation guide](npm-installation.md)
 for the available package commands and ownership rules. The
 [A–Z testing guide](testing-from-a-to-z.md) provides a complete disposable-project
 recipe, uses the actual source version and commit, and keeps existing global
