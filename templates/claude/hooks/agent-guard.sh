@@ -60,10 +60,16 @@ commit_gate_script() {
 }
 
 # Exit 1 when staged files have missing, failed, or stale run proof.
-# No run: nothing to prove. MOSKILLS_NO_COMMIT_GATE=1 is the only skip.
+# No run: nothing to prove. MOSKILLS_NO_COMMIT_GATE=1 is the only skip; it
+# never blocks, but a stale commit is still recorded in the run.
 check_run_proof() {
-  [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ] && return 0
   [ -d .moskills/runs ] || return 0
+  if [ "${MOSKILLS_NO_COMMIT_GATE:-0}" = 1 ]; then
+    if command -v node >/dev/null 2>&1 && gate=$(commit_gate_script); then
+      node "$gate" --git-hook --bypass || true
+    fi
+    return 0
+  fi
   if ! command -v node >/dev/null 2>&1; then
     say_err 'moskills commit gate: node is required to check proof'
     return 1
