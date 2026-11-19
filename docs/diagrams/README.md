@@ -11,6 +11,13 @@ slots in.
 
 ![moskills workflow](moskills-workflow.svg)
 
+## moskills in one view
+
+The stage table with its gates (top) and the architecture layers: rules,
+skills, hooks, run-state engine, project files (bottom). Open
+[moskills-overview.excalidraw](moskills-overview.excalidraw) at
+[excalidraw.com](https://excalidraw.com) (File > Open) to view or edit it.
+
 ## Evolvebook anatomy
 
 What one evolvebook is made of, read left to right as a loop: what past runs
