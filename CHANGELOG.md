@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **`--help` after a command prints help:** `run-state init --help` (or `-h`, after any command) prints the help and changes nothing. Before, it created an empty run named `default` and refreshed `.claude/STATE.md` (live test 6).
 - **Bypass is recorded:** when `MOSKILLS_NO_COMMIT_GATE=1` lets a commit through without current proof, the git pre-commit hook still records a `COMMIT_GATE_BYPASSED` event in the run, prints what was skipped, and sends an accepted result back to pending. The commit is never blocked. Before, live test 6 committed a stale file with the bypass, restored the proven bytes in the working tree, and `run-state done` passed while the commit carried unproven code.
 - **README:** a demo GIF of a real session (proof recorded, code edited, `done` refuses, `git commit` refused), recorded with vhs from `docs/demo/moskills-demo.tape`; a CI badge, an npm badge and the trigger eval results, detailed in `docs/evals.md`. Docs no longer say npm ships 0.8.1.
 - **gatekeeper stays quiet on questions about done:** its description now ends with "Not for questions about what done means or how moskills works; answer those directly." Before, "In moskills, what does the word done mean for a run?" fired gatekeeper in 2 of 3 runs. After, on Opus 5.5: 0 of 3, and the 4 gatekeeper trigger cases still fire 12 of 12 ($1.26).
