@@ -290,6 +290,49 @@ test('MOSKILLS_NO_COMMIT_GATE=1 is the only way through a stale git commit', () 
   assert.equal(commit.status, 0, commit.stdout + commit.stderr);
 });
 
+test('a bypassed stale commit is recorded and resets human acceptance', () => {
+  // Live test 6: a teammate committed a stale file with the bypass, then the
+  // working tree went back to the proven bytes. done passed on the working
+  // tree while the commit carried unproven code.
+  const dir = installed('git-bypass-record');
+  const rs = path.join(root, 'lib/run-state-cli.cjs');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  sh(dir, 'node', [rs, 'init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+  sh(dir, 'node', [rs, 'wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  new RunStateEngine({ projectDir: dir }).recordHumanAcceptance({ runId: 'default', acceptedBy: 'user' });
+  sh(dir, 'git', ['add', 'price.cjs']);
+  assert.equal(gitCommit(dir, ['-m', 'proven']).status, 0);
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 700;\n');
+  sh(dir, 'git', ['add', 'price.cjs']);
+  const commit = spawnSync('git', ['-c', 'commit.gpgsign=false', 'commit', '-m', 'override'], {
+    cwd: dir, env: { ...env, MOSKILLS_NO_COMMIT_GATE: '1' }, encoding: 'utf8', timeout: 60000
+  });
+  assert.equal(commit.status, 0, commit.stdout + commit.stderr);
+  assert.match(commit.stderr, /MOSKILLS_NO_COMMIT_GATE=1/);
+  assert.match(commit.stderr, /price\.cjs/);
+  const events = fs.readFileSync(path.join(dir, '.moskills/runs/default/events.ndjson'), 'utf8');
+  assert.match(events, /"type":"COMMIT_GATE_BYPASSED"/);
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  const done = spawnSync('node', [rs, 'done'], { cwd: dir, env, encoding: 'utf8', timeout: 60000 });
+  assert.notEqual(done.status, 0, done.stdout);
+  assert.match(done.stdout + done.stderr, /human acceptance: pending/i);
+});
+
+test('a bypassed commit with current proof records nothing', () => {
+  const dir = installed('git-bypass-clean');
+  const rs = path.join(root, 'lib/run-state-cli.cjs');
+  fs.writeFileSync(path.join(dir, 'price.cjs'), 'module.exports = 800;\n');
+  sh(dir, 'node', [rs, 'init', '--goal', 'g', '--scope', 'price.cjs', '--tasks', 'prove discount']);
+  sh(dir, 'node', [rs, 'wrap', '--task', 'task-1', '--auto-complete', '--silent', '--', 'true']);
+  sh(dir, 'git', ['add', 'price.cjs']);
+  const commit = spawnSync('git', ['-c', 'commit.gpgsign=false', 'commit', '-m', 'clean'], {
+    cwd: dir, env: { ...env, MOSKILLS_NO_COMMIT_GATE: '1' }, encoding: 'utf8', timeout: 60000
+  });
+  assert.equal(commit.status, 0, commit.stdout + commit.stderr);
+  const events = fs.readFileSync(path.join(dir, '.moskills/runs/default/events.ndjson'), 'utf8');
+  assert.doesNotMatch(events, /COMMIT_GATE_BYPASSED/);
+});
+
 test('git commit that deletes a proven file exits non-zero', () => {
   const dir = installed('git-delete');
   const rs = path.join(root, 'lib/run-state-cli.cjs');

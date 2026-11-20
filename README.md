@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Mouad1/moskills/actions/workflows/npm-checks.yml/badge.svg?branch=main)](https://github.com/Mouad1/moskills/actions/workflows/npm-checks.yml)
 [![npm](https://img.shields.io/npm/v/moskills)](https://www.npmjs.com/package/moskills)
-[![trigger evals](https://img.shields.io/badge/trigger%20evals-52%2F54-brightgreen)](docs/evals.md)
+[![trigger evals](https://img.shields.io/badge/trigger%20evals-60%2F60-brightgreen)](docs/evals.md)
 
 By [Mouad Belghiti](https://belghitis.com).
 
@@ -41,16 +41,17 @@ Each arrow is a gate. Behavior gates are decided by a check, visual gates by a s
 
 ## Evals
 
-18 [`claude plugin eval`](docs/evals.md) cases check that the agent picks the right skill from a plain request, and stays quiet when it should. Opus 5.5, Claude Code 2.1.326, plugin 0.9.3, 3 runs each:
+20 [`claude plugin eval`](docs/evals.md) cases check that the agent picks the right skill from a plain request, and stays quiet when it should. Opus 5.5, Claude Code 2.1.326, 3 runs each, latest full run on `main` (2026-11-20):
 
 | Requests | Passed |
 |---|---|
 | Direct ("Is it ready to ship?", "The build broke") for gatekeeper, handoff, diagnose | 27 / 27 |
+| Code to write ("Add a function...", "Plan approved... Build it.") for tdd | 6 / 6 |
 | Indirect ("My laptop battery is about to die, save where we are.") | 9 / 9 |
 | No skill expected (typo fix, plain questions) | 9 / 9 |
-| Aimed at a neighbouring skill, which must stay quiet | 7 / 9 |
+| Aimed at a neighbouring skill, which must stay quiet | 9 / 9 |
 
-The 2 misses: "what does done mean for a run?" fired gatekeeper. Its description was fixed on `main`, and that case now passes 3 of 3. Details, cost and how to re-run: [docs/evals.md](docs/evals.md).
+The 0.9.3 package missed 2 of these: "what does done mean for a run?" fired gatekeeper, and tdd did not fire on code requests. Both descriptions are fixed on `main`. Details, cost and how to re-run: [docs/evals.md](docs/evals.md).
 
 ## Installed Commands
 
@@ -107,7 +108,7 @@ Updating, local development, evolvebook setup, file list and uninstall: [full in
   - `docs/rules.md`: business rules register with live proof status.
   - `.claude/STATE.md`: scope, gates, next step.
   - `tasks/`: plan and lessons.
-- **Guards**: the Git pre-commit hook blocks conflict markers, placeholder phrases, and a commit of files whose run proof is missing, failed, or stale. Claude Code denies that `git commit` in the session as well. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off.
+- **Guards**: the Git pre-commit hook blocks conflict markers, placeholder phrases, and a commit of files whose run proof is missing, failed, or stale. Claude Code denies that `git commit` in the session as well. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off. A commit it lets through without current proof is still recorded in the run, and an accepted result goes back to pending.
 
 `moskills doctor` reports drift; `moskills status` prints Goal, Finished, Still not done, Blocker, Next.
 

@@ -84,7 +84,7 @@ Call the work done only after validation output has been observed and any remain
 
 ## Git pre-commit hook
 
-The Git pre-commit hook is installed by default in Git repositories. It runs for every agent and for a commit from the terminal. Pass `--no-hooks` to skip installing it. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off.
+The Git pre-commit hook is installed by default in Git repositories. It runs for every agent and for a commit from the terminal. Pass `--no-hooks` to skip installing it. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off. A commit it lets through without current proof is still recorded in the run, and an accepted result goes back to pending.
 
 ```text
 git commit -> .git/hooks/pre-commit -> .claude/hooks/agent-guard.sh -> allow or block commit
