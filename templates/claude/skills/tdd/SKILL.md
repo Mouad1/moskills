@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: "Use when: building a feature, changing behavior, fixing a bug with a reproducible case, adding tests, or creating feedback loops."
+description: "Red, green, refactor, with proof recorded per task. Use when the user asks to build, add, implement or change code: a feature, a function, a behavior change, a fix for a bug with a known reproducible case, or \"build it\" once a plan is approved. Use this skill whenever code is about to be written, even if the user never mentions tests. Not for finding the cause of an unknown failure; use diagnose."
 ---
 
 # TDD
