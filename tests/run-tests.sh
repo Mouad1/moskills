@@ -1040,8 +1040,8 @@ test_evolvebook_new_creates_a_complete_book() {
     assert_file "$BOOK/$f"
   done
   assert_contains "$BOOK/SKILL.md" 'name: article'
-  assert_contains "$BOOK/SKILL.md" 'description: "Use when: writing a dev article.'
-  assert_contains "$BOOK/SKILL.md" 'Purpose: Dev articles'
+  assert_contains "$BOOK/SKILL.md" 'description: "Runs the article evolvebook: a guide for article jobs that improves every run. Use when writing a dev article, even if the user does not say article."'
+  assert_contains "$BOOK/SKILL.md" 'Primary goal: Dev articles'
   assert_contains "$BOOK/done.md" '| Date | What | topic | format | hook | length | Manual steps |'
   assert_contains "$BOOK/choices.md" '## hook'
   assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 0 | 0 | - | home |'
@@ -1081,6 +1081,10 @@ test_evolvebook_record_updates_done_list_and_index() {
   out="$TMP_ROOT/eb-list.txt"; eb list >"$out"
   assert_contains "$out" "| article | Dev articles | 1 | 1 | $(date +%Y-%m-%d) | home |"
   assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 1 | 1 |'
+  # books made before the Primary goal line still list their Purpose
+  sed 's/^Primary goal: /Purpose: /' "$BOOK/SKILL.md" > "$BOOK/SKILL.tmp" && mv "$BOOK/SKILL.tmp" "$BOOK/SKILL.md"
+  eb list >"$out"
+  assert_contains "$out" "| article | Dev articles | 1 | 1 |"
   pass 'evolvebook record appends a Done row and rebuilds the index'
 }
 
