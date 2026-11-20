@@ -1,0 +1,15 @@
+schema_version: "1.1"
+name: collision-readme-example-not-evolvebook
+tags: [triggers, harder, collision, evolvebook]
+execution:
+  prompt: "Add the parseDate function as a usage example in the README."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: no-evolvebook
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?evolvebook"'
+    min: 0
+    max: 0
+    arm: both

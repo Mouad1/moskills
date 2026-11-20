@@ -23,6 +23,9 @@ Claude Code 2.1.326, model `claude-opus-5-5`, plugin 0.9.3, 3 runs per case.
 | neighbour: feature, not diagnose | "Add a 10% discount on orders over 100 dollars." | `diagnose` stays quiet | 3 / 3 |
 | neighbour: list, not handoff | "Continue this list with three more fruits..." | `handoff` stays quiet | 3 / 3 |
 | neighbour: question, not gatekeeper | "In moskills, what does the word done mean for a run?" | `gatekeeper` stays quiet | 1 / 3 → **3 / 3** |
+| evolvebook, direct | "Create an evolvebook for my weekly newsletter." | `evolvebook` fires | 3 / 3 |
+| evolvebook, indirect | "This is the third LinkedIn post I write with you this month. Keep a guide..." | `evolvebook` fires | 3 / 3 |
+| neighbour: README example, not evolvebook | "Add the parseDate function as a usage example in the README." | `evolvebook` stays quiet | 3 / 3 |
 | **Total, first run** | 18 cases | | **52 / 54** |
 
 The first suite run (2026-11-17) passed 52 of 54 runs: the 12 direct and quiet
@@ -33,6 +36,10 @@ done means or how moskills works; answer those directly." A re-run on
 2026-11-18 passed that case 3 of 3 and the four gatekeeper trigger cases 12 of
 12 ($1.26). That description change is on `main` (Unreleased) and is not in the
 0.9.3 package.
+
+The 3 `evolvebook` cases were added on 2026-11-20 with the rewritten
+description (it now leads with what the skill does) and passed 9 of 9 runs
+($1.17, `--tag evolvebook`). They are not in the first-run total above.
 
 Draft rules MSK-020 to MSK-023 in [`docs/rules.md`](rules.md) set the pass
 rate these cases must hold.
@@ -48,7 +55,8 @@ about $4 on Opus 5.5. Results land in `evals/results/` (gitignored).
 
 ## What they do not cover
 
-- Only 3 of the 18 skills (`diagnose`, `gatekeeper`, `handoff`) have trigger cases.
+- Only 4 of the 18 skills (`diagnose`, `gatekeeper`, `handoff`, `evolvebook`) have
+  trigger cases.
 - They check that a skill fires, not how well it does the job once it runs.
 - With a project `CLAUDE.md` and the moskills standard loaded, as in a real
   install, routing gets extra hints these evals leave out.
