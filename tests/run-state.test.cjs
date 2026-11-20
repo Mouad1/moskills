@@ -296,3 +296,18 @@ test('8. CLI integration: moskills run-state init, check, complete, resume, and 
   assert.ok(res.stdout.includes('task-1 [finished]'));
 });
 
+
+test('9. --help after a command prints help and changes nothing', () => {
+  const dir = createTestProject('cli-help');
+  for (const flag of ['--help', '-h']) {
+    for (const command of ['init', 'accept', 'wrap']) {
+      const res = spawnSync('node', [
+        path.join(root, 'bin/moskills.cjs'), 'run-state', command, flag, '--target', dir
+      ], { encoding: 'utf8' });
+      assert.equal(res.status, 0, `${command} ${flag}: ${res.stderr}`);
+      assert.ok(res.stdout.includes('moskills run-state:'), `${command} ${flag} prints help`);
+    }
+  }
+  assert.equal(fs.existsSync(path.join(dir, '.moskills', 'runs')), false, 'no run created');
+  assert.equal(fs.existsSync(path.join(dir, '.claude', 'STATE.md')), false, 'STATE.md untouched');
+});
