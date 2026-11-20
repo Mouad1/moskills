@@ -973,8 +973,8 @@ test_evolvebook_skill_is_registered_and_valid() {
   sk="$ROOT_DIR/templates/claude/skills/evolvebook/SKILL.md"
   [ "$(sed -n 1p "$sk")" = '---' ] || fail 'SKILL.md must start with frontmatter'
   sed -n '2,4p' "$sk" | grep -qx 'name: evolvebook' || fail 'frontmatter name must be evolvebook'
-  sed -n '2,4p' "$sk" | grep -q '^description: "Use when: ' || fail 'frontmatter description must start with Use when:'
-  assert_contains "$sk" 'Primary goal: Turn one kind of job into a guide that gets better every run.'
+  sed -n '2,4p' "$sk" | grep -q '^description: "Keeps one guide per kind of job' || fail 'frontmatter description must lead with what the skill does'
+  assert_contains "$sk" 'Primary goal: Every run of a job follows its evolvebook and adds a Done row, plus any Example, Never rule or Mistake the user approved.'
   assert_contains "$sk" '${CLAUDE_SKILL_DIR}/scripts/evolvebook.sh'
   # the skill is the slash command: a same-named command file would shadow it in Claude Code
   assert_not_exists "$ROOT_DIR/templates/claude/commands/evolvebook.md"

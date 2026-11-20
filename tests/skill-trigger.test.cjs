@@ -44,6 +44,13 @@ test('handoff description triggers on resume and continue phrases', () => {
   assert.match(description('templates/claude/skills/handoff/SKILL.md'), /next step/);
 });
 
+test('evolvebook description triggers on book commands and grow phrases', () => {
+  assertTrigger('templates/claude/skills/evolvebook/SKILL.md', [
+    '/evolvebook', 'add this as a good example', 'never do X again', 'EVOLVEBOOKS.md', '3 times without a book'
+  ]);
+  assert.match(description('templates/claude/skills/evolvebook/SKILL.md'), /^Keeps one guide per kind of job/);
+});
+
 test('managed sections send done and resume phrases to the skills', () => {
   const base = fs.readFileSync(path.join(root, 'templates/managed/base.md'), 'utf8');
   const protocol = fs.readFileSync(path.join(root, 'templates/managed/session-protocol.md'), 'utf8');

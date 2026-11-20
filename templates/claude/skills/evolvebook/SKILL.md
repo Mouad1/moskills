@@ -1,21 +1,27 @@
 ---
 name: evolvebook
-description: "Use when: the user runs /evolvebook; asks to create, use, list, link or export an evolvebook; says 'add this as a good example' or 'never do X again' about a kind of job; starts a task that matches a book listed in EVOLVEBOOKS.md; or has done the same kind of job 3 times without a book."
+description: "Keeps one guide per kind of job (a dev article, a landing page, a NestJS module) that improves every run: asks a short brief, blocks repeats of past runs, checks the result, and records approved examples, never-rules and mistakes. Use when the user runs /evolvebook; asks to create, use, list, link or export an evolvebook; says 'add this as a good example' or 'never do X again' about a kind of job; starts a task that matches a book listed in EVOLVEBOOKS.md; or has done the same kind of job 3 times without a book, even if the user does not say evolvebook."
 ---
 
 # Evolvebook
 
-Primary goal: Turn one kind of job into a guide that gets better every run.
+Primary goal: Every run of a job follows its evolvebook and adds a Done row, plus any Example, Never rule or Mistake the user approved.
 
 An evolvebook remembers what good looks like, what we already made, and what
 went wrong. moskills says *how we work on any task*; an evolvebook says *how we
-do one specific job well* (a dev article, a landing page, a NestJS module).
+do one specific job well*.
+
+```text
+Setup (once) -> Create (once per job) -> Use (every run) -> Grow / Evolve (on the user's yes)
+Use = Pick -> Brief -> Plan -> Repeat check -> Make -> Check -> Close (Done row)
+Link / Export: the same book, reachable from other agents
+```
 
 ## Words (the only terms to use with the user)
 
 Evolvebook, Brief, Examples, Choices, Toolbox, Never list, Check, Done list,
-Mistakes list, Home. Never say "skill", "template", "frontmatter" or "script"
-to the user.
+Mistakes list, Home. Use these names for the parts of a book instead of
+"skill", "template", "frontmatter" or "script".
 
 ## Helper
 
@@ -208,11 +214,9 @@ Nothing moves without the user's yes.
 
 ## Link — `/evolvebook link`
 
-Run `$EB link` and show every line (linked, ok, skipped). Personal books go to
-each installed agent (Claude Code `~/.claude/skills`, Codex `~/.agents/skills`,
-Antigravity `~/.gemini/config/skills`); project books go to the project's
-`.claude/skills` (and `.agents/skills` when it exists). Links, never copies:
-every run improves the book for every agent.
+Run `$EB link` and show every line (linked, ok, skipped): the helper picks the
+agent folders. Links, never copies: every run improves the book for every
+agent.
 
 ## Export — `/evolvebook export <job>`
 
