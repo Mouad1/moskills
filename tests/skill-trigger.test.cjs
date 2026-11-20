@@ -44,6 +44,22 @@ test('handoff description triggers on resume and continue phrases', () => {
   assert.match(description('templates/claude/skills/handoff/SKILL.md'), /next step/);
 });
 
+test('evolvebook description triggers on book commands and grow phrases', () => {
+  assertTrigger('templates/claude/skills/evolvebook/SKILL.md', [
+    '/evolvebook', 'add this as a good example', 'never do X again', 'EVOLVEBOOKS.md', '3 times without a book'
+  ]);
+  assert.match(description('templates/claude/skills/evolvebook/SKILL.md'), /^Keeps one guide per kind of job/);
+});
+
+test('evolvebook book template leads with what the book does', () => {
+  const tpl = fs.readFileSync(path.join(root, 'templates/claude/skills/evolvebook/book/SKILL.md.tpl'), 'utf8');
+  const found = tpl.match(/^description: "(.*)"$/m);
+  assert.ok(found, 'book template needs a one-line double-quoted description');
+  assert.doesNotMatch(found[1], /^Use when\b/);
+  assert.match(found[1], /Use when \{\{use_when\}\}, even if/);
+  assert.match(tpl, /^Primary goal: \{\{purpose\}\}$/m);
+});
+
 test('managed sections send done and resume phrases to the skills', () => {
   const base = fs.readFileSync(path.join(root, 'templates/managed/base.md'), 'utf8');
   const protocol = fs.readFileSync(path.join(root, 'templates/managed/session-protocol.md'), 'utf8');

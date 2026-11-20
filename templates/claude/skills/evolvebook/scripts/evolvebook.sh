@@ -155,7 +155,7 @@ cell() { # $1 = row, $2 = 1-based column -> trimmed cell
 
 book_line() { # $1 = folder, $2 = where
   n=$(basename "$1")
-  purpose=$(sed -n 's/^Purpose:[[:space:]]*//p' "$1/SKILL.md" | head -1)
+  purpose=$(sed -n -E 's/^(Primary goal|Purpose):[[:space:]]*//p' "$1/SKILL.md" | head -1)  # Purpose: older books
   ex=$(count_examples "$1"); ex=${ex:-0}
   rows=$(done_rows "$1")
   if [ -n "$rows" ]; then
@@ -299,7 +299,7 @@ cmd_setup() {
 subst() { # replace {{key}} markers; values are sed-escaped
   n=$(printf '%s' "$NAME" | sed 's/[&|\\]/\\&/g')
   p=$(printf '%s' "$PURPOSE" | sed 's/[&|\\]/\\&/g')
-  u=$(printf '%s' "$USE_WHEN" | sed 's/[&|\\]/\\&/g; s/"/\\\\"/g')
+  u=$(printf '%s' "$USE_WHEN" | sed 's/[.[:space:]]*$//; s/[&|\\]/\\&/g; s/"/\\\\"/g')
   sed -e "s|{{name}}|$n|g" -e "s|{{purpose}}|$p|g" -e "s|{{use_when}}|$u|g" -e "s|{{date}}|$(today)|g" "$1"
 }
 

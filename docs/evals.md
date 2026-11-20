@@ -25,6 +25,9 @@ Claude Code 2.1.326, model `claude-opus-5-5`, plugin 0.9.3, 3 runs per case.
 | neighbour: question, not gatekeeper | "In moskills, what does the word done mean for a run?" | `gatekeeper` stays quiet | 1 / 3 → **3 / 3** |
 | tdd, direct | "Add a function that gives a 10% discount on orders over 100 euros." | `tdd` fires | 0 / 3 → **3 / 3** |
 | tdd, after a plan | "Plan approved: a function that gives 10% off orders over 100 euros, in discount.js. Build it." | `tdd` fires | 0 / 3 → **3 / 3** |
+| evolvebook, direct | "Create an evolvebook for my weekly newsletter." | `evolvebook` fires | 3 / 3 |
+| evolvebook, indirect | "This is the third LinkedIn post I write with you this month. Keep a guide..." | `evolvebook` fires | 3 / 3 |
+| neighbour: README example, not evolvebook | "Add the parseDate function as a usage example in the README." | `evolvebook` stays quiet | 3 / 3 |
 | **Total, first run** | 18 cases | | **52 / 54** |
 | **Total, 2026-11-20** | 20 cases | | **60 / 60** |
 
@@ -44,6 +47,10 @@ runs: the agent wrote the code itself. The description now says to use tdd
 A full run on 2026-11-20 passed all 20 cases, 60 of 60 runs ($5.74). That
 description change is on `main` (Unreleased).
 
+The 3 `evolvebook` cases were added on 2026-11-20 with the rewritten
+description (it now leads with what the skill does) and passed 9 of 9 runs
+($1.17, `--tag evolvebook`). They are not in the totals above.
+
 Draft rules MSK-020 to MSK-023 in [`docs/rules.md`](rules.md) set the pass
 rate these cases must hold.
 
@@ -58,7 +65,8 @@ about $6 on Opus 5.5. Results land in `evals/results/` (gitignored).
 
 ## What they do not cover
 
-- Only 4 of the 18 skills (`diagnose`, `gatekeeper`, `handoff`, `tdd`) have trigger cases.
+- Only 5 of the 18 skills (`diagnose`, `gatekeeper`, `handoff`, `tdd`, `evolvebook`)
+  have trigger cases.
 - They check that a skill fires, not how well it does the job once it runs.
 - With a project `CLAUDE.md` and the moskills standard loaded, as in a real
   install, routing gets extra hints these evals leave out.

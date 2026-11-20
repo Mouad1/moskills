@@ -1,11 +1,11 @@
 ---
 name: {{name}}
-description: "Use when: {{use_when}}. This is an evolvebook: a guide for one kind of job that improves every run."
+description: "Runs the {{name}} evolvebook: a guide for {{name}} jobs that improves every run. Use when {{use_when}}, even if the user does not say {{name}}."
 ---
 
 # {{name}} evolvebook
 
-Purpose: {{purpose}}
+Primary goal: {{purpose}}
 
 Created: {{date}}
 
