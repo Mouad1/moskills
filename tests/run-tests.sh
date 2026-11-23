@@ -973,8 +973,8 @@ test_evolvebook_skill_is_registered_and_valid() {
   sk="$ROOT_DIR/templates/claude/skills/evolvebook/SKILL.md"
   [ "$(sed -n 1p "$sk")" = '---' ] || fail 'SKILL.md must start with frontmatter'
   sed -n '2,4p' "$sk" | grep -qx 'name: evolvebook' || fail 'frontmatter name must be evolvebook'
-  sed -n '2,4p' "$sk" | grep -q '^description: "Use when: ' || fail 'frontmatter description must start with Use when:'
-  assert_contains "$sk" 'Primary goal: Turn one kind of job into a guide that gets better every run.'
+  sed -n '2,4p' "$sk" | grep -q '^description: "Keeps one guide per kind of job' || fail 'frontmatter description must lead with what the skill does'
+  assert_contains "$sk" 'Primary goal: Every run of a job follows its evolvebook and adds a Done row, plus any Example, Never rule or Mistake the user approved.'
   assert_contains "$sk" '${CLAUDE_SKILL_DIR}/scripts/evolvebook.sh'
   # the skill is the slash command: a same-named command file would shadow it in Claude Code
   assert_not_exists "$ROOT_DIR/templates/claude/commands/evolvebook.md"
@@ -1040,8 +1040,8 @@ test_evolvebook_new_creates_a_complete_book() {
     assert_file "$BOOK/$f"
   done
   assert_contains "$BOOK/SKILL.md" 'name: article'
-  assert_contains "$BOOK/SKILL.md" 'description: "Use when: writing a dev article.'
-  assert_contains "$BOOK/SKILL.md" 'Purpose: Dev articles'
+  assert_contains "$BOOK/SKILL.md" 'description: "Runs the article evolvebook: a guide for article jobs that improves every run. Use when writing a dev article, even if the user does not say article."'
+  assert_contains "$BOOK/SKILL.md" 'Primary goal: Dev articles'
   assert_contains "$BOOK/done.md" '| Date | What | topic | format | hook | length | Manual steps |'
   assert_contains "$BOOK/choices.md" '## hook'
   assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 0 | 0 | - | home |'
@@ -1081,6 +1081,10 @@ test_evolvebook_record_updates_done_list_and_index() {
   out="$TMP_ROOT/eb-list.txt"; eb list >"$out"
   assert_contains "$out" "| article | Dev articles | 1 | 1 | $(date +%Y-%m-%d) | home |"
   assert_contains "$EBH/.evolvebooks/EVOLVEBOOKS.md" '| article | Dev articles | 1 | 1 |'
+  # books made before the Primary goal line still list their Purpose
+  sed 's/^Primary goal: /Purpose: /' "$BOOK/SKILL.md" > "$BOOK/SKILL.tmp" && mv "$BOOK/SKILL.tmp" "$BOOK/SKILL.md"
+  eb list >"$out"
+  assert_contains "$out" "| article | Dev articles | 1 | 1 |"
   pass 'evolvebook record appends a Done row and rebuilds the index'
 }
 
