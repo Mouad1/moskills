@@ -271,7 +271,7 @@ POSIX shell on macOS, Linux, or WSL. It supplies a CLI and project assets, not a
 AI agent or account. The full proposed workflow does not ship as an integrated
 runtime.
 
-Version 0.9.3 (with the run-state engine) is published on npm. To try
+Version 0.9.4 (with the run-state engine) is published on npm. To try
 unreleased changes from `main`, clone the source, run its checks, pack it
 locally, and install that tarball into an isolated prefix or use npx with the
 local tarball. Read the [npm installation guide](npm-installation.md)
