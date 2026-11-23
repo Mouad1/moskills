@@ -10,7 +10,7 @@ By [Mouad Belghiti](https://belghitis.com).
 
 It is the fruit of learning from engineers, experts, and successful GitHub repos: spec before code, align first, fast feedback loops, checkpoints, validation before done, clean handoffs. moskills turns those habits into rules, skills and hooks your agent follows on its own. No command names to learn.
 
-Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.3**, on npm and as the Claude Code plugin.
+Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.4**, on npm and as the Claude Code plugin.
 
 ![moskills demo: a check passes, the code changes, done says no and git commit is refused](docs/demo/moskills-demo.gif)
 
@@ -51,7 +51,7 @@ Each arrow is a gate. Behavior gates are decided by a check, visual gates by a s
 | No skill expected (typo fix, plain questions) | 9 / 9 |
 | Aimed at a neighbouring skill, which must stay quiet | 9 / 9 |
 
-The 0.9.3 package missed 2 of these: "what does done mean for a run?" fired gatekeeper, and tdd did not fire on code requests. Both descriptions are fixed on `main`. Details, cost and how to re-run: [docs/evals.md](docs/evals.md).
+The 0.9.3 package missed 2 of these: "what does done mean for a run?" fired gatekeeper, and tdd did not fire on code requests. Both descriptions are fixed in 0.9.4. Details, cost and how to re-run: [docs/evals.md](docs/evals.md).
 
 ## Installed Commands
 

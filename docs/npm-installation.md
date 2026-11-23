@@ -1,6 +1,6 @@
 # moskills: install once, ask normally
 
-Status: [moskills 0.9.3 is published on npm](https://www.npmjs.com/package/moskills/v/0.9.3) (2026-11-19), with the run-state engine. The packed tarball installed into a fresh prefix on Debian 13 and ran `init`, `doctor` and `run-state init` before publishing. For a safe, complete trial, follow the [A–Z testing walkthrough](testing-from-a-to-z.md).
+Status: [moskills 0.9.4 is published on npm](https://www.npmjs.com/package/moskills/v/0.9.4) (2026-11-23), with the run-state engine. The packed tarball installed into a fresh prefix on Debian 13 and ran `init`, `doctor` and `run-state init` before publishing. For a safe, complete trial, follow the [A–Z testing walkthrough](testing-from-a-to-z.md).
 
 ## Install and use
 
