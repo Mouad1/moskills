@@ -68,6 +68,7 @@ You rarely type these: the agent picks them from what you ask. Slash commands fo
 | `/checkpoint`, `/handoff` | Save progress; leave the next session an exact next step |
 | `/learn` | Turn a correction into a rule in `tasks/lessons.md` |
 | `/design-system` | Keep one checked `design.md` for UI work |
+| `/council-loop` | Multi-model review loop across providers until consensus is reached |
 | `/shared-language`, `/system-map`, `/project-dna`, `/compress-input`, `/evolvebook` | Glossary, blast radius, build recipes, terse mode, job guides |
 
 Full list: [command reference](docs/command-reference.md).

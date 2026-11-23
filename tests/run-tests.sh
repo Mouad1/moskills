@@ -145,6 +145,7 @@ test_commands_point_to_matching_skills() {
   assert_contains "$project/.claude/commands/compress-input.md" '`compress-input` skill'
   assert_contains "$project/.claude/commands/learn.md" '`learn` skill'
   assert_contains "$project/.claude/commands/handoff.md" '`handoff` skill'
+  assert_contains "$project/.claude/commands/council-loop.md" '`council-loop` skill'
   pass 'commands point to matching skills'
 }
 
@@ -168,6 +169,7 @@ test_skills_have_single_primary_goal() {
   assert_contains "$project/.claude/skills/learn/SKILL.md" 'Primary goal: Turn corrections into rules so the same mistake never happens twice.'
   assert_contains "$project/.claude/skills/learn/SKILL.md" 'Scope: personal'
   assert_contains "$project/.claude/skills/handoff/SKILL.md" 'Primary goal: Compact current work into a handoff document.'
+  assert_contains "$project/.claude/skills/council-loop/SKILL.md" 'Primary goal: A code change leaves the loop with every reviewer approving, or with the open disagreement escalated to the user.'
   pass 'skills have single primary goals'
 }
 

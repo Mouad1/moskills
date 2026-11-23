@@ -216,6 +216,55 @@ Rules:
 - Report failing and unknown checks clearly.
 - Do not treat unknown checks as passing.
 
+## /council-loop
+
+Purpose: a code change leaves the loop with every reviewer approving, or with the open disagreement escalated to the user.
+
+Use when code changes need high-confidence multi-model review, before or after filing a pull request, or when the user says "council", "council loop", "council-loop", "multi-model review", or asks for consensus code review.
+
+Flow:
+
+```text
+Scope & Baseline -> Convene Council (Parallel Dispatch) -> Triage Findings & Run Checks -> Loop Delta Until Agreement -> Consensus Report
+```
+
+How it works:
+
+- Picks the strongest reasoning model from 3 distinct providers at run time: `orchestrator_capabilities` in T3 Code; elsewhere one native subagent for the host provider and each other provider's own CLI in read-only mode. With fewer than 3 providers it names the missing ones and records `Providers: N of 3`.
+- Dispatches read-only reviewer delegates in parallel to review the exact merge-base to working-tree diff and intent.
+- Delegates return structured findings with stable IDs (`[D1-1]`), severity (`blocker`, `should`, `nit`), score out of 10, and verdict (`APPROVE` or `CHANGES`).
+- The primary agent acts as the Council Chair: verifies findings independently, makes minimal targeted fixes, refutes invalid feedback with evidence, declines out-of-scope nits, and arbitrates conflicting opinions.
+- Subsequent rounds review only delta diffs and open findings until all delegates agree, up to a strict budget (default 3 rounds, max 5 for security/concurrency).
+- Deadlocks or budget expirations are escalated to the human user with a balanced 2-3 line summary.
+
+Expected output (Council Review table and findings ledger):
+
+```markdown
+## Council review
+
+Rounds: 2
+Providers: 3 of 3
+Status: Consensus Reached
+
+| Delegate | Provider | Model | Round 1 | Round 2 | Final Verdict |
+| --- | --- | --- | --- | --- | --- |
+| Delegate 1 | Anthropic | <model id as reported> | 7/10 (CHANGES) | 9/10 (APPROVE) | Approved |
+| Delegate 2 | OpenAI | <model id as reported> | 8/10 (CHANGES) | 10/10 (APPROVE) | Approved |
+| Delegate 3 | Google | <model id as reported> | 7/10 (CHANGES) | 9/10 (APPROVE) | Approved |
+
+### Findings Ledger
+- [D1-1] [blocker] auth.ts:42 Session expiry unhandled -> Resolved: added expiry check.
+- [D2-1] [should] cache.ts:15 Key collision on null -> Resolved: sanitized key generation.
+- [D3-1] [nit] utils.ts:88 Suggests extra helper -> Declined: out of scope, inline code is clear.
+```
+
+Rules:
+
+- Minimal diffs: fix only real bugs and regressions; fight aggressively against scope creep.
+- Run tests and verification checks before every review round; never send broken code.
+- Record truthful scores: never fabricate approval or guess missing scores.
+- Reviewers are strictly read-only; delegates must never edit files or launch subagents.
+
 ## /modular-build
 
 Purpose: build one module at a time, and start the next only when the current one is proven and accepted.
