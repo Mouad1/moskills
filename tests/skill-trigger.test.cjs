@@ -44,6 +44,13 @@ test('handoff description triggers on resume and continue phrases', () => {
   assert.match(description('templates/claude/skills/handoff/SKILL.md'), /next step/);
 });
 
+test('writing-skills description triggers on skill creation phrases', () => {
+  assertTrigger('templates/claude/skills/writing-skills/SKILL.md', [
+    'creating new skills', 'editing existing skills', 'formalizing repeatable workflows'
+  ]);
+  assert.match(description('templates/claude/skills/writing-skills/SKILL.md'), /Test-Driven Development/);
+});
+
 test('evolvebook description triggers on book commands and grow phrases', () => {
   assertTrigger('templates/claude/skills/evolvebook/SKILL.md', [
     '/evolvebook', 'add this as a good example', 'never do X again', 'EVOLVEBOOKS.md', '3 times without a book'

@@ -41,6 +41,7 @@
     "./templates/claude/skills/preview",
     "./templates/claude/skills/design-system",
     "./templates/claude/skills/learn",
-    "./templates/claude/skills/evolvebook"
+    "./templates/claude/skills/evolvebook",
+    "./templates/claude/skills/writing-skills"
   ]
 }

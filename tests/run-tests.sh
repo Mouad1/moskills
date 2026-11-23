@@ -145,6 +145,7 @@ test_commands_point_to_matching_skills() {
   assert_contains "$project/.claude/commands/compress-input.md" '`compress-input` skill'
   assert_contains "$project/.claude/commands/learn.md" '`learn` skill'
   assert_contains "$project/.claude/commands/handoff.md" '`handoff` skill'
+  assert_contains "$project/.claude/commands/writing-skills.md" '`writing-skills` skill'
   pass 'commands point to matching skills'
 }
 
@@ -168,6 +169,7 @@ test_skills_have_single_primary_goal() {
   assert_contains "$project/.claude/skills/learn/SKILL.md" 'Primary goal: Turn corrections into rules so the same mistake never happens twice.'
   assert_contains "$project/.claude/skills/learn/SKILL.md" 'Scope: personal'
   assert_contains "$project/.claude/skills/handoff/SKILL.md" 'Primary goal: Compact current work into a handoff document.'
+  assert_contains "$project/.claude/skills/writing-skills/SKILL.md" 'Primary goal: Every new or changed skill ships with a baseline failure it fixes and proof that it fires on the right requests and stays quiet on its neighbours.'
   pass 'skills have single primary goals'
 }
 
