@@ -49,6 +49,9 @@ test('writing-skills description triggers on skill creation phrases', () => {
     'creating new skills', 'editing existing skills', 'formalizing repeatable workflows'
   ]);
   assert.match(description('templates/claude/skills/writing-skills/SKILL.md'), /Test-Driven Development/);
+  // when_to_use is what wins against superpowers:writing-skills (issue #90)
+  const skill = fs.readFileSync(path.join(root, 'templates/claude/skills/writing-skills/SKILL.md'), 'utf8');
+  assert.match(skill, /^when_to_use: ".*Write a new skill.*"$/m);
 });
 
 test('evolvebook description triggers on book commands and grow phrases', () => {

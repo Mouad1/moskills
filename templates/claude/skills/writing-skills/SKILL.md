@@ -1,6 +1,7 @@
 ---
 name: writing-skills
-description: "Creates, edits, tests, and verifies AI agent skills using Test-Driven Development (TDD) for workflow documentation with cross-provider guidelines. Use when creating new skills, editing existing skills, formalizing repeatable workflows into skills, or verifying skill behavior, even if the user does not say writing-skills."
+description: "Writes or changes a skill with Test-Driven Development and proves it: records the baseline failure, drafts the smallest SKILL.md, then adds trigger tests and evals showing it fires on the right requests and stays quiet on its neighbours. Use when creating new skills, editing existing skills, tightening when a skill fires, formalizing repeatable workflows into skills, or verifying skill behavior, even if the user does not say writing-skills."
+when_to_use: "Write a new skill, create a skill that makes the agent do something every time, edit or tighten an existing skill, prove a skill fires."
 ---
 
 # Writing Skills
@@ -42,6 +43,8 @@ description: "[What it does, third person]. Use when [specific triggers, natural
 ---
 ```
 Never start the description with `Use when`: the capability comes first. `tests/skill-trigger.test.cjs` (`assertTrigger`) enforces this shape.
+
+Optional `when_to_use`: a second line of trigger phrases, the requests users actually type. Claude Code appends it to the description in the skill listing (both together are cut at 1,536 characters). Add it when another installed plugin ships an overlapping skill: measured with superpowers installed, `superpowers:writing-skills` took "Write a new skill..." 3 of 3 times (0 of 6 for this skill) until this skill had a `when_to_use` line; with it, this skill fired 5 of 6. A sharper description alone and a rename did not help.
 
 ### 2. Header & Single Primary Goal
 States the single, unambiguous outcome of the skill:
