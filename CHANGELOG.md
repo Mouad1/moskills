@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Version check:** `moskills version-check` prints the local `VERSION`, the `VERSION` on origin's default branch (after `git fetch`), how many commits the checkout is behind, and the latest tag. It never fails. `--hook` prints SessionStart JSON; this repo's `.claude/settings.json` runs it at session start. `--release <x.y.z>` also reads `npm view <package> version` and exits 1 when the version is not higher than the published one, the tag exists on origin, the checkout is behind, or git or npm cannot be reached. The new `release check` workflow runs it on every PR that changes `VERSION`. Before, a plan named 0.10.0 from a local checkout at 0.9.3 while npm and origin were at 0.9.4.
+
 ## 0.9.4
 
 Patch on 0.9.3. Published to npm on 2026-11-23 (`npm install -g moskills@0.9.4`). Run `moskills sync` in a project to update its managed files.
