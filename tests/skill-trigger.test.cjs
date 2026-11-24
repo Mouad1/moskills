@@ -44,6 +44,13 @@ test('handoff description triggers on resume and continue phrases', () => {
   assert.match(description('templates/claude/skills/handoff/SKILL.md'), /next step/);
 });
 
+test('council-loop description triggers on council and multi-model review phrases', () => {
+  assertTrigger('templates/claude/skills/council-loop/SKILL.md', [
+    'council', 'council loop', 'multi-model review'
+  ]);
+  assert.match(description('templates/claude/skills/council-loop/SKILL.md'), /until all reviewers agree/);
+});
+
 test('writing-skills description triggers on skill creation phrases', () => {
   assertTrigger('templates/claude/skills/writing-skills/SKILL.md', [
     'creating new skills', 'editing existing skills', 'formalizing repeatable workflows'

@@ -31,7 +31,7 @@ Ask your agent:
 Requires an agent that reads project instructions, Node.js 18+, and macOS, Linux, or WSL. Published npm installation was checked on 2026-10-13.
 
 ```sh
-npm install -g moskills@0.9.3
+npm install -g moskills@0.9.4
 MOSKILLS_DEMO=$(mktemp -d "${TMPDIR:-/tmp}/moskills-demo.XXXXXX")
 cd "$MOSKILLS_DEMO"
 moskills init

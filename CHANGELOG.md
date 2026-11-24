@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.9.4
+
+Patch on 0.9.3. Published to npm on 2026-11-23 (`npm install -g moskills@0.9.4`). Run `moskills sync` in a project to update its managed files.
 
 - **Per-task scope:** `run-state scope --task <id> --files <a.js,b.js>` gives one task its own files. A check wrapped for that task hashes only those, so editing another task's file no longer makes its proof stale. Before, every task used the whole run's scope (live test 6). Setting scope on a finished task reopens it, and a file new to the run joins the run scope and sends an accepted result back to pending.
 - **tdd fires when code is about to be written:** its description now names building, adding, implementing and changing code, "build it" after an approved plan, and says to use it even when the user never mentions tests. Two new trigger cases (`tdd-feature`, `tdd-build-it`) fired 0 of 6 runs against the old description; the full suite of 20 cases now passes 60 of 60 runs on Opus 5.5 ($5.74).
@@ -11,6 +13,7 @@
 - **Trigger evals:** `evals/triggers/` holds 18 `claude plugin eval` cases for gatekeeper, handoff and diagnose: 3 direct and 1 indirect request per skill, 3 requests (typo fix, plain questions) that must trigger no skill, and 3 requests aimed at a neighbouring skill that must not trigger it (tag `harder` for the indirect and neighbour cases). Draft rules MSK-020 to MSK-023 in `docs/rules.md` set the pass rate. Run: `claude plugin eval . --tag triggers --ablation none --runs 3 --max-cost-usd 6`. On Opus 5.5 (Claude Code 2.1.326): 52 of 54 runs passed for $4.23. "What does done mean for a run?" fired gatekeeper in 2 of 3 runs. Evals load no `CLAUDE.md`, so this measures the skill descriptions alone.
 - **Commit gate checks what is staged:** the git pre-commit check now judges proof against the staged content (`git show :path`), not the working tree. Staging a stale version and restoring the proven file on disk no longer slips through; a proven version staged next to an unstaged edit commits.
 - **Doctor lock report:** `moskills doctor` prints one `lock` line per gate: `commit-proof` (hard when the git pre-commit hook can run the proof check, soft when only the Claude Code hook guards commits), `ci-proof` (hard when a workflow runs `run-state done`) and `visual-flag` (soft with the plugin hook). Each non-hard line names its fix. Doctor fails when runs exist but a plain git commit is not checked for proof.
+- **evolvebook descriptions lead with what they do:** the evolvebook skill description now says what it does before "Use when", and books created from now on get a description that starts with what the book runs and ends with "even if the user does not say <name>". Two new trigger cases (`evolvebook-indirect`, `evolvebook-new`) cover it.
 
 ## 0.9.3
 
