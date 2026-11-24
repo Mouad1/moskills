@@ -28,6 +28,12 @@ Claude Code 2.1.326, model `claude-opus-5-5`, plugin 0.9.3, 3 runs per case.
 | evolvebook, direct | "Create an evolvebook for my weekly newsletter." | `evolvebook` fires | 3 / 3 |
 | evolvebook, indirect | "This is the third LinkedIn post I write with you this month. Keep a guide..." | `evolvebook` fires | 3 / 3 |
 | neighbour: README example, not evolvebook | "Add the parseDate function as a usage example in the README." | `evolvebook` stays quiet | 3 / 3 |
+| council-loop, direct | "Run a council loop on my current changes." | `council-loop` fires | 3 / 3 |
+| council-loop, indirect | "Before I merge, get reviewers from a few different AI providers on this diff..." | `council-loop` fires | 3 / 3 |
+| neighbour: quick review, not council-loop | "Take a quick look at this diff and tell me if you see any bugs." | `council-loop` stays quiet | 3 / 3 |
+| writing-skills, direct | "Write a new skill that makes the agent run the linter before every commit." | `writing-skills` fires | 3 / 3 |
+| writing-skills, indirect | "The handoff skill fires on requests that have nothing to do with it. Tighten when it runs..." | `writing-skills` fires | 3 / 3 |
+| neighbour: skill question, not writing-skills | "Which skills does moskills ship?" | `writing-skills` stays quiet | 3 / 3 |
 | **Total, first run** | 18 cases | | **52 / 54** |
 | **Total, 2026-11-20** | 20 cases | | **60 / 60** |
 
@@ -50,6 +56,12 @@ description change is on `main` (Unreleased).
 The 3 `evolvebook` cases were added on 2026-11-20 with the rewritten
 description (it now leads with what the skill does) and passed 9 of 9 runs
 ($1.17, `--tag evolvebook`). They are not in the totals above.
+
+The 3 `council-loop` cases were added on 2026-11-23 and passed 9 of 9 runs
+($0.80, `--tag council-loop`). They are not in the totals above either.
+
+The 3 `writing-skills` cases were added on 2026-11-23 and passed 9 of 9 runs
+($1.23, `--tag writing-skills`). They are not in the totals above either.
 
 Draft rules MSK-020 to MSK-023 in [`docs/rules.md`](rules.md) set the pass
 rate these cases must hold.
@@ -111,8 +123,8 @@ node evals/env-triggers.cjs --home /tmp/env-sp --runs 3 --max-cost-usd 12
 
 ## What they do not cover
 
-- Only 5 of the 18 skills (`diagnose`, `gatekeeper`, `handoff`, `tdd`, `evolvebook`)
-  have trigger cases.
+- Only 7 skills (`diagnose`, `gatekeeper`, `handoff`, `tdd`, `evolvebook`,
+  `council-loop`, `writing-skills`) have trigger cases.
 - They check that a skill fires, not how well it does the job once it runs.
 - With a project `CLAUDE.md` and the moskills standard loaded, as in a real
   install, routing gets extra hints these evals leave out (#93).

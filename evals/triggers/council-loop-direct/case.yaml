@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: council-loop-direct
+tags: [triggers, council-loop]
+execution:
+  prompt: "Run a council loop on my current changes."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: council-loop-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?council-loop"'
