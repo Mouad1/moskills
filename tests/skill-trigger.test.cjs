@@ -37,6 +37,17 @@ test('gatekeeper description stays quiet on questions about what done means', ()
   assert.match(description('templates/claude/skills/gatekeeper/SKILL.md'), /Not for questions about what done means/);
 });
 
+test('diagnose description triggers on failures and why-questions', () => {
+  assertTrigger('templates/claude/skills/diagnose/SKILL.md', [
+    'test fails', 'stack trace', 'build breaks', 'asks why something fails'
+  ]);
+  assert.match(description('templates/claude/skills/diagnose/SKILL.md'), /Not for building a new feature; use tdd/);
+});
+
+test('gatekeeper description triggers on make-sure-it-passes requests', () => {
+  assert.match(description('templates/claude/skills/gatekeeper/SKILL.md'), /make sure everything passes before a merge, a PR or a release/);
+});
+
 test('handoff description triggers on resume and continue phrases', () => {
   assertTrigger('templates/claude/skills/handoff/SKILL.md', [
     'resume', 'pick up where we left off', 'continue from last session'

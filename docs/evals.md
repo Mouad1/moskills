@@ -75,10 +75,57 @@ claude plugin eval . --tag triggers --ablation none --runs 3 --max-cost-usd 8
 Add `--tag harder` for only the indirect and neighbour cases. A full run costs
 about $6 on Opus 5.5. Results land in `evals/results/` (gitignored).
 
+## With superpowers installed (issue #90)
+
+`claude plugin eval` loads only the plugin under test, so it cannot show what
+happens next to another plugin. [`evals/env-triggers.cjs`](../evals/env-triggers.cjs)
+replays the same `evals/triggers` cases with plain `claude -p` in a home folder
+where plugins are installed the way a user installs them
+([`evals/env-setup.sh`](../evals/env-setup.sh)). Only `moskills:` skills count
+toward a pass; other plugins' skills are recorded.
+
+Run on 2026-11-24 on an instabox VM, Claude Code 2.1.331, superpowers 7.0.2,
+3 runs per case, `main` plus the council-loop and writing-skills branches.
+
+| Skill | moskills only | + superpowers, before | + superpowers, after fixes | Won by superpowers |
+|---|---|---|---|---|
+| diagnose (4 cases) | 9 / 12 → 12 / 12 | 1 / 12 | **11 / 12** | `systematic-debugging` |
+| gatekeeper (4 cases) | 11 / 12 → 12 / 12 | 9 / 12 | **12 / 12** | `verification-before-completion` |
+| writing-skills, direct | 3 / 3 | 0 / 3 | **5 / 6** | `writing-skills` (same name) |
+| tdd, handoff, evolvebook, council-loop | 27 / 27 | 27 / 27 | 27 / 27 | none |
+| neighbour and quiet cases | all pass | all pass | all pass | none |
+
+Full first pass: 80 / 87 runs with moskills alone ($7.24), 70 / 87 with
+superpowers ($9.07). Re-runs after fixes cost about $8.
+
+What fixed it:
+
+- `diagnose` still had a trigger-only description. Leading with what it does and
+  naming red tests, stack traces and regressions after a deploy fixed it alone
+  and took it from 1 to 11 of 12 next to superpowers.
+- `gatekeeper` now names "make sure everything passes before a merge, a PR or
+  a release".
+- Against a skill with the **same name**, no description wording helped, and
+  neither did a rename. A `when_to_use` frontmatter line (trigger phrases
+  Claude Code appends to the description) did: 0 / 6 → 5 / 6. A session-start
+  routing line also worked (3 / 3) but injects text into every session, so it
+  is not used.
+
+Superpowers injects its whole `using-superpowers` skill at every session start
+and names `systematic-debugging` for bugs; that is most of its edge.
+
+Run it:
+
+```sh
+sh evals/env-setup.sh /tmp/env-sp . superpowers
+node evals/env-triggers.cjs --home /tmp/env-sp --runs 3 --max-cost-usd 12
+```
+
 ## What they do not cover
 
 - Only 7 skills (`diagnose`, `gatekeeper`, `handoff`, `tdd`, `evolvebook`,
   `council-loop`, `writing-skills`) have trigger cases.
 - They check that a skill fires, not how well it does the job once it runs.
 - With a project `CLAUDE.md` and the moskills standard loaded, as in a real
-  install, routing gets extra hints these evals leave out.
+  install, routing gets extra hints these evals leave out (#93).
+- Plugins other than superpowers are not measured.

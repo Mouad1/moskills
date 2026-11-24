@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: "Use when: debugging bugs, failing tests, broken builds, regressions, performance issues, or unexpected behavior."
+description: "Finds the root cause of a failure before any fix: reproduces it, reads the full error, traces where it starts, tests one hypothesis at a time, then fixes the cause and records the reproduction passing. Use when a test fails or tests that passed before are now red, an error or stack trace appears, a build breaks, users report wrong results or a regression after a change or deploy, something got slow, or the user asks why something fails or behaves unexpectedly, even if they do not say diagnose or debug. Not for building a new feature; use tdd."
 ---
 
 # Diagnose
