@@ -69,6 +69,7 @@ You rarely type these: the agent picks them from what you ask. Slash commands fo
 | `/learn` | Turn a correction into a rule in `tasks/lessons.md` |
 | `/design-system` | Keep one checked `design.md` for UI work |
 | `/council-loop` | Multi-model review loop across providers until consensus is reached |
+| `/writing-skills` | Author, test and refine AI agent skills using TDD & cross-provider standards |
 | `/shared-language`, `/system-map`, `/project-dna`, `/compress-input`, `/evolvebook` | Glossary, blast radius, build recipes, terse mode, job guides |
 
 Full list: [command reference](docs/command-reference.md).
@@ -119,7 +120,7 @@ Updating, local development, evolvebook setup, file list and uninstall: [full in
 - [Architecture](docs/architecture.md), [lifecycle](docs/lifecycle.md), [diagrams](docs/diagrams/README.md)
 - [Trigger evals](docs/evals.md): results and how to re-run them
 - [Product requirements](docs/prd.md) and [business rules](docs/rules.md) of moskills itself
-- [Evolvebooks](docs/evolvebook.md), [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md)
+- [Evolvebooks](docs/evolvebook.md), [Skill creation guide](docs/writing-skills-guide.md), [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md)
 
 ## Contributing
 

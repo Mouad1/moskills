@@ -265,6 +265,32 @@ Rules:
 - Record truthful scores: never fabricate approval or guess missing scores.
 - Reviewers are strictly read-only; delegates must never edit files or launch subagents.
 
+## /writing-skills
+
+Purpose: every new or changed skill ships with a baseline failure it fixes and proof that it fires on the right requests and stays quiet on its neighbours.
+
+Use when creating new skills, formalizing repeatable workflows into skills, or verifying skill compliance before deployment.
+
+Flow:
+
+```text
+Baseline Test Case (RED) -> Minimal Skill Spec (GREEN) -> Close Loopholes & Rationalizations (REFACTOR)
+```
+
+How it works:
+
+- Treats process documentation as code: writes a concrete pressure scenario first and watches an unguided agent fail or rationalize shortcuts.
+- Drafts a minimal `SKILL.md` specifying degrees of freedom (high for heuristics, medium for parameterized patterns, low/deterministic for fragile commands).
+- Integrates cross-provider principles: Anthropic context-window economy (concise is key), OpenAI explicit delimiters and positive framing, and Gemini PTCF task decomposition.
+- Pairs the skill with a companion slash command (unless the skill is its own `/command`), tests for its description and primary goal, and three trigger cases: direct, indirect, and a neighbour it must stay quiet on.
+
+Rules:
+
+- See the complete [Skill Creation & Architecture Guide](writing-skills-guide.md) for lifecycle diagrams, section breakdown, and cross-provider details.
+- Never ship a skill without testing it against a baseline scenario first.
+- Keep frontmatter descriptions under 1024 characters, written in the third person.
+- Each skill must have exactly one measurable Primary Goal.
+
 ## /modular-build
 
 Purpose: build one module at a time, and start the next only when the current one is proven and accepted.
