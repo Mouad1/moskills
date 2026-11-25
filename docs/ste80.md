@@ -17,7 +17,7 @@ STE80 uses the writing rules S1 to S8. It does not use the STE100 dictionary of 
 | S7 | One term names one concept. A term from a `shared-language` "Avoid Saying" list is an error. | Lint error |
 | S8 | A sentence keeps its articles and verbs. Do not remove words to make a sentence shorter. | Reviewer |
 
-The lint (planned: `moskills ste-lint`) counts words as follows:
+The lint `moskills ste-lint` counts words as follows:
 
 - A code span (text in backticks) counts as one word.
 - A list item that starts with a number is a procedure. Other text is a description.
