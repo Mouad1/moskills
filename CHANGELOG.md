@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- **Version check:** `moskills version-check` prints the local `VERSION`, the `VERSION` on origin's default branch (after `git fetch`), how many commits the checkout is behind, and the latest tag. It never fails. `--hook` prints SessionStart JSON; this repo's `.claude/settings.json` runs it at session start. `--release <x.y.z>` also reads `npm view <package> version` and exits 1 when the version is not higher than the published one, the tag exists on origin, the checkout is behind, or git or npm cannot be reached. The new `release check` workflow runs it on every PR that changes `VERSION`. Before, a plan named 0.10.0 from a local checkout at 0.9.3 while npm and origin were at 0.9.4.
+- **Standard rule:** `base.md` now says to read the published version and remote tags before a plan names a release version.
 - **STE80 lint:** `moskills ste-lint [--warn] [--avoid <term>=<use>] <file|dir>...` checks Markdown against the countable STE80 rules. Errors: a numbered step over 20 words (S1), any other sentence over 25 words (S2), an avoided term (S7). Warnings: a paragraph over 6 sentences (S3), two actions in one step (S4), a step that is not an imperative (S5), passive voice (S6). It skips frontmatter, code blocks, tables, quotes, headings, comments and Why/Rationale sections, and counts a code span, link or URL as one word. Errors exit 1 unless `--warn`. Zero dependencies; runs from the npm launcher without a shell. Warning mode for this repo: a test fails if errors in the skills and the standard grow past the recorded baseline (47 on 2026-11-25, `tests/ste-lint-baseline.json`).
 
 ## 0.9.4

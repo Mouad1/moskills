@@ -1,0 +1,24 @@
+name: release check
+
+# A PR that changes VERSION must name a version that is newer than npm latest,
+# has no tag on origin, and starts from current main (moskills version-check --release).
+on:
+  pull_request:
+    paths: [VERSION]
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: sh moskills version-check --release "$(cat VERSION)"

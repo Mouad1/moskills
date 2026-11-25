@@ -43,6 +43,13 @@ Commands:
                                             from the plugin, or a newer moskills is on
                                             GitHub (checked once a day); silent
                                             otherwise. Never fails.
+  version-check [--target <path>] [--hook] [--release <x.y.z>]
+                                            Local VERSION vs origin's default branch
+                                            (git fetch), commits behind, latest tag.
+                                            Never fails; --hook prints SessionStart JSON.
+                                            --release also reads npm and exits 1 when the
+                                            version is not new, the tag exists, or the
+                                            checkout is behind.
   plugin-autoupdate [--check]               Turn on Claude Code auto-update for the
                                             moskills marketplace (--check: report only).
   context [--target <path>] [--event <name>]
@@ -709,6 +716,91 @@ cmd_notice() {
   return 0
 }
 
+vc_line() { # $1 = text; plain line, or SessionStart JSON with --hook
+  if [ "$HOOK" -eq 1 ]; then
+    m=$(printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    c=${m%.}
+    printf '{"systemMessage": "%s", "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "%s. Use these versions, not the local VERSION file alone, when a plan names a version."}}\n' "$m" "$c"
+  else
+    log "$1"
+  fi
+}
+
+cmd_version_check() { # local, remote and (with --release) published versions of the repo at $TARGET
+  t=$TARGET
+  if [ ! -f "$t/VERSION" ] || ! git -C "$t" rev-parse --git-dir >/dev/null 2>&1; then
+    [ -z "$RELEASE" ] || die "version-check --release needs a git repository with a VERSION file: $t"
+    return 0
+  fi
+  if [ -n "$RELEASE" ]; then
+    printf '%s' "$RELEASE" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || die "--release needs a version like x.y.z, got '$RELEASE'"
+  fi
+  local_v=$(head -1 "$t/VERSION" | tr -d ' \r')
+  fetched=1
+  GIT_TERMINAL_PROMPT=0 GIT_SSH_COMMAND=${GIT_SSH_COMMAND:-ssh -o BatchMode=yes -o ConnectTimeout=5} \
+    git -C "$t" -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=5 fetch --tags --quiet origin >/dev/null 2>&1 || fetched=0
+  branch=$(git -C "$t" symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null || echo origin/main)
+  remote_v=$(git -C "$t" show "$branch:VERSION" 2>/dev/null | head -1 | tr -d ' \r' || true)
+  behind=$(git -C "$t" rev-list --count "HEAD..$branch" 2>/dev/null || echo '?')
+  tag=$(git -C "$t" tag --list 'v[0-9]*' --sort=-v:refname 2>/dev/null | head -1 || true)
+
+  if [ -z "$RELEASE" ]; then
+    if [ "$fetched" -eq 0 ]; then
+      vc_line "version-check: offline (git fetch failed), local $local_v, last fetched $branch ${remote_v:-unknown}, behind $behind."
+      return 0
+    fi
+    line="version-check: local $local_v, $branch ${remote_v:-unknown}, behind $behind, latest tag ${tag:-none}"
+    case "$behind" in
+      0) ;;
+      *[!0-9]*) line="$line. Cannot compare with $branch." ;;
+      *) line="$line. Run git pull --ff-only before you plan or release." ;;
+    esac
+    vc_line "$line"
+    return 0
+  fi
+
+  errs=''
+  if [ "$fetched" -eq 0 ]; then
+    errs="${errs}git fetch failed: cannot compare with origin
+"
+  else
+    case "$behind" in
+      0) ;;
+      *[!0-9]*) errs="${errs}cannot count the commits between HEAD and $branch
+" ;;
+      *) errs="${errs}the checkout is behind $branch by $behind commit(s): run git pull --ff-only
+" ;;
+    esac
+    if git -C "$t" ls-remote --exit-code --tags origin "refs/tags/v$RELEASE" >/dev/null 2>&1; then
+      errs="${errs}tag v$RELEASE exists on origin
+"
+    fi
+  fi
+  pkg=''
+  [ -f "$t/package.json" ] && pkg=$(sed -n 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$t/package.json" | head -1)
+  published=''
+  if [ -z "$pkg" ]; then
+    errs="${errs}no package name in package.json: cannot read the published version
+"
+  else
+    published=$(cd "$t" && "${MOSKILLS_NPM:-npm}" view "$pkg" version 2>/dev/null | tail -1 | tr -d ' \r' || true)
+    if ! printf '%s' "$published" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
+      published=''
+      errs="${errs}cannot read the published version of $pkg (npm view failed)
+"
+    elif ! version_lt "$published" "$RELEASE"; then
+      errs="${errs}$RELEASE is not higher than the published version $published
+"
+    fi
+  fi
+  if [ -n "$errs" ]; then
+    printf 'version-check: release %s blocked\n' "$RELEASE" >&2
+    printf '%s' "$errs" | sed 's/^/- /' >&2
+    exit 1
+  fi
+  log "version-check: release $RELEASE: ok (published $published, $branch ${remote_v:-unknown}, behind 0)"
+}
+
 # ---------- other agents (global links) ----------
 agent_targets() { # prints "agent|skills dir" for each detected agent
   if [ -d "$HOME/.gemini" ]; then printf 'antigravity|%s\n' "$HOME/.gemini/config/skills"; fi
@@ -1096,6 +1188,7 @@ VERBOSE=0
 YES=${MOSKILLS_YES:-0}
 NO_TTY=0
 ALL_ROOT=''
+RELEASE=''
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -1105,6 +1198,7 @@ while [ "$#" -gt 0 ]; do
     --with-hooks) WITH_HOOKS=1; shift ;;
     --no-hooks) WITH_HOOKS=0; shift ;;
     --hook)   HOOK=1; shift ;;
+    --release) [ "$#" -ge 2 ] || die '--release requires a version'; RELEASE=$2; shift 2 ;;
     --event)  [ "$#" -ge 2 ] || die '--event requires a hook event name'; EVENT=$2; shift 2 ;;
     --agents) AGENTS=1; shift ;;
     --replace) REPLACE=1; shift ;;
@@ -1139,6 +1233,7 @@ case "$CMD" in
   sync)    if [ -n "$ALL_ROOT" ]; then run_all cmd_sync; else cmd_sync; fi ;;
   doctor)  if [ -n "$ALL_ROOT" ]; then run_all cmd_doctor; else cmd_doctor; fi ;;
   notice)  cmd_notice ;;
+  version-check) cmd_version_check ;;
   plugin-autoupdate) cmd_plugin_autoupdate ;;
   link)    cmd_link ;;
   setup)   cmd_setup ;;

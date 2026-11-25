@@ -471,6 +471,7 @@ Project (add `--target <path>`, default is the current folder):
 | `moskills status [--verbose]` | Five advisory saved-note lines, plus the active run's progress when a run exists; `--verbose` also shows installation details |
 | `moskills context [--event <name>]` | The same five lines for the agent's context; with `--event UserPromptSubmit` or `SessionStart`, Claude Code hook JSON. Silent when nothing is recorded or `MOSKILLS_NO_CONTEXT=1` |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
+| `moskills version-check [--hook] [--release <x.y.z>]` | Local `VERSION` vs origin's default branch, commits behind, latest tag (never fails). `--release` also reads npm and exits 1 when the version is not new, its tag exists, or the checkout is behind |
 | `moskills ste-lint [--warn] [--avoid <term>=<use>] <file\|dir>...` | STE80 writing rules for Markdown: S1/S2 sentence length and S7 avoided terms are errors (exit 1 unless `--warn`); S3–S6 are warnings |
 | `moskills plugin-autoupdate [--check]` | Turn on (or check) Claude Code auto-update for the moskills marketplace |
 
