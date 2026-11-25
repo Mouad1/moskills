@@ -155,8 +155,8 @@ write_sums() { # $1 = target
   mv "$t/$SUM_FILE.tmp" "$t/$SUM_FILE"
 }
 
-write_manifest() { # $1 = target
-  cat > "$1/.moskills.json" <<EOF
+write_manifest() { # $1 = target. Keeps the project's profile fields (profile, plugins, remove).
+  cat > "$1/.moskills.json.new" <<EOF
 {
   "standard": "moskills",
   "version": "$STANDARD_VERSION",
@@ -165,6 +165,24 @@ write_manifest() { # $1 = target
   "updated": "$(date +%Y-%m-%d)"
 }
 EOF
+  if [ -f "$1/.moskills.json" ] && grep -Eq '"(profile|plugins|remove)"' "$1/.moskills.json"; then
+    if ! command -v node >/dev/null 2>&1 ||
+       ! node "$SCRIPT_DIR/lib/profile.cjs" merge-manifest "$1/.moskills.json" "$1/.moskills.json.new"; then
+      rm -f "$1/.moskills.json.new"
+      warn ".moskills.json kept as is: its profile fields need Node.js 18+ to merge (version not updated)"
+      return 0
+    fi
+  fi
+  mv "$1/.moskills.json.new" "$1/.moskills.json"
+}
+
+profile_settings() { # $1 = target — enabledPlugins for the project's profile, if it has one
+  grep -Eq '"(profile|plugins)"' "$1/.moskills.json" 2>/dev/null || return 0
+  if ! command -v node >/dev/null 2>&1; then
+    warn 'profile: enabledPlugins not written (needs Node.js 18+)'
+    return 0
+  fi
+  node "$SCRIPT_DIR/lib/profile.cjs" settings "$1" || true
 }
 
 manifest_version() { # $1 = target
@@ -525,6 +543,7 @@ cmd_sync() {
   record_install_root "$t"
   ensure_marker "$t"
   write_manifest "$t"
+  profile_settings "$t"
   log "Sync complete."
 }
 
@@ -628,7 +647,18 @@ cmd_doctor() {
          issues=1
        fi ;;
   esac
+  if command -v node >/dev/null 2>&1; then
+    pstatus=0
+    profile_out=$(node "$SCRIPT_DIR/lib/profile.cjs" check "$t" 2>&1) || pstatus=$?
+  else
+    pstatus=0
+    profile_out='profile: skipped (needs Node.js 18+)'
+  fi
+  [ "$pstatus" -eq 0 ] || issues=1
   [ "$issues" -eq 0 ] && printf '%-20s OK  v%s\n' "$name" "$v"
+  printf '%s\n' "$profile_out" | while IFS= read -r line; do
+    [ -n "$line" ] && printf '%-20s %s\n' "$name" "$line"
+  done
   printf '%-20s lock commit-proof: %s\n' "$name" "$commit"
   printf '%-20s lock ci-proof: %s\n' "$name" "$(ci_lock "$t")"
   printf '%-20s lock visual-flag: %s\n' "$name" "$(visual_lock)"

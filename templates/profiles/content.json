@@ -1,0 +1,6 @@
+{
+  "description": "Writing and content: Markdown, posts, docs.",
+  "plugins": {
+    "moskills@moskills": "^0.9"
+  }
+}
