@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **STE80 lint:** `moskills ste-lint [--warn] [--avoid <term>=<use>] <file|dir>...` checks Markdown against the countable STE80 rules. Errors: a numbered step over 20 words (S1), any other sentence over 25 words (S2), an avoided term (S7). Warnings: a paragraph over 6 sentences (S3), two actions in one step (S4), a step that is not an imperative (S5), passive voice (S6). It skips frontmatter, code blocks, tables, quotes, headings, comments and Why/Rationale sections, and counts a code span, link or URL as one word. Errors exit 1 unless `--warn`. Zero dependencies; runs from the npm launcher without a shell. Warning mode for this repo: a test fails if errors in the skills and the standard grow past the recorded baseline (47 on 2026-11-25, `tests/ste-lint-baseline.json`).
+
 ## 0.9.4
 
 Patch on 0.9.3. Published to npm on 2026-11-23 (`npm install -g moskills@0.9.4`). Run `moskills sync` in a project to update its managed files.
