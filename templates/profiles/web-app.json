@@ -1,0 +1,6 @@
+{
+  "description": "A web app or site: UI work, visual checks.",
+  "plugins": {
+    "moskills@moskills": "^0.9"
+  }
+}
