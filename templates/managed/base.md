@@ -125,6 +125,7 @@ Apply STE80 to skill steps, this standard, and documents for a reader: reports, 
 - Never commit, push, or merge without user validation. Use atomic commits when authorized; do not push directly to the default branch.
 - Ask before installing dependencies. Show a migration plan before changing database schemas; keep schema implementations internal and export only types and connection factories.
 - Record durable state and evidence in `.claude/STATE.md`; track **Finished** and **Still not done** in `tasks/todo.md`.
+- Before you write a release version in a plan, read the published version and the remote tags. Write them in the plan. In a repository with a `VERSION` file, `moskills version-check` shows them.
 - Never claim a check passed without observed evidence. When a run exists, its recorded proof decides task and gate status; these files guide everything else.
 - Use shared project terms when available. Secrets come from environment variables; follow project environment-file rules and never put tokens in URLs. Pass large payloads via stdin rather than argv.
 - Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies, or decisions.

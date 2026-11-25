@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh \"${CLAUDE_PROJECT_DIR:-.}/moskills\" version-check --hook --target \"${CLAUDE_PROJECT_DIR:-.}\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
