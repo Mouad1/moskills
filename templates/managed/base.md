@@ -114,7 +114,7 @@ Apply STE80 to skill steps, this standard, and documents for a reader: reports, 
 - S7: Use one term for one concept. Never use a term from a `shared-language` "Avoid Saying" list.
 - S8: Keep the articles and verbs. Do not remove words to make a sentence shorter.
 - Output ladder: start with text. Go up one rung only for a named trigger, and use the lower rung when two apply.
-- Rungs: 1 text (default); 2 Mermaid diagram (3 or more connected parts); 3 static HTML page (the reader must change a value); 4 animation (not available).
+- Rungs: 1 text, the default. 2 Mermaid diagram, for 3 or more connected parts. 3 static HTML page, when the reader must change a value. 4 animation, not available.
 - Add text with the conclusion to each diagram or page. Do not go up for a short answer or a plain question.
 - The diagram rule in Rules still applies to every documentation artifact.
 
