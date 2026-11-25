@@ -466,8 +466,8 @@ Project (add `--target <path>`, default is the current folder):
 | Command | Purpose |
 |---|---|
 | `moskills init [--agents] [--no-hooks]` | Install the standard; `--agents` adds `.agents/skills/` and `AGENTS.md`; `--no-hooks` skips the Git pre-commit guard |
-| `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version |
-| `moskills doctor` | Report drift (version, edited or missing managed files) and, per gate, whether it is a `hard` lock (git pre-commit, CI), `soft` (Claude Code hook only) or `missing`. Fails when runs exist and a plain git commit is not checked for proof |
+| `moskills sync [--agents] [--force]` | Upgrade managed files to the installed version. Keeps the profile fields of `.moskills.json` and, when the project has a profile, writes its plugins into `enabledPlugins` in `.claude/settings.json` ([profiles](profiles.md)) |
+| `moskills doctor` | Report drift (version, edited or missing managed files) and, per gate, whether it is a `hard` lock (git pre-commit, CI), `soft` (Claude Code hook only) or `missing`. Fails when runs exist and a plain git commit is not checked for proof. Also checks the installed plugins against the project profile and fails on a missing, extra or out-of-range plugin or an unknown preset; proposes a preset when the project has no profile ([profiles](profiles.md)) |
 | `moskills status [--verbose]` | Five advisory saved-note lines, plus the active run's progress when a run exists; `--verbose` also shows installation details |
 | `moskills context [--event <name>]` | The same five lines for the agent's context; with `--event UserPromptSubmit` or `SessionStart`, Claude Code hook JSON. Silent when nothing is recorded or `MOSKILLS_NO_CONTEXT=1` |
 | `moskills notice [--hook]` | One line when the project version differs from the installed one, or a newer moskills is on GitHub (checked daily) |
