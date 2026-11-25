@@ -104,6 +104,20 @@ Choose checks proportionate to changed scope. For each gate, record `passed`, `f
 
 A required failed or unknown gate leaves work **Still not done**. Optional unavailable checks remain explicit limitations. Passing implementation checks does not authorize a Git action. Report **Finished** only for the agreed scope, with evidence and any exclusions.
 
+## Writing (STE80)
+
+Apply STE80 to skill steps, this standard, and documents for a reader: reports, specs, plans, handoffs and PR descriptions. Do not apply it to frontmatter descriptions, rationale, chat replies, non-English text or code. Rationale and examples: `docs/ste80.md` in moskills.
+
+- S1: A procedural sentence has 20 words or fewer. S2: A descriptive sentence has 25 words or fewer.
+- S3: A paragraph has 6 sentences or fewer. S4: An instruction gives one action, unless two actions occur at the same time.
+- S5: Write each instruction in the imperative. S6: Use the active voice.
+- S7: Use one term for one concept. Never use a term from a `shared-language` "Avoid Saying" list.
+- S8: Keep the articles and verbs. Do not remove words to make a sentence shorter.
+- Output ladder: start with text. Go up one rung only for a named trigger, and use the lower rung when two apply.
+- Rungs: 1 text (default); 2 Mermaid diagram (3 or more connected parts); 3 static HTML page (the reader must change a value); 4 animation (not available).
+- Add text with the conclusion to each diagram or page. Do not go up for a short answer or a plain question.
+- The diagram rule in Rules still applies to every documentation artifact.
+
 ## Rules
 
 - Keep changes small, modular, and within the authorized scope.

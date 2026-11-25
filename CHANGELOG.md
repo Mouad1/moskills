@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Writing standard (STE80):** `base.md` has a new "Writing (STE80)" section: rules S1 to S8 from Simplified Technical English (20 words per procedural sentence, 25 per descriptive sentence, 6 sentences per paragraph, one action per instruction, imperative, active voice, one term per concept, no dropped words) and the output ladder (text by default; a Mermaid diagram, a static HTML page or an animation only for a named trigger, and the lower rung when two apply). It applies to skill steps, the standard and documents for a reader, not to frontmatter descriptions, rationale, chat replies, non-English text or code. `docs/ste80.md` gives the scope and the reasons. Projects get the section with `moskills sync`.
+
 ## 0.9.4
 
 Patch on 0.9.3. Published to npm on 2026-11-23 (`npm install -g moskills@0.9.4`). Run `moskills sync` in a project to update its managed files.
