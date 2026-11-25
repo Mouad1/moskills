@@ -38,7 +38,8 @@
     "docs/run-state-next.md",
     "docs/roadmap.md",
     "docs/live-session.md",
-    "docs/panel-host.md"
+    "docs/panel-host.md",
+    "docs/profiles.md"
   ],
   "scripts": {
     "test:windows": "node --test tests/windows-launcher.test.cjs tests/run-state.test.cjs tests/run-state-wrap.test.cjs tests/run-state-agent.test.cjs tests/skill-trigger.test.cjs tests/skill-brief.test.cjs tests/portable-proof.test.cjs tests/modular-build.test.cjs tests/design-system.test.cjs tests/dep-graph.test.cjs tests/semantic-invalidation.test.cjs tests/agent-leases.test.cjs tests/parallel-dag.test.cjs tests/external-evidence.test.cjs tests/panel-host.test.cjs",
