@@ -1,0 +1,6 @@
+{
+  "description": "A command-line tool or library.",
+  "plugins": {
+    "moskills@moskills": "^0.9"
+  }
+}
