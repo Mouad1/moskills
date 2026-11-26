@@ -5,8 +5,8 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 ## Start
 
 1. Read project instructions, `.claude/STATE.md`, `tasks/todo.md`, and relevant `tasks/lessons.md` entries when present. When `.moskills/runs/` exists, run `run-state resume` to reopen tasks whose proof went stale and name the next ready task.
-2. If the user said "resume", "pick up where we left off", or "continue from last session", invoke the handoff skill and follow it. `run-state resume` is a step inside that skill, not the reply.
-3. If the user asked "Is the module done?", "is X done?", or "can we ship?", invoke the gatekeeper skill and follow it. Do not answer from the Run proof block or the plan reminder alone.
+2. On "resume", "pick up where we left off", or "continue from last session": invoke the handoff skill and follow it. `run-state resume` is a step inside that skill, not the reply.
+3. On "Is the module done?", "is X done?", or "can we ship?": invoke the gatekeeper skill and follow it. Do not answer from the Run proof block or the plan reminder alone.
 4. Inspect the current branch and working tree. Preserve existing changes; choose an appropriate branch for implementation according to project rules.
 5. Restate the requested outcome briefly. Route ordinary language to needed capabilities without asking the user to remember commands.
 6. For non-trivial work, record a plan, dependency order, and acceptance/gate criteria before implementation. Continue authorized work without adding approval stops for routine choices.
@@ -17,8 +17,8 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 - Checkpoint meaningful changes and evidence: commands/checks, observed results, changed files, decisions, blockers, and next actions.
 - Keep gate statuses explicit: passed, failed, unknown, or not applicable. Record review pass count and unresolved findings.
 - After a user correction, rejected review, or confirmed root cause, capture the preventive rule in `tasks/lessons.md`.
-- When research or exploration turns up something the next session would otherwise rediscover (how a part works, a constraint, a rejected option and why), add one line under `Findings` in `.claude/STATE.md`.
-- Run commands likely to take more than about two minutes (builds, emulators, installs, large test suites) in the background from the start, and keep working on tasks that do not depend on them.
+- Research can find something that the next session would otherwise find again: how a part works, a constraint, a rejected option and why. Add one line for it under `Findings` in `.claude/STATE.md`.
+- Run a command that can take more than about two minutes in the background from the start: builds, emulators, installs, large test suites. Keep working on tasks that do not depend on it.
 - Propose a commit as soon as a task's checks pass, instead of holding several finished tasks behind a slow step.
 - Ask before installing dependencies; show the migration plan before changing database schemas. Obtain user validation before any commit, push, or merge.
 
@@ -28,4 +28,4 @@ Managed by moskills. Change this standard in the moskills repo, then run `moskil
 2. Leave working changes intact. Ending a session does not require a commit or stash.
 3. If incomplete, record a short handoff: intended result, current branch/files, prerequisites satisfied, blockers, evidence, and exact next step. Do not label pending required validation as complete.
 
-Task and gate status come from the run record when a run exists (see Run state in `base.md`); otherwise this protocol is an instruction-based audit trail. Record only work and evidence actually observed.
+When a run exists, task and gate status come from the run record (see Run state in `base.md`). Otherwise this protocol is an instruction-based audit trail. Record only work and evidence actually observed.
