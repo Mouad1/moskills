@@ -7,7 +7,7 @@ const { spawnSync } = require('node:child_process');
 
 const input = process.argv.slice(2);
 const args = [];
-const helper = ['evolvebook', 'evolvebooks', 'run-state', 'dashboard', 'design', 'commit-gate', 'visual-flag'].includes(input[0]);
+const helper = ['evolvebook', 'evolvebooks', 'run-state', 'dashboard', 'design', 'commit-gate', 'visual-flag', 'ste-lint'].includes(input[0]);
 let verbose = false;
 for (let i = 0; i < input.length; i++) {
   if (helper) args.push(input[i]);
@@ -28,6 +28,7 @@ const help = `moskills — structured agent work, short answers.
   moskills commit-gate  Refuse git commit when run proof is missing, failed, or stale.
   moskills visual-flag  Flag a UI edit so done asks for a look.
   moskills design <init|check|css>  Check design.md and export its tokens as CSS variables.
+  moskills ste-lint <file|dir>  Check Markdown against the STE80 writing rules.
   moskills evolvebook <command> Create, use, link, or export a recurring-job guide.
   moskills dashboard [--panels <dir>]  Local dashboard of plug-in panels (127.0.0.1 only).
   moskills plugin-autoupdate [--check]  Configure or inspect Claude plugin updates.
@@ -56,7 +57,7 @@ if (blocked.includes(command)) {
   process.stderr.write(`moskills ${command} is unavailable in npm installs. Use moskills init for project setup; npm install -g moskills@latest to update; npm uninstall -g moskills to remove CLI.\n`);
   process.exit(1);
 }
-if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state', 'dashboard', 'context', 'design', 'commit-gate', 'visual-flag'].includes(command)) {
+if (!['init', 'sync', 'doctor', 'notice', 'version', 'status', 'evolvebook', 'evolvebooks', 'plugin-autoupdate', 'run-state', 'dashboard', 'context', 'design', 'commit-gate', 'visual-flag', 'ste-lint'].includes(command)) {
   process.stderr.write(`moskills: unknown command '${command}'. Run moskills --help.\n`);
   process.exit(1);
 }

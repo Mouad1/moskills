@@ -78,6 +78,9 @@ Commands:
   design     <init|check|css> [args]       One design file (design.md): check tokens,
                                             contrast and screens; export CSS variables.
                                             Run: moskills design help
+  ste-lint [--warn] [--avoid <t>=<use>] <file|dir>...
+                                            STE80 writing rules (docs/ste80.md) for
+                                            Markdown: errors exit 1 unless --warn.
   dashboard [--panels <dir>]... [--port <n>] Local dashboard of plug-in panels
                                             (127.0.0.1 only). Run: moskills dashboard --help
 
@@ -1200,6 +1203,7 @@ case "$CMD" in
     exec node "$SCRIPT_DIR/lib/visual-flag.cjs" "$@" ;;
   design) exec node "$SCRIPT_DIR/lib/design-system.cjs" "$@" ;;
   dashboard) exec node "$SCRIPT_DIR/lib/panel-host-cli.cjs" "$@" ;;
+  ste-lint) exec node "$SCRIPT_DIR/lib/ste-lint.cjs" "$@" ;;
 esac
 TARGET=$(pwd)
 FORCE=0
