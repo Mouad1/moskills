@@ -37,6 +37,16 @@ test('sentences split at end punctuation; a code span, link or URL counts as one
   assert.deepEqual(rules(`1. Use e.g. this and i.e. that, not vs. ${words(10)}.\n`), [], 'abbreviations do not end a sentence');
 });
 
+test('a closing quote or parenthesis after end punctuation still ends the sentence', () => {
+  assert.deepEqual(rules(`Ask "is it ${words(12)}?" It ${words(14)}.\n`), []);
+  assert.deepEqual(rules(`(It ${words(14)}.) It ${words(14)}.\n`), []);
+});
+
+test('a code span that wraps across lines counts as one word and keeps line numbers', () => {
+  const text = `1. Add \`a b c d e f g h\n   j k l m n o p q r s t u v w x y z\` now.\n\nIt ${words(30)}.\n`;
+  assert.deepEqual(rules(text), ['4:S2:error']);
+});
+
 test('skips frontmatter, code blocks, tables, quotes, headings and comments', () => {
   const long = `It ${words(30)}.`;
   const text = [
