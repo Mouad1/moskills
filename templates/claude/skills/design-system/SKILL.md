@@ -11,18 +11,18 @@ Primary goal: Keep one design file (`design.md`) that every screen and component
 
 ## Parts (build in this order; each can be its own request)
 
-1. **tokens:** colors (light and dark), type, spacing, radius, motion, as rows in the `## Tokens` table, plus the text/background pairs that must stay readable under `### Contrast pairs` (4.5 for text, 3 for large text and UI boundaries).
+1. **tokens:** colors (light and dark), type, spacing, radius and motion, as rows in the `## Tokens` table. Add the text/background pairs that must stay readable under `### Contrast pairs`: 4.5 for text, 3 for large text and UI boundaries.
 2. **shell:** the app frame under `## Shell`: navigation pattern, header, safe areas, breakpoints, where content scrolls.
 3. **components:** one row per reusable piece under `## Components`, with every state it needs (`default, pressed, focus, disabled, loading, error` as they apply).
-4. **screen:** one `### Screen: <name>` block per screen under `## Screens`, with a `Components:` line (only names from the Components table) and a `States:` line (`empty, loading, error, ready` as they apply), then a short layout description.
+4. **screen:** one `### Screen: <name>` block per screen under `## Screens`. Each block has a `Components:` line with names from the Components table only. It has a `States:` line: `empty, loading, error, ready`, as they apply. Then it has a short layout description.
 
 ## Steps
 
 1. No `design.md` yet: run `moskills design init` (writes a skeleton with starter tokens) or write the same structure by hand.
-2. For the part asked for, propose concrete values. When a visual choice matters, show options with the `/preview` Visual Companion (swatches, type scale, shell layouts, component states) and let the user pick. If the user says "you decide", choose and label it `Self-authored under delegation`.
+2. For the part asked for, propose concrete values. When a visual choice matters, show options with the `/preview` Visual Companion and let the user pick. Options can be swatches, a type scale, shell layouts or component states. If the user says "you decide", choose and label it `Self-authored under delegation`.
 3. Write the choice into `design.md`. Never keep design values only in chat or only in code.
 4. Run `moskills design check` and fix every error (bad color values, failing contrast, screens using components that are not declared). Use `--complete` once all parts exist. When a run exists, record it as proof: `run-state wrap --task <id> -- moskills design check --complete`.
-5. Turn tokens into code with `moskills design css --out <path>` (for example `src/styles/tokens.css`) and use those variables in components; do not hard-code a value that has a token. For non-CSS stacks, map the same token names in the platform's theme file.
+5. Turn tokens into code with `moskills design css --out <path>`, for example `src/styles/tokens.css`. Use those variables in components. Do not hard-code a value that has a token. For non-CSS stacks, map the same token names in the theme file of the platform.
 6. When building a screen, read its block first, and cover every listed state.
 
 ## Rules
