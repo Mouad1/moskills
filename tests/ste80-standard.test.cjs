@@ -19,10 +19,7 @@ function section(text, heading) {
   const next = text.indexOf('\n## ', start + 1);
   return text.slice(start, next === -1 ? undefined : next);
 }
-// word count as the STE80 lint will count it: a code span is one word
-function sentences(line) {
-  return line.replace(/`[^`]*`/g, 'X').split(/(?<=[.;])\s+/).filter((s) => s.trim());
-}
+const { lintText } = require('../lib/ste-lint.cjs');
 
 test('base.md has a short Writing section with rules S1 to S8', () => {
   const writing = section(base, 'Writing (STE80)');
@@ -53,14 +50,9 @@ test('the output ladder starts at text and climbs one rung per named trigger', (
   assert.match(writing, /diagram rule in Rules still applies/, 'the ladder must not weaken the documentation diagram rule');
 });
 
-test('the Writing section follows its own word limits', () => {
+test('the Writing section passes the STE80 lint with no errors', () => {
   const writing = section(base, 'Writing (STE80)');
-  for (const line of writing.split('\n').slice(1)) {
-    for (const s of sentences(line.replace(/^-\s+/, ''))) {
-      const words = s.split(/\s+/).filter(Boolean).length;
-      assert.ok(words <= 25, `${words} words: ${s}`);
-    }
-  }
+  assert.deepEqual(lintText(writing).filter((x) => x.level === 'error'), []);
 });
 
 test('docs/ste80.md explains the rules, the ladder and the scope, and ships in the npm package', () => {
