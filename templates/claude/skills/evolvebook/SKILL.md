@@ -124,8 +124,8 @@ Three questions (short answers are fine, "you decide" works too):
 - Compare good against bad to find the **Choices**: 3 to 6 decisions that
   take a *different value on different runs* (topic, angle, hook, layout,
   palette...). Test each one: "would two good runs pick different values?"
-  If not, it is a fixed rule: put it in the Never list or the Check, never in
-  Choices, or the repeat check can never pass. Name each Choice with one or
+  If not, it is a fixed rule. Put it in the Never list or the Check, never in
+  Choices; otherwise the repeat check can never pass. Name each Choice with one or
   two lowercase words joined by a dash.
 - Draft the **Never list**: every rule has an "Instead".
 - Draft the **Check**: automatic items (commands, counts, links) and human
@@ -134,9 +134,8 @@ Three questions (short answers are fine, "you decide" works too):
   nothing can be guessed in advance, write `Guess: from the request`.
 - **Purpose**: one line, at most 12 words.
 - Brand: if `<home>/shared/brand.md` exists, read it (never write it). If it
-  is missing and the job needs a brand, put this line at the end of the
-  summary instead of a separate message: "No brand found. Describe it in 3
-  words, or skip?" Keep the answer in the book's `brief.md` as a fixed line
+  is missing and the job needs a brand, end the summary with one line, not a
+  separate message: "No brand found. Describe it in 3 words, or skip?" Keep the answer in the book's `brief.md` as a fixed line
   `Brand: <words>`.
 
 Show it as one screen: Purpose, For, Choices, Brief, Never list, Check,
@@ -162,7 +161,7 @@ Examples. End with: "Reply ok, or tell me what to change."
    say "Using the <name> evolvebook (N examples, M runs)" with N and M from
    the list. Several: ask with a numbered list. None: carry on without a book.
 2. **Brief.** Send the questions from `brief.md` in **one** message, each with
-   your guess filled in, then stop and wait for the reply. If the user says
+   your guess filled in. Then stop and wait for the reply. If the user says
    "you decide" (or "ok"), use your guesses, label the brief
    `Self-authored under delegation`, and do not ask again. Skip the Brief only
    when the user already said "you decide" in the request.

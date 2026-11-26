@@ -37,6 +37,16 @@ test('sentences split at end punctuation; a code span, link or URL counts as one
   assert.deepEqual(rules(`1. Use e.g. this and i.e. that, not vs. ${words(10)}.\n`), [], 'abbreviations do not end a sentence');
 });
 
+test('a closing quote or parenthesis after end punctuation still ends the sentence', () => {
+  assert.deepEqual(rules(`Ask "is it ${words(12)}?" It ${words(14)}.\n`), []);
+  assert.deepEqual(rules(`(It ${words(14)}.) It ${words(14)}.\n`), []);
+});
+
+test('a code span that wraps across lines counts as one word and keeps line numbers', () => {
+  const text = `1. Add \`a b c d e f g h\n   j k l m n o p q r s t u v w x y z\` now.\n\nIt ${words(30)}.\n`;
+  assert.deepEqual(rules(text), ['4:S2:error']);
+});
+
 test('skips frontmatter, code blocks, tables, quotes, headings and comments', () => {
   const long = `It ${words(30)}.`;
   const text = [
@@ -129,10 +139,8 @@ test('moskills ste-lint runs the same checker', () => {
   assert.match(r.stdout, /c\.md:1: S1 error/);
 });
 
-// Warning mode for the repo: errors in the skills and the standard may not grow.
-// Step 3 of the STE80 plan rewrites them and sets this to 0, then the lint turns strict.
-const BASELINE_ERRORS = require('./ste-lint-baseline.json').errors;
-test(`repo skills and managed standard: STE80 errors stay at or below the baseline`, () => {
+// Strict mode for the repo: the skills and the managed standard have no STE80 errors.
+test('repo skills and managed standard have no STE80 errors', () => {
   const dirs = ['templates/claude/skills', 'templates/managed'];
   const files = [];
   for (const d of dirs) {
@@ -144,7 +152,11 @@ test(`repo skills and managed standard: STE80 errors stay at or below the baseli
     }
   }
   assert.ok(files.length >= 15, `expected the skills and the standard, got ${files.length}`);
-  let errors = 0;
-  for (const f of files) errors += lintText(fs.readFileSync(path.join(root, f), 'utf8')).filter((x) => x.level === 'error').length;
-  assert.ok(errors <= BASELINE_ERRORS, `STE80 errors grew: ${errors} > baseline ${BASELINE_ERRORS}. Run: moskills ste-lint ${dirs.join(' ')}`);
+  const errors = [];
+  for (const f of files) {
+    for (const x of lintText(fs.readFileSync(path.join(root, f), 'utf8'))) {
+      if (x.level === 'error') errors.push(`${f}:${x.line}: ${x.rule} ${x.message}`);
+    }
+  }
+  assert.deepEqual(errors, [], 'Fix with: moskills ste-lint templates/claude/skills templates/managed');
 });

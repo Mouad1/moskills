@@ -36,7 +36,7 @@ This standard controls the flow of non-trivial work, even when another skill pac
 | Pause | none | `/handoff` | `.claude/STATE.md` holds Finished, Still not done, and the exact next step. |
 
 - When a helper skill finishes or hands off to another skill, return to this table before invoking anything else. Run the gate, then pick the next stage's helper or moskills skill.
-- Use a helper only for its own stage. A helper's progress ledger (for example `.superpowers/sdd/`) may stay, but it never replaces `.claude/STATE.md` and `tasks/todo.md`: mirror each milestone there (spec approved, plan approved, task proven, before a long wait, session end).
+- Use a helper only for its own stage. A helper can keep its progress ledger, for example `.superpowers/sdd/`. The ledger never replaces `.claude/STATE.md` and `tasks/todo.md`. Mirror each milestone there: spec approved, plan approved, task proven, before a long wait, and at session end.
 - Without a helper, use the moskills skill for the stage. The gates are the same either way.
 
 ### Product reference and rules
@@ -85,13 +85,15 @@ If an evolvebooks home is configured, read its `EVOLVEBOOKS.md` and project `.ev
 
 ## Run state (proof the tools check)
 
-For non-trivial work with checkable acceptance criteria, keep a run: `moskills run-state` saves each check's exit code, output and file hashes, reopens tasks when checked files change, and refuses to mark a task finished without passing, current proof. When a run exists it is the source of truth for task and gate status. The **Run proof** block in `.claude/STATE.md` shows the active run (the one `run-state init` or `run-state resume` recorded, otherwise the newest) and is refreshed from live proof; reading another run does not retarget it. Never edit inside that block. "Is the module done?", "is X done?", and "can we ship?" are answered by the gatekeeper skill, not by this block. "resume", "pick up where we left off", and "continue from last session" are answered by the handoff skill.
+For non-trivial work with checkable acceptance criteria, keep a run. `moskills run-state` saves the exit code, output and file hashes of each check. It reopens tasks when checked files change, and it refuses to mark a task finished without passing, current proof. When a run exists, it is the source of truth for task and gate status.
+
+The **Run proof** block in `.claude/STATE.md` shows the active run: the one that `run-state init` or `run-state resume` recorded, otherwise the newest. Live proof refreshes the block, and reading another run does not retarget it. Never edit inside that block. "Is the module done?", "is X done?", and "can we ship?" are answered by the gatekeeper skill, not by this block. "resume", "pick up where we left off", and "continue from last session" are answered by the handoff skill.
 
 - **CLI:** use the exact command shown in the `Record proof` line of the plan reminder. Without it, use `moskills` when it is on PATH, else `sh ~/.moskills/moskills`. If none works, work from the Markdown notes and record the limitation.
 - **Start once:** `run-state init --goal "<goal>" --scope <files> --tasks "<t1>,<t2>"`. Never re-initialize an existing run; continue it with `run-state resume`.
 - **Prove, don't claim:** run each agreed check through `run-state wrap --task <id> --auto-complete -- <command>`. A gate is `passed` only when that proof is current; `resume` reopens tasks whose proof went stale.
 - **Human gate:** run `run-state accept --by <name>` only after the user explicitly approves the result in this conversation. Never accept on the user's behalf.
-- **Several modules:** when an app or large feature is built in parts, follow `/modular-build`: one run per module (`--id module-<name>`), started with `--after <previous module>` so the engine refuses to switch before the previous module is done (`run-state done`).
+- **Several modules:** when you build an app or large feature in parts, follow `/modular-build`. Use one run per module (`--id module-<name>`). Start each run with `--after <previous module>`, so the engine refuses to switch before the previous module is done (`run-state done`).
 
 ## Completion gates
 
@@ -128,6 +130,6 @@ Apply STE80 to skill steps, this standard, and documents for a reader: reports, 
 - Before you write a release version in a plan, read the published version and the remote tags. Write them in the plan. In a repository with a `VERSION` file, `moskills version-check` shows them.
 - Never claim a check passed without observed evidence. When a run exists, its recorded proof decides task and gate status; these files guide everything else.
 - Use shared project terms when available. Secrets come from environment variables; follow project environment-file rules and never put tokens in URLs. Pass large payloads via stdin rather than argv.
-- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram; prefer Mermaid for Markdown and Obsidian, explain its labels in text, and keep it aligned with the documented workflow, structure, dependencies, or decisions.
+- Diagrams are required in every documentation artifact you create or update. Include at least one meaningful diagram, and prefer Mermaid for Markdown and Obsidian. Explain its labels in text. Keep it aligned with the documented workflow, structure, dependencies, or decisions.
 
 - Evolvebooks: read and write only inside the evolvebooks home and project `.evolvebooks/`. When the home is inside a vault, the rest of the vault is off-limits.

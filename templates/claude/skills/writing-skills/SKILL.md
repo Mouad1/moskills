@@ -6,13 +6,13 @@ when_to_use: "Write a new skill, create a skill that makes the agent do somethin
 
 # Writing Skills
 
-Primary goal: Every new or changed skill ships with a baseline failure it fixes and proof that it fires on the right requests and stays quiet on its neighbours.
+Primary goal: Every new or changed skill ships with a baseline failure it fixes. It also ships with proof that it fires on the right requests and stays quiet on its neighbours.
 
 ## Overview
 
 **Writing skills IS Test-Driven Development applied to process documentation.**
 
-A skill is not a narrative of how a problem was solved once; it is a reusable, discoverable reference guide that equips future agents with proven techniques, boundaries, and checklists.
+A skill is not the story of how someone solved a problem once. It is a reusable reference that future agents can find, with proven techniques, boundaries, and checklists.
 
 ## TDD Mapping for Skills
 
@@ -35,7 +35,7 @@ Baseline Test Case (RED) -> Minimal Skill Spec (GREEN) -> Close Loopholes & Rati
 Every skill file consists of clear, bounded sections designed for minimal token overhead and maximum behavioral compliance:
 
 ### 1. Frontmatter (Discovery Metadata)
-Loaded at agent startup. One double-quoted line under 1024 characters, third person, that leads with what the skill does and then says when to use it, with the natural phrases a user types:
+Loaded at agent startup. Write one double-quoted line under 1024 characters, in the third person. Lead with what the skill does, then say when to use it. Use the natural phrases that a user types:
 ```yaml
 ---
 name: skill-name

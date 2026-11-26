@@ -12,7 +12,11 @@ headings as `/checkpoint`, so the next agent reads one place, not two.
 
 ## Steps
 
-1. When a run exists, start from one command: `run-state resume`. Its proof brief names the run, goal, finished work, blockers, verification, and the exact next step, and do not open `.moskills/runs`, `run.json`, or evidence JSON. A check the brief marks current already passed; do not re-run it. When the brief marks a check stale, failing, or missing, copy that re-run command into Exact next step; do not run it while writing the handoff.
+1. When a run exists, start from one command: `run-state resume`.
+   - Its proof brief names the run, goal, finished work, blockers, verification, and the exact next step.
+   - Use the brief only: do not open `.moskills/runs`, `run.json`, or evidence JSON.
+   - A check that the brief marks current already passed, so do not re-run it.
+   - Copy the re-run command of a stale, failing, or missing check into Exact next step; do not run it while writing the handoff.
 2. Inspect current Git status only for the branch and changed files. Do not use it to judge proof.
 3. Read `.claude/STATE.md` only to update it. If a legacy `.claude/HANDOFF.md` exists, fold its open items into `.claude/STATE.md` and say so.
 4. Update `Current run` in `.claude/STATE.md`: set **Status** (awaiting user, blocked, or parked) and **Next action / blocker** from the brief.

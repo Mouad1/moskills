@@ -32,13 +32,13 @@ prevent it. Together they make every session improve the next one.
 
 ## Active Evolvebook
 
-When an evolvebook is active (the run started with "Using the <name>
-evolvebook"), write the lesson to that book's `mistakes.md` instead of
-`tasks/lessons.md`, through the evolvebook helper:
-`evolvebook.sh mistake <book> --title ... --context ... --mistake ... --rule ...`
-(reusing an existing title raises its `Seen` counter). At
-`Seen: 2` (not 3), propose moving the rule to the book's `never.md`, with an
-"Instead" line. The user decides; mark the entry `Promoted: never.md` on yes.
+When an evolvebook is active, write the lesson to the `mistakes.md` of that
+book, not to `tasks/lessons.md`. An evolvebook is active when the run started
+with "Using the <name> evolvebook". Use the evolvebook helper:
+`evolvebook.sh mistake <book> --title ... --context ... --mistake ... --rule ...`.
+A title that exists already raises its `Seen` counter. At `Seen: 2` (not 3),
+propose moving the rule to the `never.md` of the book, with an "Instead" line.
+The user decides; mark the entry `Promoted: never.md` on yes.
 
 ## Entry Format
 
@@ -64,13 +64,13 @@ Session insight -> project rule -> reusable skill. Check at every capture:
 
 1. `Seen: 3+` and `Scope: project` -> move the rule into the project
    `CLAUDE.md` (or `.claude/CLAUDE.md`), then mark the entry `Promoted: CLAUDE.md`.
-2. `Scope: stack` or `universal` -> propose adding it to the moskills repo:
-   either a rule in the relevant skill's `SKILL.md`, or a new skill if no
-   skill owns the pattern. Tell the user the exact target file so they can
-   commit it to moskills.
-3. `Scope: personal` -> propose adding it to the user's personal instruction
-   file (`~/.claude/CLAUDE.md` in Claude Code; the equivalent user-level file
-   in other agents), not to the project.
+2. `Scope: stack` or `universal` -> propose adding it to the moskills repo.
+   Add a rule to the `SKILL.md` of the skill that owns the pattern. When no
+   skill owns it, propose a new skill. Tell the user the exact target file, so
+   they can commit it to moskills.
+3. `Scope: personal` -> propose adding it to the personal instruction file of
+   the user, not to the project. In Claude Code that file is
+   `~/.claude/CLAUDE.md`; other agents have an equivalent user-level file.
 4. Never promote silently. Show the user the rule and the target file first.
 
 ## Session Start

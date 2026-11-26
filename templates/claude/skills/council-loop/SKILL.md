@@ -16,9 +16,9 @@ Scope & Baseline -> Convene Council (Parallel Dispatch) -> Triage Findings & Run
 ## Budget
 
 - **Default budget**: 3 rounds maximum. Round 1 reviews the full change diff. Subsequent rounds review only the delta diff and open findings.
-- **Extended budget**: Up to 5 rounds only for critical security, permissions/auth, data loss, or tricky concurrency/state edge cases where a blocker or should remains open with concrete evidence.
+- **Extended budget**: up to 5 rounds, only for critical security, permissions/auth, data loss, or tricky concurrency or state edge cases. A blocker or should must stay open with concrete evidence.
 - **Early exit**: Stop immediately once all delegates return `VERDICT: APPROVE` (or score 9+/10 with zero open blockers/shoulds). A round returning only nits or stylistic comments ends the loop without a new round.
-- **Deadlock escalation**: If an issue remains disputed after two rounds of replies or if the budget expires, summarize both positions in 2-3 lines and escalate to the human user for a tie-break decision.
+- **Deadlock escalation**: an issue stays disputed after two rounds of replies, or the budget expires. Then summarize both positions in 2-3 lines, and ask the human user to break the tie.
 
 ## 1. Scope & Baseline
 
@@ -36,8 +36,8 @@ Bring in three reviewer delegates from three distinct AI model providers at high
 - **In T3 Code**:
   1. Call `orchestrator_capabilities` once to discover available providers and models.
   2. Dispatch delegates in parallel using `delegate_task` (`role: "review"`, `mode: "async"`). Keep the `taskId` and assign a unique `clientRequestId` per delegate per round. Wait for completion events instead of polling `task_status` or sleeping.
-- **In Claude Code, Codex, Antigravity and other CLIs**: a native subagent runs only the host's own provider. Use one native subagent for the host provider. Reach each other provider through its own CLI, run non-interactively in read-only mode as a background shell command (check availability with `command -v <cli>`, and its `--help` for the read-only or sandbox flag before the first run). Keep each delegate's ID or session for follow-up rounds.
-- **Missing providers**: if fewer than 3 distinct providers are reachable, run the council with the ones that are, name the missing ones to the user, and record `Providers: <N> of 3` in the report. Never count two delegates on the same provider as different providers.
+- **In Claude Code, Codex, Antigravity and other CLIs**: a native subagent runs only the host's own provider. Use one native subagent for the host provider. Reach each other provider through its own CLI. Run it non-interactively, in read-only mode, as a background shell command. Before the first run, check availability with `command -v <cli>`, and find the read-only or sandbox flag in its `--help`. Keep each delegate's ID or session for follow-up rounds.
+- **Missing providers**: if fewer than 3 distinct providers are reachable, run the council with the ones that are. Name the missing ones to the user, and record `Providers: <N> of 3` in the report. Never count two delegates on the same provider as different providers.
 - **Constraints**:
   - Delegates are strictly read-only reviewers. They must NOT edit files, commit, push, create PR comments, or launch subagents.
   - Do NOT edit files while delegates are concurrently reviewing the same checkout.
@@ -83,7 +83,7 @@ When delegate responses arrive, the driving agent acts as the Council Chair:
    - **Agree**: Make the smallest, cleanest fix possible. Prefer simplifying or deleting code over adding new abstractions, parameters, or wrappers. Add a focused regression test if required.
    - **Disagree**: If a finding is incorrect or based on a false assumption, refute it with concrete evidence (file:line, test output, or specification).
    - **Decline / Nit / Out of Scope**: Decline in one sentence. Do NOT let reviewers expand scope into refactoring untouched modules.
-3. **Arbitrate conflicting advice**: If Delegate A recommends adding an abstraction and Delegate B recommends keeping it flat, choose the simpler, less invasive option that satisfies the intent and passes tests.
+3. **Arbitrate conflicting advice**: delegates can disagree. For example, Delegate A recommends an abstraction and Delegate B recommends keeping it flat. Choose the simpler, less invasive option that satisfies the intent and passes tests.
 4. **Re-verify**: Run the project's tests and checks after applying fixes before starting another round.
 
 ## 5. Next Round & Loop Convergence
@@ -106,7 +106,7 @@ For Round 2+:
 
 ## 6. Council Review Ledger & Report
 
-Record the council review outcome. If a PR is open, update the PR description with this table above the model/harness signature; otherwise, record it in `.claude/STATE.md` under `Validation History` and in the final summary:
+Record the council review outcome. If a PR is open, put this table in the PR description, above the model/harness signature. Otherwise, record it under `Validation History` in `.claude/STATE.md` and in the final summary:
 
 ```markdown
 ## Council review
