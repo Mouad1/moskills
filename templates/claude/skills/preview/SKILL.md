@@ -30,14 +30,26 @@ If the request is really several independent projects, say so, agree on an order
 
 ## Steps
 
-1. **Explore context** — read project files, docs, recent commits. If `design.md` exists, read it: mockups use its tokens, shell, and components, and choices the user makes in the Visual Companion are written back into it (see the `design-system` skill). Do not keep a second set of design values in the spec.
+1. **Explore context** — read project files, docs and recent commits. If `design.md` exists, read it. Mockups use its tokens, shell and components. Write the choices that the user makes in the Visual Companion back into it (see the `design-system` skill). Do not keep a second set of design values in the spec.
 2. **Size the work** — use the table above. Quick tasks and small changes skip steps 6 and 7.
 3. **Detect frontend** — check rules below; start Visual Companion if triggered.
 4. **Resolve missing decisions** — follow the Conversation rules. When the user says "you decide", resolve remaining choices, label them `Self-authored under delegation`, and do not re-ask. Infer routine choices from context.
-5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`; do not commit automatically. For a project, also fill or update `docs/prd.md` (one page: problem, users, goals with measurable targets, non-goals, core journeys, constraints, open questions; add a Change log line) and add one row per business rule to `docs/rules.md` with state `draft`: an EARS-style sentence, a measurable expectation, and the check that will prove it. The spec and PRD refer to rules by ID instead of repeating them. Mark gaps `[NEEDS CLARIFICATION: ...]`; never guess.
-6. **Builder check** — before showing the spec, give it to a fresh subagent with the prompt in `builder-check.md` (next to this file). Tell the user a reviewer reads it first and you may come back once with a few questions. Sort what comes back into the three piles the prompt defines: put already-answered points into the spec, settle builder-can-decide points yourself and mark them as your call, and bring only the user's-call points to the user, in one message, most important first. Without a subagent tool, read the spec yourself as that builder and record the limitation.
+5. **Write a concrete design** — save a concise spec to `docs/specs/YYYY-MM-DD-<topic>.md`. Do not commit it automatically.
+   - For a project, also fill or update `docs/prd.md`: one page with problem, users, measurable goals, non-goals, core journeys, constraints and open questions. Add a Change log line.
+   - Add one row per business rule to `docs/rules.md` with state `draft`: an EARS-style sentence, a measurable expectation, and the check that will prove it.
+   - The spec and the PRD refer to rules by ID. They do not repeat them.
+   - Mark gaps `[NEEDS CLARIFICATION: ...]`. Never guess.
+6. **Builder check** — before you show the spec, give it to a fresh subagent with the prompt in `builder-check.md`.
+   - The prompt file is next to this file. Tell the user that a reviewer reads the spec first, and that you may come back once with a few questions.
+   - Sort the answers into the three piles that the prompt defines. Put already-answered points into the spec.
+   - Settle builder-can-decide points yourself, and mark them as your call.
+   - Bring only the user's-call points to the user, in one message, most important first.
+   - Without a subagent tool, read the spec yourself as that builder. Record the limitation.
 7. **Self-review spec** — fix placeholders, contradictions, ambiguity, and scope creep inline.
-8. **Confirm only missing design approval** — if user authorization does not yet cover this design, present one concrete spec with the short list of calls you made and the rule IDs it adds or changes, and ask once before implementation. Do not seek per-section approval or a second approval for the same design. When the user approves, set those rules to `accepted`.
+8. **Confirm only missing design approval** — ask only when user authorization does not yet cover this design.
+   - Present one concrete spec, with the short list of calls you made and the rule IDs that it adds or changes. Ask once before implementation.
+   - Do not ask for approval per section, or for a second approval of the same design.
+   - When the user approves, set those rules to `accepted`.
 9. **Hand back** — record the spec path under Agreed scope in `tasks/todo.md`. Apply align-intent only if consequential intent remains unresolved; otherwise continue to the plan within the approved scope. No slash command is required from the user.
 
 ## Visual Companion
