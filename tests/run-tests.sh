@@ -782,9 +782,10 @@ test_documentation_exists() {
 
   assert_not_exists "$ROOT_DIR/setupskill.sh"
   assert_not_contains "$ROOT_DIR/README.md" 'setupskill.sh'
-  assert_contains "$ROOT_DIR/README.md" 'fruit of learning from engineers, experts, and successful GitHub repos'
-  assert_contains "$ROOT_DIR/README.md" 'What users get'
-  assert_heading_before "$ROOT_DIR/README.md" '## Installed Commands' '## Install'
+  assert_contains "$ROOT_DIR/README.md" 'agree on the work, prove each step'
+  assert_contains "$ROOT_DIR/README.md" '## What `init` adds to your project'
+  assert_heading_before "$ROOT_DIR/README.md" '## Install' '## What starts each skill'
+  assert_heading_before "$ROOT_DIR/README.md" '## Scenario 1: a new project without a UI' '## Scenario 2: a project with a UI'
   assert_not_contains "$ROOT_DIR/README.md" 'tasks/todo.md'
   assert_contains "$ROOT_DIR/.gitignore" 'tasks/'
   assert_contains "$ROOT_DIR/.gitignore" 'docs/superpowers/'
@@ -795,7 +796,7 @@ test_documentation_exists() {
   assert_contains "$ROOT_DIR/docs/command-reference.md" '## /learn'
   assert_contains "$ROOT_DIR/docs/command-reference.md" '/compress-input'
   assert_not_contains "$ROOT_DIR/docs/command-reference.md" '/memorize'
-  assert_contains "$ROOT_DIR/README.md" 'curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh'
+  assert_contains "$ROOT_DIR/README.md" 'npm install -g moskills'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills setup'
   assert_contains "$ROOT_DIR/docs/command-reference.md" 'moskills uninstall'
   assert_contains "$ROOT_DIR/docs/pain-points.md" 'Requirements live in scattered chat messages, so agent starts coding from an incomplete brief.'
@@ -1331,7 +1332,8 @@ test_diagrams_folder_is_complete_and_in_sync() {
     awk -v want="$n" '/^```mermaid/ { k++; on=(k==want); next } /^```/ { on=0 } on' "$ROOT_DIR/docs/evolvebook.md" > "$TMP_ROOT/inline-$d.mmd"
     cmp -s "$TMP_ROOT/inline-$d.mmd" "$dir/$d.mmd" || fail "$d.mmd differs from the diagram inlined in docs/evolvebook.md"
   done
-  assert_contains "$ROOT_DIR/README.md" 'docs/diagrams/moskills-workflow.svg'
+  assert_contains "$ROOT_DIR/README.md" 'docs/diagrams/moskills-flow.png'
+  for f in moskills-flow.excalidraw moskills-flow.png moskills-flow.md 00-inventory.md scenes/moskills-flow.mjs; do assert_file "$dir/$f"; done
   pass 'docs/diagrams holds every diagram as source, SVG and PNG, in sync with the docs'
 }
 

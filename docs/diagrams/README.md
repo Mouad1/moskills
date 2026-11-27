@@ -4,6 +4,12 @@ Visual quick-start for moskills. Each diagram has an editable source
 (`.mmd`, Mermaid) and rendered images (`.svg` for docs, `.png` for slides or
 chat).
 
+## How a task moves, and what starts each skill
+
+The README diagram. Source: `moskills-flow.excalidraw`, drawn from `00-inventory.md` by `scenes/moskills-flow.mjs` with the `system-diagrams` skill. Talking points and a Mermaid copy: `moskills-flow.md`.
+
+![How a task moves through moskills](moskills-flow.png)
+
 ## moskills workflow
 
 The whole flow on one line: where each command sits, and where an evolvebook
