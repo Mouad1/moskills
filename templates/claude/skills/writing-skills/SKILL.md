@@ -57,7 +57,7 @@ Primary goal: [One clear, testable, single sentence defining done].
 ### 3. Workflow & Flow Diagram
 A visual or sequential overview of the execution path:
 ```text
-Step 1 (Input & Baseline) -> Step 2 (Execution) -> Step 3 (Verification & Hand-off)
+Step 1 (Input & Baseline) -> Step 2 (Execution) -> Step 3 (Verification & Handoff)
 ```
 
 ### 4. Steps & Degrees of Freedom
