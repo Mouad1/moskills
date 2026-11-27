@@ -24,7 +24,7 @@ Use installed skills when available. If a capability or tool is unavailable, per
 
 ## Stages and gates
 
-This standard controls the flow of non-trivial work, even when another skill pack is installed. A helper skill may do the work of a stage; the gate at the end of the stage belongs to this standard. These instructions come from the project's CLAUDE.md, so they take precedence over a helper skill's own hand-off rules.
+This standard controls the flow of non-trivial work, even when another skill pack is installed. A helper skill may do the work of a stage; the gate at the end of the stage belongs to this standard. These instructions come from the project's CLAUDE.md, so they take precedence over the rules a helper skill has for passing work on.
 
 | Stage | Helper when installed | moskills skill | Gate before the next stage |
 | --- | --- | --- | --- |
