@@ -205,3 +205,10 @@ test('repo skills and managed standard use the terms in docs/glossary.md', () =>
   }
   assert.deepEqual(hits, [], 'Fix with: moskills ste-lint --glossary docs/glossary.md templates/claude/skills templates/managed');
 });
+
+test('README follows STE80 and the glossary', () => {
+  const terms = parseGlossary(fs.readFileSync(path.join(root, 'docs/glossary.md'), 'utf8'));
+  const found = lintText(fs.readFileSync(path.join(root, 'README.md'), 'utf8'), { terms })
+    .filter((x) => x.level === 'error').map((x) => `README.md:${x.line}: ${x.rule} ${x.message}`);
+  assert.deepEqual(found, [], 'Fix with: moskills ste-lint --glossary docs/glossary.md README.md');
+});

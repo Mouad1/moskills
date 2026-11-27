@@ -2,78 +2,17 @@
 
 [![CI](https://github.com/Mouad1/moskills/actions/workflows/npm-checks.yml/badge.svg?branch=main)](https://github.com/Mouad1/moskills/actions/workflows/npm-checks.yml)
 [![npm](https://img.shields.io/npm/v/moskills)](https://www.npmjs.com/package/moskills)
-[![trigger evals](https://img.shields.io/badge/trigger%20evals-60%2F60-brightgreen)](docs/evals.md)
+[![trigger evals](https://img.shields.io/badge/trigger%20evals-51%20cases-brightgreen)](docs/evals.md)
 
-By [Mouad Belghiti](https://belghitis.com).
+Rules, skills and hooks that make an AI coding agent agree on the work, prove each step, and stop before it says "done".
 
-**moskills keeps AI coding agents honest.** You describe work in plain words. moskills makes the agent agree on what to build before coding, prove each step with a real check, and stop calling work "done" until the proof is current and you have accepted it.
+- You ask in plain words. The agent picks the skill.
+- Each step has a gate: a check, a screenshot or your approval.
+- A changed file makes the proof stale, and moskills refuses the commit.
 
-It is the fruit of learning from engineers, experts, and successful GitHub repos: spec before code, align first, fast feedback loops, checkpoints, validation before done, clean handoffs. moskills turns those habits into rules, skills and hooks your agent follows on its own. No command names to learn.
+It works in Claude Code as a plugin, and in Codex, Antigravity and other agents through the CLI.
 
-Works with Claude Code (plugin), Codex and Antigravity. Current release: **0.9.4**, on npm and as the Claude Code plugin.
-
-![moskills demo: a check passes, the code changes, done says no and git commit is refused](docs/demo/moskills-demo.gif)
-
-A real session, recorded with [vhs](https://github.com/charmbracelet/vhs) from [`docs/demo/moskills-demo.tape`](docs/demo/moskills-demo.tape): the test passes and is recorded, the code changes, `done` says no and `git commit` is refused.
-
-![moskills workflow](docs/diagrams/moskills-workflow.svg)
-
-## What it does
-
-| Without moskills | With moskills |
-|---|---|
-| Agent starts coding from a vague brief | `/preview` sizes the work, asks one question at a time, writes a spec and a one-page PRD you approve |
-| "Fast", "works well": goals nobody can check | `docs/rules.md`: each business rule has a measurable expectation and the check that proves it |
-| "Tests pass" written by hand | `run-state wrap` runs the check and records exit code + file hashes |
-| A file changes after the test ran; nobody notices | Proof goes stale, the task reopens, `git commit` is refused |
-| UI "looks fine" without anyone looking | A UI edit flags the task: screenshot or your eyes required |
-| Plan forgotten after a long session | Scope and next step are re-injected at every prompt and after compaction |
-| Agent declares "done" | `done` exits 0 only when every task and rule is proven and you accepted it |
-
-## How a task flows
-
-```text
-Idea -> Spec (/preview) -> Plan -> Build (/tdd) -> UI check -> Module done (/gatekeeper) -> Pause (/handoff)
-          you approve     you approve  check passes   someone looks   you accept
-```
-
-Each arrow is a gate. Behavior gates are decided by a check, visual gates by a screenshot, human gates by you. Other skill packs (superpowers, ...) may do a stage's work; the gate stays with moskills.
-
-## Evals
-
-20 [`claude plugin eval`](docs/evals.md) cases check that the agent picks the right skill from a plain request, and stays quiet when it should. Opus 5.5, Claude Code 2.1.326, 3 runs each, latest full run on `main` (2026-11-20):
-
-| Requests | Passed |
-|---|---|
-| Direct ("Is it ready to ship?", "The build broke") for gatekeeper, handoff, diagnose | 27 / 27 |
-| Code to write ("Add a function...", "Plan approved... Build it.") for tdd | 6 / 6 |
-| Indirect ("My laptop battery is about to die, save where we are.") | 9 / 9 |
-| No skill expected (typo fix, plain questions) | 9 / 9 |
-| Aimed at a neighbouring skill, which must stay quiet | 9 / 9 |
-
-The 0.9.3 package missed 2 of these: "what does done mean for a run?" fired gatekeeper, and tdd did not fire on code requests. Both descriptions are fixed in 0.9.4. Details, cost and how to re-run: [docs/evals.md](docs/evals.md).
-
-## Installed Commands
-
-You rarely type these: the agent picks them from what you ask. Slash commands force one.
-
-| Command | Use it to |
-|---|---|
-| `/preview` | Turn an idea into a spec, PRD and draft rules before code |
-| `/align-intent` | Fix goal, scope, success criteria and rule IDs; start a run |
-| `/tdd` | Red, green, refactor, with proof recorded per task |
-| `/diagnose` | Reproduce a bug and find root cause before fixing |
-| `/gatekeeper` | Audit a module: all proof current, all rules proven |
-| `/modular-build` | Build an app one accepted module at a time |
-| `/checkpoint`, `/handoff` | Save progress; leave the next session an exact next step |
-| `/learn` | Turn a correction into a rule in `tasks/lessons.md` |
-| `/design-system` | Keep one checked `design.md` for UI work |
-| `/council-loop` | Multi-model review loop across providers until consensus is reached |
-| `/writing-skills` | Author, test and refine AI agent skills using TDD & cross-provider standards |
-| `/playground` | One throwaway HTML page with sliders to compare options and see a trade-off |
-| `/shared-language`, `/system-map`, `/project-dna`, `/compress-input`, `/evolvebook` | Glossary, blast radius, build recipes, terse mode, job guides |
-
-Full list: [command reference](docs/command-reference.md).
+![How a task moves through moskills, and what starts each skill](docs/diagrams/moskills-flow.png)
 
 ## Install
 
@@ -85,48 +24,104 @@ Full list: [command reference](docs/command-reference.md).
 /moskills-init
 ```
 
-Run `/moskills-init` once per project. Turn on auto-update with `/moskills-doctor`.
-
-**Codex, Antigravity, other agents**, in a terminal:
+**Other agents**, in a terminal:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/Mouad1/moskills/main/install.sh | sh
+npm install -g moskills
 cd your-project && moskills init --agents
 ```
 
-**npm**: `npm install -g moskills`, then `moskills init` ([details](docs/npm-installation.md)).
+Run `init` once per project. Then ask the agent: "Build this feature" or "Fix this bug". Updates, uninstall and the file list are in the [install guide](docs/install.md).
 
-Then open your agent in the project and ask: "Build this feature" or "Fix this bug".
+## What starts each skill
 
-Updating, local development, evolvebook setup, file list and uninstall: [full install guide](docs/install.md).
+| Starts | Skill | What it does |
+|---|---|---|
+| Always on (hooks) | Context | Puts the scope and the next step into every prompt and after compaction. |
+| Always on (hooks) | Commit gate | Refuses `git commit` when a proof is missing, failed or stale. |
+| Always on (hooks) | Version notice | Says at session start when a newer moskills exists. |
+| Always on (hooks) | Visual flag | Marks a task after a UI edit. A screenshot or your look is then required. |
+| Agent picks it | `/preview` | Turns a vague idea into a spec and a one-page PRD that you approve. |
+| Agent picks it | `/align-intent` | Fixes the goal, scope, success criteria and rule IDs before code. |
+| Agent picks it | `/tdd` | Writes a failing test, then the code, and records the proof. |
+| Agent picks it | `/diagnose` | Reproduces a bug and finds the root cause before any fix. |
+| Agent picks it | `/gatekeeper` | Answers "is it done?" with the checks: Finished or Still not done. |
+| Agent picks it | `/handoff` | Saves the exact next step so the next session can continue. |
+| Agent picks it | `/checkpoint` | Records progress, evidence and blockers after a milestone. |
+| Agent picks it | `/modular-build` | Builds an app one module at a time. You accept each module. |
+| Agent picks it | `/design-system` | Keeps one `design.md` with the colours, type and spacing of the UI. |
+| Agent picks it | `/playground` | Makes one HTML page with sliders when you must change a value to see a result. |
+| Agent picks it | `/system-map` | Maps modules and dependencies before a change to unfamiliar code. |
+| Agent picks it | `/shared-language` | Keeps one term per concept in a glossary that the lint checks. |
+| Agent picks it | `/learn` | Turns a correction into a rule in `tasks/lessons.md`. |
+| Agent picks it | `/project-dna` | Records a decision and a replay prompt to build the same thing again. |
+| You ask | `/council-loop` | Asks reviewers from other model providers and loops until they agree. |
+| You ask | `/compress-input` | Makes the agent reply in fewer words. |
+| You ask | `/writing-skills` | Writes or changes a skill, with trigger tests and evals. |
+| You ask | `/evolvebook` | Keeps one guide per kind of job that improves on each run. |
 
-## What users get
+"Agent picks it" means the agent starts the skill from your words or from the situation. A slash command starts any skill directly. The [trigger evals](docs/evals.md) test each "Agent picks it" skill on a direct request and an indirect request.
 
-`moskills init` adds to your project:
+Note on `/council-loop`: how the agent reaches the other providers depends on the host. Some hosts have a delegate tool for other models, and other hosts use each provider's CLI. The report says how many providers took part.
 
-- **Rules** in `.claude/standard/`, imported by `CLAUDE.md`. Managed by moskills; `moskills sync` upgrades them.
+## Scenario 1: a new project without a UI
+
+```mermaid
+flowchart LR
+  A[Idea] -->|/preview| B[Spec you approve]
+  B -->|/align-intent| C[Scope and rules]
+  C -->|/tdd| D[Code with proof]
+  D -->|/gatekeeper| E[Done]
+  E -->|/handoff| F[Next session]
+```
+
+| You say | What starts | What happens |
+|---|---|---|
+| "I want a CLI that renames photos by date." | `/preview` | The agent asks one question at a time and writes a spec. You approve it. |
+| "Pin down what done means for the first version." | `/align-intent` | The agent writes the goal, the non-goals and the rules with their checks. |
+| "Build it." | `/tdd` | Each task starts with a failing test. The check result is recorded. |
+| (You edit a file after the test ran.) | Commit gate | The proof is stale. The commit is refused until the test runs again. |
+| "The build broke." | `/diagnose` | The agent finds the root cause before it changes code. |
+| "Is it done?" | `/gatekeeper` | The agent runs the checks and reports Finished or Still not done. |
+| "Save where we are, I must stop." | `/handoff` | The next session starts at the exact next step. |
+
+## Scenario 2: a project with a UI
+
+```mermaid
+flowchart LR
+  A[App idea] -->|/modular-build| B[Module list]
+  B -->|/design-system| C[design.md]
+  C -->|/tdd| D[One module built]
+  D -->|visual flag| E[Screenshot or your look]
+  E -->|/gatekeeper| F[Module accepted]
+  F -->|next module| D
+```
+
+| You say | What starts | What happens |
+|---|---|---|
+| "Build a booking app: auth, calendar, payments." | `/modular-build` | The agent splits the app into modules. You accept the order. |
+| "Pick the colours and spacing for the app." | `/design-system` | The agent writes one `design.md`. The UI code uses only those values. |
+| "Build the calendar module." | `/tdd` | Tests first, then the code, with recorded proof. |
+| (The agent edits a UI file.) | Visual flag | The task needs a screenshot or your look before it is done. |
+| "I can't picture how the price changes with the duration." | `/playground` | The agent makes one HTML page with sliders for the price inputs. |
+| "Is the calendar module done?" | `/gatekeeper` | Every check and the visual check must pass. Then you accept the module. |
+| "No, we always use pnpm here." | `/learn` | The agent records the rule in `tasks/lessons.md`. |
+
+## What `init` adds to your project
+
+- **Rules** in `.claude/standard/`, imported by `CLAUDE.md`. `moskills sync` upgrades them.
 - **Skills and commands** in `.claude/skills/` and `.claude/commands/`.
-- **Your files**, created once and never overwritten:
-  - `docs/prd.md`: problem, users, measurable goals, non-goals.
-  - `docs/rules.md`: business rules register with live proof status.
-  - `.claude/STATE.md`: scope, gates, next step.
-  - `tasks/`: plan and lessons.
-- **Guards**: the Git pre-commit hook blocks conflict markers, placeholder phrases, and a commit of files whose run proof is missing, failed, or stale. Claude Code denies that `git commit` in the session as well. `MOSKILLS_NO_COMMIT_GATE=1` turns the proof check off. A commit it lets through without current proof is still recorded in the run, and an accepted result goes back to pending.
+- **Your files**, created once and never overwritten: `docs/prd.md`, `docs/rules.md`, `.claude/STATE.md` and `tasks/`.
+- **Guards**: a Git pre-commit hook and the Claude Code hooks above.
 
-`moskills doctor` reports drift; `moskills status` prints Goal, Finished, Still not done, Blocker, Next.
+`moskills doctor` reports drift. `moskills status` prints the goal, the finished work, the blockers and the next step.
 
 ## More docs
 
-- [Quick start](docs/quick-start.md) and [A–Z testing walkthrough](docs/testing-from-a-to-z.md)
-- [Architecture](docs/architecture.md), [lifecycle](docs/lifecycle.md), [diagrams](docs/diagrams/README.md)
-- [Trigger evals](docs/evals.md): results and how to re-run them
-- [Product requirements](docs/prd.md) and [business rules](docs/rules.md) of moskills itself
-- [Evolvebooks](docs/evolvebook.md), [Skill creation guide](docs/writing-skills-guide.md), [roadmap](docs/roadmap.md), [changelog](CHANGELOG.md)
-
-## Contributing
+- [Quick start](docs/quick-start.md), [command reference](docs/command-reference.md), [install guide](docs/install.md)
+- [Architecture](docs/architecture.md), [diagrams](docs/diagrams/README.md), [STE80 writing rules](docs/ste80.md)
+- [Trigger evals](docs/evals.md), [changelog](CHANGELOG.md), [roadmap](docs/roadmap.md)
 
 Do not push directly to the default branch. Push a branch and open a pull request. Run `npm test` before you do.
 
-## Who made this
-
-Built and maintained by Mouad Belghiti: [belghitis.com](https://belghitis.com). If moskills helps you, a star and a link back are appreciated.
+Built by [Mouad Belghiti](https://belghitis.com).

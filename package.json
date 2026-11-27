@@ -1,7 +1,7 @@
 {
   "name": "moskills",
   "version": "0.9.4",
-  "description": "Structured AI agent skills with simple project setup and concise natural-language workflows.",
+  "description": "Rules, skills and hooks that make an AI coding agent agree on the work, prove each step, and stop before it says done.",
   "license": "MIT",
   "author": "Mouad Belghiti",
   "repository": {
