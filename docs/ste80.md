@@ -57,7 +57,7 @@ Labels: each arrow from the decision is one trigger. Text is the default when no
 |---|---|---|
 | 1. Text | Default | STE80 text |
 | 2. Diagram | The content has 3 or more connected parts: a flow, a structure or dependencies | Mermaid block with a short label key |
-| 3. Page | The reader must change a value to understand the result: parameters, trade-offs, a comparison of options | One static HTML file (planned: `/playground`) |
+| 3. Page | The reader must change a value to understand the result: parameters, trade-offs, a comparison of options | One static HTML file from `/playground` |
 | 4. Animation | The insight is a change over time that a static picture cannot show | Not available |
 
 1. Start at rung 1.

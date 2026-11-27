@@ -70,6 +70,7 @@ You rarely type these: the agent picks them from what you ask. Slash commands fo
 | `/design-system` | Keep one checked `design.md` for UI work |
 | `/council-loop` | Multi-model review loop across providers until consensus is reached |
 | `/writing-skills` | Author, test and refine AI agent skills using TDD & cross-provider standards |
+| `/playground` | One throwaway HTML page with sliders to compare options and see a trade-off |
 | `/shared-language`, `/system-map`, `/project-dna`, `/compress-input`, `/evolvebook` | Glossary, blast radius, build recipes, terse mode, job guides |
 
 Full list: [command reference](docs/command-reference.md).

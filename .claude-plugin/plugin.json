@@ -20,7 +20,8 @@
     "preview",
     "evolvebook",
     "modular-build",
-    "design-system"
+    "design-system",
+    "playground"
   ],
   "commands": [
     "./templates/claude/commands",
@@ -43,6 +44,7 @@
     "./templates/claude/skills/learn",
     "./templates/claude/skills/evolvebook",
     "./templates/claude/skills/council-loop",
-    "./templates/claude/skills/writing-skills"
+    "./templates/claude/skills/writing-skills",
+    "./templates/claude/skills/playground"
   ]
 }

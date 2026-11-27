@@ -72,6 +72,21 @@ test('writing-skills description triggers on skill creation phrases', () => {
   assert.match(skill, /^when_to_use: ".*Write a new skill.*"$/m);
 });
 
+test('playground description triggers on interactive comparison phrases and yields design to preview', () => {
+  assertTrigger('templates/claude/skills/playground/SKILL.md', [
+    'sliders', 'trade-off', 'let me play with', '.moskills/scratch/', 'rung 3'
+  ]);
+  assert.match(description('templates/claude/skills/playground/SKILL.md'), /^Builds one throwaway HTML page/);
+  assert.match(description('templates/claude/skills/playground/SKILL.md'), /Not for designing a feature or app screens; that is \/preview/);
+  const skill = fs.readFileSync(path.join(root, 'templates/claude/skills/playground/SKILL.md'), 'utf8');
+  assert.match(skill, /^Primary goal: /m);
+  assert.match(skill, /-mtime \+7 -delete/, 'prunes scratch pages older than 7 days');
+  assert.match(skill, /no network/i);
+  const plugin = JSON.parse(fs.readFileSync(path.join(root, '.claude-plugin/plugin.json'), 'utf8'));
+  assert.ok(plugin.skills.includes('./templates/claude/skills/playground'), 'plugin.json registers the skill');
+  assert.match(fs.readFileSync(path.join(root, 'templates/claude/commands/playground.md'), 'utf8'), /`playground` skill/);
+});
+
 test('evolvebook description triggers on book commands and grow phrases', () => {
   assertTrigger('templates/claude/skills/evolvebook/SKILL.md', [
     '/evolvebook', 'add this as a good example', 'never do X again', 'EVOLVEBOOKS.md', '3 times without a book'

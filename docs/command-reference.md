@@ -265,6 +265,24 @@ Rules:
 - Record truthful scores: never fabricate approval or guess missing scores.
 - Reviewers are strictly read-only; delegates must never edit files or launch subagents.
 
+## /playground
+
+Purpose: the user changes a value on one page and sees the result, with no build and no server.
+
+Use when the reader must change a value to understand the result: comparing options, a trade-off, or how a parameter changes an output. This is rung 3 of the output ladder in `docs/ste80.md`.
+
+Flow:
+
+```text
+One insight -> 1 to 5 inputs -> one static HTML file in .moskills/scratch/ -> user opens it
+```
+
+Rules:
+
+- One self-contained file: inline CSS and vanilla JavaScript, no build, no network.
+- Pages older than 7 days are deleted at each new write; `.moskills/scratch/` is gitignored.
+- A durable design or app screens belong to `/preview`.
+
 ## /writing-skills
 
 Purpose: every new or changed skill ships with a baseline failure it fixes and proof that it fires on the right requests and stays quiet on its neighbours.
