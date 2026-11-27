@@ -14,7 +14,7 @@ STE80 uses the writing rules S1 to S8. It does not use the STE100 dictionary of 
 | S4 | An instruction gives one action. Two actions that occur at the same time can share one instruction. | Lint warning |
 | S5 | An instruction uses the imperative: "Run the tests", not "The tests should be run". | Lint warning |
 | S6 | A sentence uses the active voice. | Lint warning |
-| S7 | One term names one concept. A term from a `shared-language` "Avoid Saying" list is an error. | Lint error |
+| S7 | One term names one concept. A term from a `shared-language` "Avoid Saying" list is an error. | Lint error (`--glossary <file>` or `--avoid <term>=<use>`) |
 | S8 | A sentence keeps its articles and verbs. Do not remove words to make a sentence shorter. | Reviewer |
 
 The lint `moskills ste-lint` counts words as follows:

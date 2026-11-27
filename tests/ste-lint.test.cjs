@@ -9,7 +9,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
-const { lintText } = require('../lib/ste-lint.cjs');
+const { lintText, parseGlossary } = require('../lib/ste-lint.cjs');
 const scratch = fs.mkdtempSync(path.join(os.tmpdir(), 'moskills ste lint '));
 test.after(() => fs.rmSync(scratch, { recursive: true, force: true }));
 
@@ -98,6 +98,26 @@ test('S7: a term from the avoid list is an error, outside code spans only', () =
   assert.deepEqual(rules('Start `session` now. Obsessions stay.\n', { terms }), []);
 });
 
+test('parseGlossary reads Term and Avoid Saying pairs from shared-language entries', () => {
+  const text = [
+    '```text', 'Term: handoff', 'Meaning: the note for the next session', 'Avoid Saying: hand-off, hand over note', '```',
+    '- **Term:** run', '- **Avoid Saying:** run-state session', '',
+    'Term: gate', 'Avoid Saying: none', '',
+    'Term: proof', 'Avoid Saying: unknown',
+  ].join('\n');
+  assert.deepEqual(parseGlossary(text), [
+    { avoid: 'hand-off', use: 'handoff' },
+    { avoid: 'hand over note', use: 'handoff' },
+    { avoid: 'run-state session', use: 'run' },
+  ]);
+});
+
+test('S7 skips the Avoid Saying line itself', () => {
+  const terms = [{ avoid: 'hand-off', use: 'handoff' }];
+  assert.deepEqual(rules('Term: handoff\nAvoid Saying: hand-off\n', { terms }), []);
+  assert.deepEqual(rules('Write the hand-off now.\n', { terms }), ['1:S7:error']);
+});
+
 function cli(args, opts = {}) {
   const r = spawnSync(process.execPath, [path.join(root, 'lib/ste-lint.cjs'), ...args],
     { encoding: 'utf8', timeout: 60000, cwd: opts.cwd || scratch });
@@ -123,6 +143,15 @@ test('CLI: --avoid adds a banned term; a clean file exits 0', () => {
   const r = cli(['--avoid', 'session=run', 'b.md']);
   assert.equal(r.status, 1);
   assert.match(r.stdout, /S7 error/);
+});
+
+test('CLI: --glossary reads avoided terms from a shared-language file', () => {
+  fs.writeFileSync(path.join(scratch, 'glossary.md'), 'Term: handoff\nAvoid Saying: hand-off\n');
+  fs.writeFileSync(path.join(scratch, 'g.md'), 'Write the hand-off now.\n');
+  const r = cli(['--glossary', 'glossary.md', 'g.md']);
+  assert.equal(r.status, 1);
+  assert.match(r.stdout, /g\.md:1: S7 error: "hand-off": use "handoff"/);
+  assert.equal(cli(['--glossary', 'missing.md', 'g.md']).status, 2);
 });
 
 test('CLI: no file or a missing file exits 2 with usage', () => {
@@ -159,4 +188,20 @@ test('repo skills and managed standard have no STE80 errors', () => {
     }
   }
   assert.deepEqual(errors, [], 'Fix with: moskills ste-lint templates/claude/skills templates/managed');
+});
+
+test('repo skills and managed standard use the terms in docs/glossary.md', () => {
+  const terms = parseGlossary(fs.readFileSync(path.join(root, 'docs/glossary.md'), 'utf8'));
+  assert.ok(terms.length >= 3, 'docs/glossary.md needs entries with Avoid Saying terms');
+  const hits = [];
+  for (const d of ['templates/claude/skills', 'templates/managed']) {
+    for (const entry of fs.readdirSync(path.join(root, d), { withFileTypes: true })) {
+      const f = entry.isDirectory() ? path.join(d, entry.name, 'SKILL.md') : path.join(d, entry.name);
+      if (!f.endsWith('.md') || !fs.existsSync(path.join(root, f))) continue;
+      for (const x of lintText(fs.readFileSync(path.join(root, f), 'utf8'), { terms })) {
+        if (x.rule === 'S7') hits.push(`${f}:${x.line}: ${x.message}`);
+      }
+    }
+  }
+  assert.deepEqual(hits, [], 'Fix with: moskills ste-lint --glossary docs/glossary.md templates/claude/skills templates/managed');
 });

@@ -21,6 +21,7 @@ Primary goal: Build shared language for the project.
 3. Write each term with meaning, usage, naming guidance, and example.
 4. Prefer the project term in variables, functions, files, tests, and docs.
 5. Update `.claude/STATE.md` under `Shared Language`.
+6. Check the docs against the entries: `moskills ste-lint --glossary .claude/STATE.md <files>`. Each S7 error names an avoided word and the term to use.
 
 ## Entry Format
 
