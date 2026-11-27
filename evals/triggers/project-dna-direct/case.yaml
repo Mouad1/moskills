@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: project-dna-direct
+tags: [triggers, core, situation, project-dna]
+execution:
+  prompt: "Record the decision to use SQLite over Postgres and the steps to reproduce the setup."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: project-dna-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?project-dna"'
