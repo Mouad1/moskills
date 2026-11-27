@@ -76,3 +76,16 @@ test('init ships the Writing section into the project standard', () => {
   const shipped = fs.readFileSync(path.join(dir, '.claude/standard/base.md'), 'utf8');
   assert.match(shipped, /## Writing \(STE80\)\n/);
 });
+
+test('project-dna writes its replay prompt in STE80 with the project terms', () => {
+  const skill = fs.readFileSync(path.join(root, 'templates/claude/skills/project-dna/SKILL.md'), 'utf8');
+  const step = skill.slice(skill.indexOf('## Step 5'), skill.indexOf('## Step 6'));
+  assert.match(step, /STE80/);
+  assert.match(step, /one action/);
+  assert.match(step, /Avoid Saying/);
+  assert.match(step, /moskills ste-lint --glossary/);
+  const tpl = fs.readFileSync(path.join(root, 'templates/claude/skills/project-dna/references/templates.md'), 'utf8');
+  const replay = tpl.slice(tpl.indexOf('### 🔁 Replay Prompt'));
+  assert.match(replay, /one action/);
+  for (const text of [step, replay]) assert.deepEqual(lintText(text).filter((x) => x.level === 'error'), []);
+});

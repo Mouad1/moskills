@@ -98,6 +98,12 @@ Every entry ends with a `## Replay Prompt` section. This is a single Claude prom
 4. Includes all relevant config values (redacted secrets as `[SECRET_NAME]`)
 5. Asks the agent to follow the exact steps
 
+Write the replay prompt in STE80, the Writing section of the standard:
+
+- Each step gives one action, in the imperative, in 20 words or fewer.
+- Use the shared-language terms of the project. Never use a word from an "Avoid Saying" list.
+- When the command exists, check the entry: `moskills ste-lint --glossary .claude/STATE.md .claude/PROJECT-DNA.md`.
+
 Format:
 ```markdown
 ## 🔁 Replay Prompt
@@ -114,8 +120,8 @@ Format:
 - [decision 2]
 
 **Steps to follow:**
-1. [step 1]
-2. [step 2]
+1. [one action, in the imperative]
+2. [the next action]
 ...
 
 **Config required:**
