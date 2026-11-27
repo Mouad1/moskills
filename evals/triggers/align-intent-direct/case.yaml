@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: align-intent-direct
+tags: [triggers, core, situation, align-intent]
+execution:
+  prompt: "Before we code the CSV export, pin down the scope, inputs, outputs and what counts as success."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: align-intent-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?align-intent"'

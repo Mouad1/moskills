@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: checkpoint-indirect
+tags: [triggers, harder, situation, checkpoint]
+execution:
+  prompt: "We just got the migration working. Write down where we are before I switch to the other bug."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: checkpoint-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?checkpoint"'
