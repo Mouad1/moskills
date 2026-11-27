@@ -140,10 +140,10 @@ Use this for every new entry. Replace all `[...]` placeholders.
 - [decision 1 — e.g. "Use BullMQ over cron for job scheduling"]
 - [decision 2]
 
-**Steps to follow:**
-1. [step 1]
-2. [step 2]
-3. [step N]
+**Steps to follow:** (one action per step, in the imperative, 20 words or fewer)
+1. [one action]
+2. [the next action]
+3. [the last action]
 
 **Config required:**
 - `VAR_NAME` = `[SECRET: VAR_NAME]` — [purpose]
