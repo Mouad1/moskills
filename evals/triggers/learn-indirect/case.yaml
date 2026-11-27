@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: learn-indirect
+tags: [triggers, harder, situation, learn]
+execution:
+  prompt: "No, that's wrong again. We always use pnpm here, not npm. That's the third time."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: learn-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?learn"'

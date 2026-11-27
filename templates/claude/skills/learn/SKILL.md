@@ -1,6 +1,6 @@
 ---
 name: learn
-description: "Use when: the user corrects the agent, a diagnose session ends with a root cause, a review rejects an approach, or a captured lesson repeats and should be promoted to a project rule or a reusable skill."
+description: "Turns a correction into a rule in tasks/lessons.md so the same mistake never happens twice, and promotes a repeated lesson to a project rule or a skill. Use when the user corrects the agent (\"no, that's wrong\", \"again\", \"that's the third time\"), says \"remember this\", \"make it a rule\", \"always do X\" or \"never do X\", when a diagnose session ends with a root cause, or when a review rejects an approach. Use this skill whenever the user states a standing rule or repeats a correction, even if they do not say learn."
 ---
 
 # Learn

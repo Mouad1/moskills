@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: system-map-indirect
+tags: [triggers, harder, situation, system-map]
+execution:
+  prompt: "I've never touched this codebase. What breaks if I change the session middleware?"
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: system-map-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?system-map"'

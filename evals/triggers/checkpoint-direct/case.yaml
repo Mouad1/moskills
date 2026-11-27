@@ -1,0 +1,12 @@
+schema_version: "1.1"
+name: checkpoint-direct
+tags: [triggers, core, situation, checkpoint]
+execution:
+  prompt: "Checkpoint our progress: what changed, what is verified, what is next."
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+graders:
+  - name: checkpoint-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?checkpoint"'
